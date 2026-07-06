@@ -135,10 +135,7 @@ function updateVariants(){
     var price=ed?ed.querySelector('.v-price')?.value||'':'';
     var skuDesc=ed?ed.querySelector('.v-sku-desc')?.value||'':'';
     html+='<div class="variant-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
-    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px;font-weight:600">第一层规格名</label><input class="form-input v-tier1-name" placeholder="如：颜色" value="'+escapeHtml(tier1Name)+'"></div>';
-    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">第一层规格值 <span class="required">*</span></label><input class="form-input v-tier1-val" placeholder="如：红色" value="'+escapeHtml(tier1Val)+'" required></div></div>';
-    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px;font-weight:600">第二层规格名 <span class="optional">(可选)</span></label><input class="form-input v-tier2-name" placeholder="如：尺码" value="'+escapeHtml(tier2Name)+'"></div>';
-    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">第二层规格值 <span class="optional">(可选)</span></label><input class="form-input v-tier2-val" placeholder="如：M" value="'+escapeHtml(tier2Val)+'"></div></div>';
+    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">变体名称 <span class="required">*</span></label><input class="form-input v-name" placeholder="如：红色" value="'+escapeHtml(tier1Val)+'" required></div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px;font-weight:600">白底参考图 <span class="required">*</span></label>';
     html+='<div class="upload-zone'+(hasImg?' has-image':'')+'" onclick="document.getElementById(\'variantInput'+i+'\').click()">';
     html+='<input type="file" id="variantInput'+i+'" accept="image/*" style="display:none" onchange="handleVariantUpload(event,'+i+')">';
@@ -186,7 +183,7 @@ async function handleCreate(e){
   if(!refFiles[0]){showToast('请上传核心参考图','error');return}
   if(!refTitle){showToast('请填写参考标题','error');return}
   var variantItems=document.querySelectorAll('.variant-item');
-  for(var item of variantItems){if(!item.querySelector('.v-tier1-val').value.trim()){showToast('请填写所有变体','error');return}}
+  for(var item of variantItems){if(!item.querySelector('.v-name').value.trim()){showToast('请填写所有变体','error');return}}
   var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
   var initRes=await API.initTask('jst');
   if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建任务';return}
@@ -202,15 +199,12 @@ async function handleCreate(e){
   var variants=[];
   for(var i=0;i<variantItems.length;i++){
     btn.textContent='上传变体图 '+(i+1)+'/'+variantItems.length+'...';
-    var name=variantItems[i].querySelector('.v-tier1-val').value.trim();
+    var vname=variantItems[i].querySelector('.v-name').value.trim();
     var file=variantFiles[i];if(!file){showToast('变体 #'+(i+1)+' 未选择白底图','error');btn.disabled=false;btn.textContent='创建任务';return}
     var vRes=await uploadFile(taskId,file,'variants');
     if(!vRes.success){showToast('变体图上传失败','error');btn.disabled=false;btn.textContent='创建任务';return}
     variants.push({
-      tier1_name:variantItems[i].querySelector('.v-tier1-name').value.trim(),
-      tier1_value:name,
-      tier2_name:variantItems[i].querySelector('.v-tier2-name').value.trim(),
-      tier2_value:variantItems[i].querySelector('.v-tier2-val').value.trim(),
+      name:vname,
       white_bg_image:vRes.url||vRes.key,
       price:variantItems[i].querySelector('.v-price')?.value||undefined,
       sku_description:variantItems[i].querySelector('.v-sku-desc')?.value.trim()||'',
