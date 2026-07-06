@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>任务列表 - EWS</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}</style>
+</head><body>
+<script src="/js/nav.js"></script>
+<div class="app-container">
+<div class="page-header"><h1 class="page-title">任务列表</h1>
+<div class="action-bar"><a href="/create-jst.html" class="btn btn-primary">创建(聚水潭)</a><a href="/create-shopee.html" class="btn btn-primary">创建(虾皮)</a>
+<button class="btn btn-outline" onclick="refreshTasks()">刷新</button></div></div>
+<div class="card"><div class="card-body" id="taskContent"><div class="loading"><div class="spinner"></div>加载中...</div></div></div>
+</div>
+<script src="/js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();await refreshTasks()});
+async function refreshTasks(){
+  const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
+  const res=await API.getTasks();
+  if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
+  const tasks=res.tasks||[];
+  if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px"><a href="/create-jst.html" class="btn btn-primary">创建第一个任务(聚水潭)</a> <a href="/create-shopee.html" class="btn btn-primary">创建第一个任务(虾皮)</a></div></div>';return}
+  var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+  for(var i=0;i<tasks.length;i++){
+    var t=tasks[i];
+    var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
+    var stLabel={init:'初始化',pending:'待推送',processing:'处理中',completed:'已完成',failed:'失败'}[t.status]||t.status;
+    var stClass={init:'badge-default',pending:'badge-warning',processing:'badge-info',completed:'badge-success',failed:'badge-danger'}[t.status]||'badge-default';
+    html+='<tr><td>'+platTag+'</td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td><span class="badge '+stClass+'">'+stLabel+'</span></td><td>'+(t.created_at||'').slice(0,16)+'</td><td><button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button></td></tr>';
+  }
+  html+='</tbody></table></div>';
+  c.innerHTML=html;
+}
+function viewTask(taskId){
+  // 获取详情后根据 platform 展示不同内容
+  API.getTask(taskId).then(function(res){
+    if(!res.success||!res.task){showToast('加载失败','error');return}
+    var t=res.task;
+    if(t.platform==='jst') showJstDetail(t);
+    else showShopeeDetail(t);
+  });
+}
+function showJstDetail(t){
+  var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
+  var html='<div class="modal"><div class="modal-header"><div class="modal-title">任务详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
+  html+='<div class="detail-section"><span class="platform-tag tag-jst">聚水潭</span><strong>'+escapeHtml(t.name||'')+'</strong></div>';
+  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+(t.status||'')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+(t.mode||'full')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">主图/附图: '+(t.main_image_count||5)+' 详情图: '+(t.detail_image_count||5)+'</div></div>';
+  if(t.variants) html+='<div class="detail-section"><div class="detail-label">变体 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return v.tier1_value||v.name||''}).join(', ')+'</div></div>';
+  html+='</div><div class="modal-footer"><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  dt.innerHTML=html;document.body.appendChild(dt);
+}
+function showShopeeDetail(t){
+  var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
+  var p=t.product||{};
+  var v=(p.variations||[]).map(function(v){return v.option1+(v.option2?'/'+v.option2:'')}).join(', ');
+  var html='<div class="modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
+  html+='<div class="detail-section"><span class="platform-tag tag-shopee">虾皮</span><strong>'+escapeHtml(p.name||'')+'</strong></div>';
+  html+='<div class="detail-section"><div class="detail-label">分类</div><div class="detail-value">'+(p.category_id||'')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">规格</div><div class="detail-value">'+(p.variation_name1||'')+(p.variation_name2?'/'+p.variation_name2:'')+' | '+v+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div>';
+  html+='</div><div class="modal-footer"><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  dt.innerHTML=html;document.body.appendChild(dt);
+}
+function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
+async function doExport(taskId){
+  var res=await API.exportTask(taskId);
+  if(!res.success||!res.rows||!res.rows.length){showToast(res.error||'无数据','error');return}
+  try{
+    var keys=Object.keys(res.rows[0]);var wsData=[keys];
+    for(var r of res.rows) wsData.push(keys.map(function(k){return r[k]}));
+    var ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=keys.map(function(){return{wch:20}});
+    var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'导出');
+    var fmt=res.export_format==='shopee'?'Shopee':'聚水潭';
+    XLSX.writeFile(wb,fmt+'_'+(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    showToast('导出成功！','success');
+  }catch(err){showToast('导出失败: '+err.message,'error')}
+}
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+</script>
+<script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body></html>
