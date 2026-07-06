@@ -1,0 +1,294 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>系统配置 - EWS</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>.user-credits-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap}</style>
+</head><body>
+<script src="/js/nav.js"></script>
+<div class="app-container">
+<div class="page-header"><h1 class="page-title">系统配置</h1><div style="font-size:14px;color:var(--gray-500)" id="userInfo"></div></div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('general')">通用</button>
+  <button class="tab-btn" onclick="switchTab('jst')">JST 工作流</button>
+  <button class="tab-btn" onclick="switchTab('shopee')">Shopee 工作流</button>
+  <button class="tab-btn" onclick="switchTab('users')">用户管理</button>
+</div>
+
+<!-- 通用配置 -->
+<div class="tab-panel active" id="tab-general">
+  <div class="card"><div class="card-header">通用设置</div><div class="card-body">
+    <form onsubmit="return false">
+      <div class="form-group"><label class="form-label">R2 公开访问地址</label><input type="url" class="form-input" id="r2PublicUrl" placeholder="https://oss.langaj.work"></div>
+      <div class="form-group"><label class="form-label">回调密钥 (callback_secret)</label><input type="text" class="form-input" id="callbackSecret" placeholder="n8n 回调时校验用"></div>
+      <button class="btn btn-primary" onclick="saveGeneralConfig()">保存通用配置</button>
+    </form>
+  </div></div>
+  <div class="card" style="margin-top:20px"><div class="card-header">修改密码</div><div class="card-body">
+    <form onsubmit="handleChangePassword(event)">
+      <div class="form-group"><label class="form-label">当前密码</label><input type="password" class="form-input" id="oldPassword" required></div>
+      <div class="form-group"><label class="form-label">新密码</label><input type="password" class="form-input" id="newPassword" required minlength="6"></div>
+      <div class="form-group"><label class="form-label">确认新密码</label><input type="password" class="form-input" id="confirmPassword" required minlength="6"></div>
+      <button type="submit" class="btn btn-outline">修改密码</button>
+    </form>
+  </div></div>
+</div>
+
+<!-- JST 工作流 -->
+<div class="tab-panel" id="tab-jst">
+  <div class="card"><div class="card-header">JST 工作流 Webhook</div><div class="card-body">
+    <form onsubmit="return false">
+      <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
+      <div class="form-group"><label class="form-label">商品标题 Webhook</label><input type="url" class="form-input" id="jst_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">SKU标题 Webhook</label><input type="url" class="form-input" id="jst_sku_title" placeholder="https://..."></div>
+      <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
+      <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="jst_main" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="jst_sub" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="jst_detail" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">SKU图工作流</label><input type="url" class="form-input" id="jst_sku" placeholder="https://..."></div>
+      <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
+      <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="jst_batch" value="20" min="1"></div>
+      <button class="btn btn-primary" onclick="saveJstConfig()">保存 JST 配置</button>
+    </form>
+  </div></div>
+</div>
+
+<!-- Shopee 工作流 -->
+<div class="tab-panel" id="tab-shopee">
+  <div class="card"><div class="card-header">Shopee 工作流 Webhook</div><div class="card-body">
+    <form onsubmit="return false">
+      <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
+      <div class="form-group"><label class="form-label">商品标题 Webhook</label><input type="url" class="form-input" id="shopee_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">SKU标题 Webhook</label><input type="url" class="form-input" id="shopee_sku_title" placeholder="https://..."></div>
+      <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
+      <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="shopee_main" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="shopee_sub" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="shopee_detail" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">SKU图工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
+      <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
+      <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="shopee_batch" value="20" min="1"></div>
+      <button class="btn btn-primary" onclick="saveShopeeConfig()">保存 Shopee 配置</button>
+    </form>
+  </div></div>
+</div>
+
+<!-- 用户管理 -->
+<div class="tab-panel" id="tab-users">
+  <div class="card"><div class="card-header">添加用户</div><div class="card-body">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input type="text" class="form-input" id="newUsername" placeholder="用户名" style="max-width:150px">
+      <input type="password" class="form-input" id="addUserPassword" placeholder="密码（至少6位）" style="max-width:180px">
+      <select class="form-input" id="newRole" style="max-width:100px">
+        <option value="user">普通用户</option><option value="admin">管理员</option>
+      </select>
+      <button class="btn btn-primary" onclick="handleAddUser()">添加用户</button>
+    </div>
+  </div></div>
+  <div class="card" style="margin-top:20px"><div class="card-header">用户列表</div><div class="card-body">
+    <div class="table-container">
+      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>算力</th><th>操作</th></tr></thead>
+      <tbody id="userListBody"></tbody></table>
+    </div>
+  </div></div>
+  <div class="card" style="margin-top:20px"><div class="card-header">用户 Webhook 配置</div><div class="card-body">
+    <div class="form-group">
+      <label class="form-label">选择用户</label>
+      <select class="form-input" id="webhookUserSelect" onchange="loadUserWebhook()"><option value="">— 请选择用户 —</option></select>
+    </div>
+    <div id="userWebhookFields" style="display:none">
+      <h4 style="margin:0 0 12px;color:var(--gray-600)">JST 工作流（留空则使用全局）</h4>
+      <div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_jst_title"></div>
+      <div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_jst_sku_title"></div>
+      <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_jst_main"></div>
+      <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_jst_sub"></div>
+      <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_jst_detail"></div>
+      <div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_jst_sku"></div>
+      <h4 style="margin:16px 0 12px;color:var(--gray-600)">Shopee 工作流（留空则使用全局）</h4>
+      <div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_shopee_title"></div>
+      <div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_shopee_sku_title"></div>
+      <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_shopee_main"></div>
+      <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_shopee_sub"></div>
+      <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_shopee_detail"></div>
+      <div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_shopee_sku"></div>
+      <button class="btn btn-primary" onclick="saveUserWebhook()">保存该用户配置</button>
+    </div>
+  </div></div>
+</div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+var currentRole='';
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  var auth=await requireAuth();if(!auth)return;
+  currentRole=localStorage.getItem('ews_role')||'';
+  document.getElementById('userInfo').textContent=(localStorage.getItem('ews_username')||'admin')+' ('+(currentRole==='admin'?'管理员':'普通用户')+')';
+  refreshNavCredits();
+  if(currentRole!=='admin'){window.location.href='/';return}
+  await loadGeneralConfig();
+});
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});
+  document.querySelector('.tab-btn[onclick*="'+name+'"]').classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='users'){loadUserList();populateWebhookUserSelect()}
+  if(name==='jst')loadJstConfig();
+  if(name==='shopee')loadShopeeConfig();
+  if(name==='general')loadGeneralConfig();
+}
+
+function g(id){return document.getElementById(id).value.trim()}
+function s(id,v){document.getElementById(id).value=v||''}
+
+// 通用
+async function loadGeneralConfig(){
+  var res=await API.getConfig('');
+  if(!res.success)return;
+  var c=res.config||{};
+  s('r2PublicUrl',c.r2_public_url);
+  s('callbackSecret',c.callback_secret);
+}
+async function saveGeneralConfig(){
+  var cfg={r2_public_url:g('r2PublicUrl'),callback_secret:g('callbackSecret')};
+  var res=await API.updateConfig(cfg,'');
+  showToast(res.success?'保存成功':(res.error||'失败'),res.success?'success':'error');
+}
+
+// JST
+async function loadJstConfig(){
+  var res=await API.getConfig('jst');
+  if(!res.success)return;
+  var c=res.config||{};
+  s('jst_title',c.n8n_title_webhook);s('jst_sku_title',c.n8n_sku_title_webhook);
+  s('jst_main',c.n8n_main_webhook);s('jst_sub',c.n8n_sub_image_webhook);
+  s('jst_detail',c.n8n_detail_webhook);s('jst_sku',c.n8n_sku_image_webhook);
+  s('jst_batch',c.push_batch_size||'20');
+}
+async function saveJstConfig(){
+  var cfg={
+    n8n_title_webhook:g('jst_title'),n8n_sku_title_webhook:g('jst_sku_title'),
+    n8n_main_webhook:g('jst_main'),n8n_sub_image_webhook:g('jst_sub'),
+    n8n_detail_webhook:g('jst_detail'),n8n_sku_image_webhook:g('jst_sku'),
+    push_batch_size:parseInt(g('jst_batch'))||20,
+  };
+  var res=await API.updateConfig(cfg,'jst');
+  showToast(res.success?'JST配置保存成功':(res.error||'失败'),res.success?'success':'error');
+}
+
+// Shopee
+async function loadShopeeConfig(){
+  var res=await API.getConfig('shopee');
+  if(!res.success)return;
+  var c=res.config||{};
+  s('shopee_title',c.n8n_title_webhook);s('shopee_sku_title',c.n8n_sku_title_webhook);
+  s('shopee_main',c.n8n_main_webhook);s('shopee_sub',c.n8n_sub_image_webhook);
+  s('shopee_detail',c.n8n_detail_webhook);s('shopee_sku',c.n8n_sku_image_webhook);
+  s('shopee_batch',c.push_batch_size||'20');
+}
+async function saveShopeeConfig(){
+  var cfg={
+    n8n_title_webhook:g('shopee_title'),n8n_sku_title_webhook:g('shopee_sku_title'),
+    n8n_main_webhook:g('shopee_main'),n8n_sub_image_webhook:g('shopee_sub'),
+    n8n_detail_webhook:g('shopee_detail'),n8n_sku_image_webhook:g('shopee_sku'),
+    push_batch_size:parseInt(g('shopee_batch'))||20,
+  };
+  var res=await API.updateConfig(cfg,'shopee');
+  showToast(res.success?'Shopee配置保存成功':(res.error||'失败'),res.success?'success':'error');
+}
+
+// 用户
+async function loadUserList(){
+  var res=await API.getUsers();
+  if(!res.success)return;
+  var sel=document.getElementById('webhookUserSelect');
+  var existing=sel.value;
+  sel.innerHTML='<option value="">— 请选择用户 —</option>';
+  res.users.forEach(function(u){sel.innerHTML+='<option value="'+u.id+'">'+u.username+(u.role==='admin'?' (管理员)':'')+'</option>'});
+  if(existing)sel.value=existing;
+  var tbody=document.getElementById('userListBody');
+  tbody.innerHTML=res.users.map(function(u){
+    var status=u.is_active?'<span style="color:var(--success)">活跃</span>':'<span style="color:var(--danger)">已禁用</span>';
+    var creditsHtml='<div class="user-credits-cell">'+
+      '<span style="font-weight:600">'+u.credits+'</span>'+
+      '<input type="number" class="form-input" id="ci_'+u.id+'" value="0" min="0" style="width:60px;font-size:12px;padding:2px 6px">'+
+      '<select class="form-input" id="ca_'+u.id+'" style="width:70px;font-size:12px;padding:2px 6px">'+
+        '<option value="add">增加</option><option value="subtract">减少</option><option value="set">设置</option>'+
+      '</select>'+
+      '<button class="btn btn-sm btn-outline" onclick="updateCredits(\''+u.id+'\')" style="font-size:11px">确认</button></div>';
+    var toggleBtn=u.id==='admin'?'—':'<button class="btn btn-sm btn-outline" onclick="toggleUser(\''+u.id+'\')" style="font-size:11px">'+(u.is_active?'禁用':'启用')+'</button>';
+    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+creditsHtml+'</td><td>'+toggleBtn+'</td></tr>';
+  }).join('');
+}
+function populateWebhookUserSelect(){loadUserList()}
+
+async function loadUserWebhook(){
+  var userId=document.getElementById('webhookUserSelect').value;
+  var fields=document.getElementById('userWebhookFields');
+  if(!userId){fields.style.display='none';return}
+  fields.style.display='block';
+  // 清空
+  ['jst_title','jst_sku_title','jst_main','jst_sub','jst_detail','jst_sku','shopee_title','shopee_sku_title','shopee_main','shopee_sub','shopee_detail','shopee_sku'].forEach(function(k){s('uwh_'+k,'')});
+  try{
+    var res=await API.getUserWebhook(userId);
+    if(res.success&&res.webhook){
+      var w=res.webhook;
+      var jst=w.jst||{};var shopee=w.shopee||{};
+      s('uwh_jst_title',jst.n8n_title_webhook);s('uwh_jst_sku_title',jst.n8n_sku_title_webhook);
+      s('uwh_jst_main',jst.n8n_main_webhook);s('uwh_jst_sub',jst.n8n_sub_image_webhook);
+      s('uwh_jst_detail',jst.n8n_detail_webhook);s('uwh_jst_sku',jst.n8n_sku_image_webhook);
+      s('uwh_shopee_title',shopee.n8n_title_webhook);s('uwh_shopee_sku_title',shopee.n8n_sku_title_webhook);
+      s('uwh_shopee_main',shopee.n8n_main_webhook);s('uwh_shopee_sub',shopee.n8n_sub_image_webhook);
+      s('uwh_shopee_detail',shopee.n8n_detail_webhook);s('uwh_shopee_sku',shopee.n8n_sku_image_webhook);
+    }
+  }catch(e){}
+}
+async function saveUserWebhook(){
+  var userId=document.getElementById('webhookUserSelect').value;
+  if(!userId){showToast('请选择用户','error');return}
+  var cfg={jst:{},shopee:{}};
+  cfg.jst.n8n_title_webhook=g('uwh_jst_title');cfg.jst.n8n_sku_title_webhook=g('uwh_jst_sku_title');
+  cfg.jst.n8n_main_webhook=g('uwh_jst_main');cfg.jst.n8n_sub_image_webhook=g('uwh_jst_sub');
+  cfg.jst.n8n_detail_webhook=g('uwh_jst_detail');cfg.jst.n8n_sku_image_webhook=g('uwh_jst_sku');
+  cfg.shopee.n8n_title_webhook=g('uwh_shopee_title');cfg.shopee.n8n_sku_title_webhook=g('uwh_shopee_sku_title');
+  cfg.shopee.n8n_main_webhook=g('uwh_shopee_main');cfg.shopee.n8n_sub_image_webhook=g('uwh_shopee_sub');
+  cfg.shopee.n8n_detail_webhook=g('uwh_shopee_detail');cfg.shopee.n8n_sku_image_webhook=g('uwh_shopee_sku');
+  var res=await API.updateUserWebhook(userId,cfg);
+  showToast(res.success?'已保存':(res.error||'保存失败'),res.success?'success':'error');
+}
+
+async function handleAddUser(){
+  var u=document.getElementById('newUsername').value.trim();
+  var p=document.getElementById('addUserPassword').value;
+  var r=document.getElementById('newRole').value;
+  if(!u||p.length<6){showToast('用户名不能为空，密码至少6位','error');return}
+  var res=await API.createUser(u,p,r);
+  if(res.success){showToast('用户创建成功','success');document.getElementById('newUsername').value='';document.getElementById('addUserPassword').value='';loadUserList();}
+  else showToast(res.error||'创建失败','error');
+}
+async function toggleUser(userId){
+  var res=await API.toggleUser(userId);
+  if(res.success){showToast(res.message,'success');loadUserList()}
+  else showToast(res.error||'操作失败','error');
+}
+async function updateCredits(userId){
+  var amount=parseInt(document.getElementById('ci_'+userId).value);
+  var action=document.getElementById('ca_'+userId).value;
+  if(isNaN(amount)||amount<0){showToast('请输入有效数值','error');return}
+  var res=await API.updateUserCredits(userId,action,amount);
+  if(res.success){showToast(res.message,'success');loadUserList();refreshNavCredits()}
+  else showToast(res.error||'操作失败','error');
+}
+async function handleChangePassword(e){
+  e.preventDefault();
+  var oldPwd=document.getElementById('oldPassword').value;
+  var newPwd=document.getElementById('newPassword').value;
+  var confirmPwd=document.getElementById('confirmPassword').value;
+  if(newPwd!==confirmPwd){showToast('两次输入的新密码不一致','error');return}
+  var res=await API.changePassword(oldPwd,newPwd);
+  if(res.success){showToast('密码修改成功！','success');['oldPassword','newPassword','confirmPassword'].forEach(function(id){document.getElementById(id).value=''})}
+  else showToast(res.error||'修改失败','error');
+}
+</script>
+</body></html>
