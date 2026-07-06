@@ -98,7 +98,7 @@
 let refFiles=[],variantFiles={};
 
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();initRefSlots();updateVariants()});
-function toggleMode(){document.getElementById('dedupHint').style.display=document.querySelector('input[name="genMode"]:checked').value==='dedup'?'block':'none'}
+function toggleMode(){}
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];
   var html='';
