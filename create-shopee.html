@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>创建商品(虾皮) - EWS</title>
+<link rel="stylesheet" href="/css/style.css">
+</head><body>
+<script src="/js/nav.js"></script>
+<div class="app-container">
+<div class="page-header"><h1 class="page-title">创建新商品 (虾皮)</h1></div>
+<div class="card"><div class="card-body">
+<form id="productForm" onsubmit="handleCreate(event)">
+  <div class="form-group">
+    <label class="form-label">商品名称 <span class="required">*</span></label>
+    <input type="text" class="form-input" id="productName" required placeholder="如：iPhone 15 Case">
+  </div>
+  <div class="form-group">
+    <label class="form-label">商品描述 <span class="required">*</span></label>
+    <textarea class="form-textarea" id="productDesc" rows="4" required placeholder="商品功能、材质、特点等"></textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">分类 ID</label>
+      <input type="text" class="form-input" id="categoryId" placeholder="如：120055">
+    </div>
+    <div class="form-group">
+      <label class="form-label">品牌 ID</label>
+      <input type="text" class="form-input" id="brandId" placeholder="如：2200345">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">封面图</label>
+    <div class="upload-zone" id="coverZone" onclick="document.getElementById('coverInput').click()" style="max-width:300px;aspect-ratio:1">
+      <input type="file" id="coverInput" accept="image/*" style="display:none" onchange="handleCoverUpload(event)">
+      <div id="coverPlaceholder"><div class="upload-text">点击上传封面图</div></div>
+      <div id="coverPreview" style="display:none;width:100%"><img id="coverPreviewImg" src="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px"></div>
+    </div>
+    <input type="hidden" id="coverImage">
+  </div>
+  <div class="form-group">
+    <label class="form-label">商品图片（最多8张，URL格式，每行一个）</label>
+    <textarea class="form-textarea" id="itemImages" rows="4" placeholder="每行一个图片URL&#10;第1行=Item Image 1&#10;第2行=Item Image 2&#10;..."></textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">重量(kg) <span class="required">*</span></label>
+      <input type="number" class="form-input" id="weightKg" value="0.1" step="0.01" min="0" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">预购天数(DTS)</label>
+      <input type="number" class="form-input" id="preOrderDts" min="0">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">长(cm)</label><input type="number" class="form-input" id="length" step="0.1" min="0"></div>
+    <div class="form-group"><label class="form-label">宽(cm)</label><input type="number" class="form-input" id="width" step="0.1" min="0"></div>
+    <div class="form-group"><label class="form-label">高(cm)</label><input type="number" class="form-input" id="height" step="0.1" min="0"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">GTIN</label><input type="text" class="form-input" id="gtin" placeholder="商品条形码"></div>
+    <div class="form-group"><label class="form-label">HS Code</label><input type="text" class="form-input" id="hsCode" placeholder="4/6/8位数字"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">税率代码</label><input type="text" class="form-input" id="taxCode" placeholder="如：GEN_18%"></div>
+    <div class="form-group"><label class="form-label">原产地</label><input type="text" class="form-input" id="originCountry" placeholder="如：China"></div>
+  </div>
+  <hr style="margin:20px 0">
+  <h4 style="margin-bottom:16px;color:var(--gray-700)">规格设置（二维）</h4>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">第一层规格名</label><input type="text" class="form-input" id="varName1" placeholder="如：颜色" value="Color"></div>
+    <div class="form-group"><label class="form-label">第二层规格名 <span class="optional">(可选)</span></label><input type="text" class="form-input" id="varName2" placeholder="如：尺码"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">变体数量</label>
+    <input type="number" class="form-input" id="variationCount" value="1" min="1" max="50" onchange="updateVariations()">
+  </div>
+  <div id="variationsContainer"></div>
+  <hr style="margin:20px 0">
+  <h4 style="margin-bottom:16px;color:var(--gray-700)">物流渠道</h4>
+  <div class="form-row" id="shippingChannels"></div>
+  <div style="display:flex;gap:12px;margin-top:24px">
+    <button type="submit" class="btn btn-primary" id="submitBtn">创建商品</button>
+    <a href="/" class="btn btn-outline">取消</a>
+  </div>
+</form>
+</div></div></div>
+<script src="/js/api.js"></script>
+<script>
+var coverFile=null;
+var channels=[{id:'5000',label:'快速(Hoa Toc)'},{id:'5001',label:'标准(Nhanh)'},{id:'5004',label:'大件'},{id:'5012',label:'当日达'},{id:'5115',label:'快速优先'}];
+
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();updateVariations();initShippingChannels()});
+function initShippingChannels(){
+  var html='';
+  for(var c of channels) html+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"> '+c.label+'</label>';
+  document.getElementById('shippingChannels').innerHTML=html;
+}
+function handleCoverUpload(e){
+  var f=e.target.files[0];if(!f)return;coverFile=f;
+  var reader=new FileReader();reader.onload=function(e2){
+    document.getElementById('coverPlaceholder').style.display='none';
+    document.getElementById('coverPreview').style.display='block';
+    document.getElementById('coverPreviewImg').src=e2.target.result;
+    document.getElementById('coverZone').classList.add('has-image');
+  };reader.readAsDataURL(f);
+}
+function updateVariations(){
+  var count=parseInt(document.getElementById('variationCount').value)||1;
+  var container=document.getElementById('variationsContainer');
+  var existing=container.querySelectorAll('.shopee-variant');
+  var html='';
+  for(var i=0;i<count;i++){
+    var ed=existing[i];
+    var o1=ed?ed.querySelector('.v-opt1')?.value||'':'';
+    var img=ed?ed.querySelector('.v-img')?.value||'':'';
+    var o2=ed?ed.querySelector('.v-opt2')?.value||'':'';
+    var price=ed?ed.querySelector('.v-price')?.value||'':'';
+    var stock=ed?ed.querySelector('.v-stock')?.value||'':'';
+    var sku=ed?ed.querySelector('.v-sku')?.value||'':'';
+    html+='<div class="variant-item shopee-variant"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariation('+i+')">删除</button>':'')+'</div>';
+    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">第一层值 <span class="required">*</span></label><input class="form-input v-opt1" placeholder="如：红色" value="'+escapeHtml(o1)+'" required></div>';
+    html+='<div class="form-group"><label style="font-size:13px">规格图URL</label><input class="form-input v-img" placeholder="规格图片URL" value="'+escapeHtml(img)+'"></div></div>';
+    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">第二层值 <span class="optional">(可选)</span></label><input class="form-input v-opt2" placeholder="如：M" value="'+escapeHtml(o2)+'"></div>';
+    html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sku" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div></div>';
+    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-price" step="0.01" min="0" value="'+escapeHtml(price)+'" required></div>';
+    html+='<div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-stock" min="0" value="'+escapeHtml(stock||'0')+'"></div></div></div>';
+  }
+  container.innerHTML=html;
+}
+function removeVariation(i){
+  var c=parseInt(document.getElementById('variationCount').value)||1;
+  if(c<=1)return;document.getElementById('variationCount').value=c-1;updateVariations();
+}
+async function handleCreate(e){
+  e.preventDefault();
+  var name=document.getElementById('productName').value.trim();
+  var desc=document.getElementById('productDesc').value.trim();
+  if(!name||!desc){showToast('请填写商品名称和描述','error');return}
+  var varItems=document.querySelectorAll('.shopee-variant');
+  for(var item of varItems){if(!item.querySelector('.v-opt1').value.trim()){showToast('请填写所有变体','error');return}}
+  var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
+  var initRes=await API.initTask('shopee');
+  if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建商品';return}
+  var taskId=initRes.task_id;
+
+  // 上传封面图
+  var coverUrl='';
+  if(coverFile){
+    btn.textContent='上传封面图...';
+    var upRes=await API.uploadFile(taskId,coverFile,'covers');
+    if(upRes.success) coverUrl=upRes.url||upRes.key;
+  }
+
+  // 收集变体
+  var variations=[];
+  var integrationNo=taskId.slice(0,8);
+  for(var i=0;i<varItems.length;i++){
+    variations.push({
+      id:uuid(),product_id:taskId,integration_no:integrationNo,
+      option1:varItems[i].querySelector('.v-opt1').value.trim(),
+      image_per_variation:varItems[i].querySelector('.v-img').value.trim(),
+      option2:varItems[i].querySelector('.v-opt2').value.trim(),
+      price:parseFloat(varItems[i].querySelector('.v-price').value)||0,
+      stock:parseInt(varItems[i].querySelector('.v-stock').value)||0,
+      sku:varItems[i].querySelector('.v-sku').value.trim(),
+    });
+  }
+
+  // 图片URL（手动输入的）
+  var imgLines=document.getElementById('itemImages').value.trim().split('\n').filter(Boolean);
+
+  btn.textContent='提交...';
+  // 提交商品数据到后端 updateTask 端点（平台自行识别为shopee后存到 shopee 表）
+  var submitRes=await API.updateTask(taskId,{
+    name,task_description:desc,category_id:document.getElementById('categoryId').value.trim(),
+    brand_id:document.getElementById('brandId').value.trim(),
+    cover_image:coverUrl,images:JSON.stringify(imgLines),
+    weight_kg:parseFloat(document.getElementById('weightKg').value)||0,
+    length_cm:parseFloat(document.getElementById('length').value)||null,
+    width_cm:parseFloat(document.getElementById('width').value)||null,
+    height_cm:parseFloat(document.getElementById('height').value)||null,
+    gtin:document.getElementById('gtin').value.trim(),
+    hs_code:document.getElementById('hsCode').value.trim(),
+    tax_code:document.getElementById('taxCode').value.trim(),
+    origin_country:document.getElementById('originCountry').value.trim(),
+    variation_name1:document.getElementById('varName1').value.trim(),
+    variation_name2:document.getElementById('varName2').value.trim(),
+    pre_order_dts:parseInt(document.getElementById('preOrderDts').value)||null,
+    shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-chk:checked')).map(function(cb){return cb.value})),
+    variations:variations,
+  });
+  if(submitRes.success){showToast('商品创建成功！','success');setTimeout(()=>{window.location.href='/'},1500)}
+  else{showToast(submitRes.error||'提交失败','error');btn.disabled=false;btn.textContent='创建商品'}
+}
+function uuid(){return Math.random().toString(36).slice(2,10)}
+function escapeHtml(s){if(s===undefined||s===null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+</script>
+</body></html>
