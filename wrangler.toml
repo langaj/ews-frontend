@@ -1,0 +1,12 @@
+# EWS 前端 - Cloudflare Pages 配置
+name = "ews-frontend"
+compatibility_date = "2025-04-01"
+
+[build]
+  command = ""
+  output_dir = "/"
+
+[env.production]
+  routes = [
+    { pattern = "ews.langaj.cn" }
+  ]
