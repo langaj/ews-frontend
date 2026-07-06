@@ -24,7 +24,8 @@
   var rightHtml = '';
   if (isLoggedIn) {
     rightHtml += '<span class="nav-credits">算力: <b id="navCredits">\u2026</b>';
-    rightHtml += '<a href="javascript:void(0)" id="navRefreshCredits" class="nav-refresh">刷新</a></span>';
+    rightHtml += '<a href="javascript:void(0)" id="navRefreshCredits" class="nav-refresh">刷新</a>';
+    rightHtml += '<a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);padding:6px 12px">退出</a></span>';
   }
 
   var nav = document.createElement('nav');

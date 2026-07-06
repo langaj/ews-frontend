@@ -108,6 +108,13 @@ async function handleLogin(e) {
 
 function hideLoginModal() { if (loginModalEl) { loginModalEl.classList.remove('show'); loginModalEl.remove(); loginModalEl = null; } }
 
+function handleLogout() {
+  API._clearToken();
+  localStorage.removeItem('ews_role');
+  localStorage.removeItem('ews_username');
+  location.reload();
+}
+
 function showToast(msg, type) {
   const t = document.createElement('div');
   t.className = 'toast toast-' + (type || 'info');
