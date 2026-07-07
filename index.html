@@ -68,8 +68,8 @@ async function doExport(taskId){
   var res=await API.exportTask(taskId);
   if(!res.success||!res.rows||!res.rows.length){showToast(res.error||'无数据','error');return}
   try{
-    var keys=Object.keys(res.rows[0]);var wsData=[keys];
-    for(var r of res.rows) wsData.push(keys.map(function(k){return r[k]}));
+    var keys=res.columns||Object.keys(res.rows[0]);var wsData=[keys];
+    for(var r of res.rows) wsData.push(Array.isArray(r)?r:keys.map(function(k){return r[k]}));
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=keys.map(function(){return{wch:20}});
     var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'导出');
