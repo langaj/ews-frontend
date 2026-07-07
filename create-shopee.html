@@ -171,18 +171,19 @@ async function handleCreate(e){
   if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建商品';return}
   var taskId=initRes.task_id;btn.textContent='上传参考图...';
   var auxUrls=[];var refImg='';
-  for(var ri=0;ri<5;ri++){
-    var rf=refFiles[ri];if(!rf)continue;
-    var upRes=await uploadFile(taskId,rf,'references');
-    if(!upRes.success){showToast('参考图上传失败','error');btn.disabled=false;btn.textContent='创建商品';return}
-    if(ri===0)refImg=upRes.url||upRes.key;
-    else auxUrls.push(upRes.url||upRes.key);
+  for(var ri=0;ri<5;ri++){var rf=refFiles[ri];if(!rf)continue;
+    var upRes=await uploadFile(taskId,rf,'references');if(!upRes.success){showToast('参考图上传失败','error');btn.disabled=false;return}
+    if(ri===0)refImg=upRes.url||upRes.key;else auxUrls.push(upRes.url||upRes.key);
   }
   var variations=[];
   for(var i=0;i<varItems.length;i++){
+    btn.textContent='上传SKU参考图 '+(i+1)+'/'+varItems.length+'...';
+    var skuImgUrl='';var skuFile=variantImgFiles[i];
+    if(skuFile){var sRes=await uploadFile(taskId,skuFile,'variants');if(sRes.success) skuImgUrl=sRes.url||sRes.key;}
     variations.push({
       option1:varItems[i].querySelector('.v-o1').value.trim(),
       option2:varItems[i].querySelector('.v-o2').value.trim(),
+      image_per_variation:skuImgUrl||varItems[i].querySelector('.sku-img-input').value||'',
       price:parseFloat(varItems[i].querySelector('.v-pr').value)||0,
       stock:parseInt(varItems[i].querySelector('.v-st').value)||0,
       sku:varItems[i].querySelector('.v-sk').value.trim(),
