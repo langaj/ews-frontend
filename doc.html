@@ -240,7 +240,7 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>图片队列默认最多 3 个活跃处理任务，单轮最多消费 3 条。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
@@ -289,7 +289,8 @@ ${WEBHOOKS.slice(2).map(function(w){
 <pre>ews_config      (key, value, platform)  — 分平台配置
 ews_users       (id, username, password_hash, role, credits, webhook_config)
 ews_tasks       (id, platform, name, status, user_id)  — 统一任务索引
-ews_callback_queue — 共享回调队列（成功处理后删除，失败保留重试）</pre>
+ews_callback_queue — 共享回调队列（成功处理后删除，失败保留重试）
+ews_image_queue    — 共享图片处理队列（限制下载/R2写入并发）</pre>
 
 <h4>聚水潭 (ews_jst_)</h4>
 <pre>ews_jst_tasks       — 任务扩展信息（图片数量、模式等）
