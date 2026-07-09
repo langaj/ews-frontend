@@ -65,9 +65,11 @@ function showShopeeDetail(t){
 }
 function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
 async function doExport(taskId){
+  if(!window.XLSX){showToast('导出组件加载中，请稍后再试','error');return}
   var res=await API.exportTask(taskId);
   if(!res.success||!res.rows||!res.rows.length){showToast(res.error||'无数据','error');return}
   try{
+    if(res.export_format==='shopee'){await exportShopeeTemplate(res,taskId);showToast('导出成功！','success');return}
     var keys=res.columns||Object.keys(res.rows[0]);var wsData=[keys];
     for(var r of res.rows) wsData.push(Array.isArray(r)?r:keys.map(function(k){return r[k]}));
     var ws=XLSX.utils.aoa_to_sheet(wsData);
@@ -78,6 +80,19 @@ async function doExport(taskId){
     showToast('导出成功！','success');
   }catch(err){showToast('导出失败: '+err.message,'error')}
 }
+async function exportShopeeTemplate(res,taskId){
+  var tpl=await fetch('/templates/Shopee_mass_upload_2026-07-03_basic_template.xlsx');
+  if(!tpl.ok)throw new Error('找不到Shopee官方模板文件');
+  var wb=XLSX.read(await tpl.arrayBuffer(),{type:'array'});
+  var ws=wb.Sheets['Template']||wb.Sheets[wb.SheetNames[0]];
+  XLSX.utils.sheet_add_aoa(ws,res.rows,{origin:'A7'});
+  var range=XLSX.utils.decode_range(ws['!ref']||'A1:AP6');
+  range.e.r=Math.max(range.e.r,6+res.rows.length);
+  range.e.c=Math.max(range.e.c,(res.rows[0]||[]).length-1);
+  ws['!ref']=XLSX.utils.encode_range(range);
+  XLSX.writeFile(wb,'Shopee_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

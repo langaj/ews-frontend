@@ -105,6 +105,7 @@
 <script src="/js/api.js"></script>
 <script>
 var refFiles=[];
+var variantImgFiles=[];
 var channels=[{id:'5000',label:'快速'},{id:'5001',label:'标准'},{id:'5004',label:'大件'},{id:'5012',label:'当日达'},{id:'5115',label:'快速优先'}];
 
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();initRefSlots();updateVariants();initShipping()});
@@ -140,12 +141,14 @@ function updateVariants(){
     var price=ed?ed.querySelector('.v-pr')?.value||'':'';
     var stock=ed?ed.querySelector('.v-st')?.value||'':'';
     var sku=ed?ed.querySelector('.v-sk')?.value||'':'';
+    var skuImg=ed?ed.querySelector('.sku-img-input')?.value||'':'';
     html+='<div class="variant-item v-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">颜色 <span class="required">*</span></label><input class="form-input v-o1" placeholder="如：红色" value="'+escapeHtml(o1)+'" required></div>';
     html+='<div class="form-group"><label style="font-size:13px">尺码</label><input class="form-input v-o2" placeholder="如：M" value="'+escapeHtml(o2)+'"></div></div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="0" value="'+escapeHtml(price)+'" required></div>';
     html+='<div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(stock||'0')+'"></div></div>';
-    html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div></div>';
+    html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div>';
+    html+='<div class="form-group"><label style="font-size:13px">SKU图片URL</label><input class="form-input sku-img-input" placeholder="可选，留空则由工作流生成" value="'+escapeHtml(skuImg)+'"></div></div>';
   }
   container.innerHTML=html;
 }
@@ -183,7 +186,7 @@ async function handleCreate(e){
     variations.push({
       option1:varItems[i].querySelector('.v-o1').value.trim(),
       option2:varItems[i].querySelector('.v-o2').value.trim(),
-      image_per_variation:skuImgUrl||varItems[i].querySelector('.sku-img-input').value||'',
+      image_per_variation:skuImgUrl||(varItems[i].querySelector('.sku-img-input')?.value.trim()||''),
       price:parseFloat(varItems[i].querySelector('.v-pr').value)||0,
       stock:parseInt(varItems[i].querySelector('.v-st').value)||0,
       sku:varItems[i].querySelector('.v-sk').value.trim(),
@@ -195,6 +198,7 @@ async function handleCreate(e){
     main_description:document.getElementById('mainDescription').value.trim(),
     detail_description:document.getElementById('detailDescription').value.trim(),
     reference_image:refImg,auxiliary_images:JSON.stringify(auxUrls),
+    cover_image:refImg,images:JSON.stringify(auxUrls),
     main_image_count:parseInt(document.getElementById('mainImageCount').value),
     detail_image_count:parseInt(document.getElementById('detailImageCount').value),
     mode:document.querySelector('input[name="genMode"]:checked').value,
