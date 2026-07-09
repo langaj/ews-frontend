@@ -120,6 +120,35 @@ function handleRefUpload(e,i){var f=e.target.files[0];if(!f)return;refFiles[i]=f
     document.getElementById('refZone'+i).classList.add('has-image');
   };reader.readAsDataURL(f);
 }
+function precisionOptions(selected){
+  selected=parseInt(selected);if(isNaN(selected))selected=0;
+  var opts=[[2,'2位小数'],[1,'1位小数'],[0,'整数'],[-1,'十位归零'],[-2,'百位归零']];
+  return opts.map(function(o){return '<option value="'+o[0]+'"'+(selected===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('');
+}
+function togglePriceFloat(cb){
+  var item=cb.closest('.variant-item');
+  var on=cb.checked;
+  item.querySelector('.price-single').style.display=on?'none':'';
+  item.querySelector('.price-range').style.display=on?'':'none';
+  var price=item.querySelector('.v-price');
+  var min=item.querySelector('.v-price-min');
+  var max=item.querySelector('.v-price-max');
+  if(on&&price&&price.value){if(!min.value)min.value=price.value;if(!max.value)max.value=price.value}
+}
+function readPriceConfig(item,index,requiredPrice){
+  var enabled=item.querySelector('.v-price-float')?.checked||false;
+  var precision=parseInt(item.querySelector('.v-price-precision')?.value);
+  if(isNaN(precision))precision=0;
+  if(enabled){
+    var min=parseFloat(item.querySelector('.v-price-min')?.value);
+    var max=parseFloat(item.querySelector('.v-price-max')?.value);
+    if(isNaN(min)||isNaN(max)||max<min){showToast('请检查变体 #'+(index+1)+' 的价格浮动区间','error');return null}
+    return {price:min,price_float_enabled:1,price_min:min,price_max:max,price_precision:precision};
+  }
+  var raw=item.querySelector('.v-price')?.value||'';
+  if(requiredPrice&&!raw){showToast('请填写变体 #'+(index+1)+' 的价格','error');return null}
+  return {price:raw||undefined,price_float_enabled:0,price_precision:precision};
+}
 function updateVariants(){
   var count=parseInt(document.getElementById('variantCount').value)||1;
   var container=document.getElementById('variantsContainer');
@@ -134,6 +163,10 @@ function updateVariants(){
     var hasImg=ed?ed.querySelector('.upload-zone').classList.contains('has-image'):false;
     var imgUrl=ed?ed.querySelector('.v-img-input')?.value||'':'';
     var price=ed?ed.querySelector('.v-price')?.value||'':'';
+    var floatOn=ed?ed.querySelector('.v-price-float')?.checked||false:false;
+    var priceMin=ed?ed.querySelector('.v-price-min')?.value||'':'';
+    var priceMax=ed?ed.querySelector('.v-price-max')?.value||'':'';
+    var precision=ed?ed.querySelector('.v-price-precision')?.value||'0':'0';
     var skuDesc=ed?ed.querySelector('.v-sku-desc')?.value||'':'';
     html+='<div class="variant-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
     html+='<div class="form-group"><label style="font-size:13px;font-weight:600">变体名称 <span class="required">*</span></label><input class="form-input v-name" placeholder="如：红色" value="'+escapeHtml(tier1Val)+'" required></div>';
@@ -143,7 +176,11 @@ function updateVariants(){
     html+='<div class="variant-placeholder"'+(hasImg?'style="display:none"':'')+'><div class="upload-text">点击上传白底参考图</div></div>';
     html+='<div class="variant-preview"'+(hasImg?'':'style="display:none"')+'><img src="'+imgUrl+'" style="max-width:100%;max-height:150px;border-radius:6px" id="variantPreviewImg'+i+'"></div></div>';
     html+='<input type="hidden" class="v-img-input" value="'+escapeHtml(imgUrl)+'" required></div>';
-    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">基本售价(¥)</label><input type="number" class="form-input v-price" step="0.01" min="0" value="'+escapeHtml(price)+'"></div></div>';
+    html+='<div class="form-group price-single" style="'+(floatOn?'display:none':'')+'"><label style="font-size:13px;font-weight:600">基本售价(¥)</label><input type="number" class="form-input v-price" step="0.01" min="0" value="'+escapeHtml(price)+'"></div></div>';
+    html+='<label style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;font-size:13px"><input type="checkbox" class="v-price-float" onchange="togglePriceFloat(this)"'+(floatOn?' checked':'')+'> 启用价格浮动</label>';
+    html+='<div class="form-row price-range" style="'+(floatOn?'':'display:none')+'"><div class="form-group"><label style="font-size:13px;font-weight:600">最低价</label><input type="number" class="form-input v-price-min" step="0.01" min="0" value="'+escapeHtml(priceMin)+'"></div>';
+    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">最高价</label><input type="number" class="form-input v-price-max" step="0.01" min="0" value="'+escapeHtml(priceMax)+'"></div>';
+    html+='<div class="form-group"><label style="font-size:13px;font-weight:600">取价精度</label><select class="form-input v-price-precision">'+precisionOptions(precision)+'</select></div></div>';
     html+='<div class="form-group"><label style="font-size:13px;font-weight:600">SKU图描述 <span class="optional">(可选)</span></label><textarea class="form-textarea v-sku-desc" rows="2" style="font-size:13px;min-height:40px">'+escapeHtml(skuDesc)+'</textarea></div>';
     html+='</div>';
   }
@@ -185,6 +222,7 @@ async function handleCreate(e){
   if(!refTitle){showToast('请填写参考标题','error');return}
   var variantItems=document.querySelectorAll('.variant-item');
   for(var item of variantItems){if(!item.querySelector('.v-name').value.trim()){showToast('请填写所有变体','error');return}}
+  for(var vi=0;vi<variantItems.length;vi++){if(!readPriceConfig(variantItems[vi],vi,false))return}
   var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
   var initRes=await API.initTask('jst');
   if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建任务';return}
@@ -204,10 +242,16 @@ async function handleCreate(e){
     var file=variantFiles[i];if(!file){showToast('变体 #'+(i+1)+' 未选择白底图','error');btn.disabled=false;btn.textContent='创建任务';return}
     var vRes=await uploadFile(taskId,file,'variants');
     if(!vRes.success){showToast('变体图上传失败','error');btn.disabled=false;btn.textContent='创建任务';return}
+    var pricing=readPriceConfig(variantItems[i],i,false);
+    if(!pricing){btn.disabled=false;btn.textContent='创建任务';return}
     variants.push({
       name:vname,
       white_bg_image:vRes.url||vRes.key,
-      price:variantItems[i].querySelector('.v-price')?.value||undefined,
+      price:pricing.price,
+      price_float_enabled:pricing.price_float_enabled,
+      price_min:pricing.price_min,
+      price_max:pricing.price_max,
+      price_precision:pricing.price_precision,
       sku_description:variantItems[i].querySelector('.v-sku-desc')?.value.trim()||'',
     });
   }

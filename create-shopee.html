@@ -39,8 +39,8 @@
   <div class="form-row">
     <div class="form-group">
       <label class="form-label">主图/附图总量</label>
-      <input type="number" class="form-input" id="mainImageCount" value="5" min="5" max="9" required>
-      <div class="form-hint">默认5(1封面+4商品图)，最多9</div>
+      <input type="number" class="form-input" id="mainImageCount" value="9" min="5" max="9" required>
+      <div class="form-hint">默认9(1封面+8附图)，最多9；去重模式第2套开始只生成封面图</div>
     </div>
     <div class="form-group">
       <label class="form-label">详情图数量</label>
@@ -142,6 +142,38 @@ function handleRefUpload(e,i){var f=e.target.files[0];if(!f)return;refFiles[i]=f
     document.getElementById('refZone'+i).classList.add('has-image');
   };reader.readAsDataURL(f);
 }
+function precisionOptions(selected){
+  selected=parseInt(selected);if(isNaN(selected))selected=0;
+  var opts=[[2,'2位小数'],[1,'1位小数'],[0,'整数'],[-1,'十位归零'],[-2,'百位归零']];
+  return opts.map(function(o){return '<option value="'+o[0]+'"'+(selected===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('');
+}
+function togglePriceFloat(cb){
+  var item=cb.closest('.v-item');
+  var on=cb.checked;
+  item.querySelector('.price-single').style.display=on?'none':'';
+  item.querySelector('.price-range').style.display=on?'':'none';
+  var price=item.querySelector('.v-pr');
+  var min=item.querySelector('.v-price-min');
+  var max=item.querySelector('.v-price-max');
+  if(price)price.required=!on;
+  if(min)min.required=on;
+  if(max)max.required=on;
+  if(on&&price&&price.value){if(!min.value)min.value=price.value;if(!max.value)max.value=price.value}
+}
+function readPriceConfig(item,index,requiredPrice){
+  var enabled=item.querySelector('.v-price-float')?.checked||false;
+  var precision=parseInt(item.querySelector('.v-price-precision')?.value);
+  if(isNaN(precision))precision=0;
+  if(enabled){
+    var min=parseFloat(item.querySelector('.v-price-min')?.value);
+    var max=parseFloat(item.querySelector('.v-price-max')?.value);
+    if(isNaN(min)||isNaN(max)||max<min){showToast('请检查变体 #'+(index+1)+' 的价格浮动区间','error');return null}
+    return {price:min,price_float_enabled:1,price_min:min,price_max:max,price_precision:precision};
+  }
+  var raw=item.querySelector('.v-pr')?.value||'';
+  if(requiredPrice&&!raw){showToast('请填写变体 #'+(index+1)+' 的价格','error');return null}
+  return {price:parseFloat(raw)||0,price_float_enabled:0,price_precision:precision};
+}
 function updateVariants(){
   var count=parseInt(document.getElementById('variantCount').value)||1;
   var container=document.getElementById('variantsContainer');
@@ -152,14 +184,22 @@ function updateVariants(){
     var o1=ed?ed.querySelector('.v-o1')?.value||'':'';
     var o2=ed?ed.querySelector('.v-o2')?.value||'':'';
     var price=ed?ed.querySelector('.v-pr')?.value||'':'';
+    var floatOn=ed?ed.querySelector('.v-price-float')?.checked||false:false;
+    var priceMin=ed?ed.querySelector('.v-price-min')?.value||'':'';
+    var priceMax=ed?ed.querySelector('.v-price-max')?.value||'':'';
+    var precision=ed?ed.querySelector('.v-price-precision')?.value||'0':'0';
     var stock=ed?ed.querySelector('.v-st')?.value||'':'';
     var sku=ed?ed.querySelector('.v-sk')?.value||'':'';
     var hasImg=!!variantImgFiles[i];
     html+='<div class="variant-item v-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">颜色 <span class="required">*</span></label><input class="form-input v-o1" placeholder="如：红色" value="'+escapeHtml(o1)+'" required></div>';
     html+='<div class="form-group"><label style="font-size:13px">尺码</label><input class="form-input v-o2" placeholder="如：M" value="'+escapeHtml(o2)+'"></div></div>';
-    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="0" value="'+escapeHtml(price)+'" required></div>';
+    html+='<div class="form-row"><div class="form-group price-single" style="'+(floatOn?'display:none':'')+'"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="0" value="'+escapeHtml(price)+'"'+(floatOn?'':' required')+'></div>';
     html+='<div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(stock||'0')+'"></div></div>';
+    html+='<label style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;font-size:13px"><input type="checkbox" class="v-price-float" onchange="togglePriceFloat(this)"'+(floatOn?' checked':'')+'> 启用价格浮动</label>';
+    html+='<div class="form-row price-range" style="'+(floatOn?'':'display:none')+'"><div class="form-group"><label style="font-size:13px">最低价 <span class="required">*</span></label><input type="number" class="form-input v-price-min" step="0.01" min="0" value="'+escapeHtml(priceMin)+'"'+(floatOn?' required':'')+'></div>';
+    html+='<div class="form-group"><label style="font-size:13px">最高价 <span class="required">*</span></label><input type="number" class="form-input v-price-max" step="0.01" min="0" value="'+escapeHtml(priceMax)+'"'+(floatOn?' required':'')+'></div>';
+    html+='<div class="form-group"><label style="font-size:13px">取价精度</label><select class="form-input v-price-precision">'+precisionOptions(precision)+'</select></div></div>';
     html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div>';
     html+='<div class="form-group"><label style="font-size:13px">SKU参考图 <span class="required">*</span></label>';
     html+='<div class="upload-zone'+(hasImg?' has-image':'')+'" onclick="document.getElementById(\'variantInput'+i+'\').click()">';
@@ -198,6 +238,7 @@ async function handleCreate(e){
   var varItems=document.querySelectorAll('.v-item');
   for(var item of varItems){if(!item.querySelector('.v-o1').value.trim()){showToast('请填写所有变体颜色','error');return}}
   for(var vi=0;vi<varItems.length;vi++){if(!variantImgFiles[vi]){showToast('请上传变体 #'+(vi+1)+' 的SKU参考图','error');return}}
+  for(var pi=0;pi<varItems.length;pi++){if(!readPriceConfig(varItems[pi],pi,true))return}
   var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
   var initRes=await API.initTask('shopee');
   if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建商品';return}
@@ -212,11 +253,17 @@ async function handleCreate(e){
     btn.textContent='上传SKU参考图 '+(i+1)+'/'+varItems.length+'...';
     var skuImgUrl='';var skuFile=variantImgFiles[i];
     if(skuFile){var sRes=await uploadFile(taskId,skuFile,'variants');if(sRes.success) skuImgUrl=sRes.url||sRes.key;}
+    var pricing=readPriceConfig(varItems[i],i,true);
+    if(!pricing){btn.disabled=false;btn.textContent='创建商品';return}
     variations.push({
       option1:varItems[i].querySelector('.v-o1').value.trim(),
       option2:varItems[i].querySelector('.v-o2').value.trim(),
       image_per_variation:skuImgUrl,
-      price:parseFloat(varItems[i].querySelector('.v-pr').value)||0,
+      price:pricing.price,
+      price_float_enabled:pricing.price_float_enabled,
+      price_min:pricing.price_min,
+      price_max:pricing.price_max,
+      price_precision:pricing.price_precision,
       stock:parseInt(varItems[i].querySelector('.v-st').value)||0,
       sku:varItems[i].querySelector('.v-sk').value.trim(),
     });

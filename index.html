@@ -95,7 +95,7 @@ async function showShopeeDetail(t){
   html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(p.mode||'full')+' <span class="muted">'+done+'/'+(p.sub_tasks||[]).length+' 子任务完成</span></div></div>';
   html+='<div class="detail-section"><div class="detail-label">分类</div><div class="detail-value">'+escapeHtml(p.category_id||'')+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">规格</div><div class="detail-value">'+escapeHtml((p.variation_name1||'')+(p.variation_name2?'/'+p.variation_name2:''))+' | '+v+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">封面/附图: '+(p.main_image_count||5)+' 详情图: '+(p.detail_image_count||0)+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">封面/附图: '+(p.main_image_count||9)+' 详情图: '+(p.detail_image_count||0)+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div>';
   html+=await renderPushPlans(t.id);
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';

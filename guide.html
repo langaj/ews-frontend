@@ -43,7 +43,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           <ol>
             <li>进入 <strong>创建(聚水潭)</strong>，填写任务名称、商品描述、生成套数、生成模式。</li>
             <li>上传核心参考图和辅助参考图；核心参考图决定商品主体，辅助参考图用于补充角度、材质、细节。</li>
-            <li>填写颜色、尺码、价格、库存、SKU 等变体信息。</li>
+            <li>填写颜色、尺码、价格、库存、SKU 等变体信息；需要每套链接价格不同，可在单个变体里启用价格浮动。</li>
             <li>提交任务后在任务列表点击推送，等待标题、SKU 标题、主图、详情图、SKU 图全部完成。</li>
             <li>完成后导出聚水潭表格，导出的图片 URL 来自系统保存到 R2 图床的生成结果。</li>
           </ol>
@@ -57,6 +57,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>任务名称</td><td>给自己识别批次用，例如“手机壳-透明款-7月”。</td><td>影响任务列表展示，也会作为 AI 生成标题的参考。</td></tr>
               <tr><td>参考图</td><td>核心图必须上传；辅助图可上传不同角度、包装、细节。</td><td>只作为 AI 输入，不直接写入最终导出表。</td></tr>
               <tr><td>生成套数</td><td>需要多少个商品款式就填多少套。</td><td>每套会生成独立标题和商品图片。</td></tr>
+              <tr><td>价格浮动</td><td>默认关闭；开启后给单个变体填写最低价、最高价和取价精度。</td><td>每套商品导出时会在区间内稳定取价；精度可选 2/1/0 位小数，或十位/百位归零。</td></tr>
               <tr><td>全量生成</td><td>每套都生成完整主图、详情图、SKU 图。</td><td>成本更高，但差异最大。</td></tr>
               <tr><td>去重生成</td><td>多套商品共享部分通用图，只保留必要差异。</td><td>适合只换封面或轻微差异的批量生成。</td></tr>
               <tr><td>颜色/尺码</td><td>颜色是一级规格，尺码是二级规格；没有尺码可留空。</td><td>决定 SKU 组合。</td></tr>
@@ -115,10 +116,10 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>任务名称</td><td>内部批次名，例如“手机壳-越南站-透明款”。</td><td>用于任务列表，也会传给 AI 作为标题参考。</td></tr>
               <tr><td>商品描述</td><td>写材质、功能、包装、适用场景，尽量完整。</td><td>Shopee 模板要求 Product Description 100~3000 字符。</td></tr>
               <tr><td>参考标题</td><td>放你希望 AI 学习的标题风格，可以多行。</td><td>用于生成 Product Name 和 SKU 标题，不直接导出。</td></tr>
-              <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。</td></tr>
+              <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>详情图生成描述</td><td>写卖点、结构、场景、参数表达。</td><td>仅在详情图数量大于 0 时生效；当前 basic template 暂不导出详情图，可在任务列表打包下载。</td></tr>
               <tr><td>详情图数量</td><td>默认 0。只有需要额外归档详情素材时才填 1~9。</td><td>Shopee basic template 没有详情图字段，填 0 时系统不会要求详情图工作流。</td></tr>
-              <tr><td>生成模式</td><td>新款差异大选全量；同款换封面/颜色选去重。</td><td>去重模式下第 2 套开始复用第 1 套附图、SKU 图；详情图数量大于 0 时也复用详情图。</td></tr>
+              <tr><td>生成模式</td><td>新款差异大选全量；同款换封面/颜色选去重。</td><td>去重模式下第 2 套开始只生成封面图，并复用第 1 套附图、SKU 图；详情图数量大于 0 时也复用详情图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
               <tr><td>分类 ID</td><td>建议从 Shopee Seller Center 的 Category Tree 查。</td><td>模板说明：可从 Category Tree 选择；留空时 Shopee 可能推荐类目。准确类目有利于搜索和属性匹配。</td></tr>
               <tr><td>品牌 ID</td><td>当前可留空。</td><td>当前 basic Template A~AP 没有 Brand 列，系统不导出品牌 ID。类目专用模板中 Brand 可能必填，应使用有效品牌或 no brand。</td></tr>
@@ -127,7 +128,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>规格名1</td><td>通常填颜色、款式。</td><td>官方要求 1~14 字符。</td></tr>
               <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
               <tr><td>规格名2/规格值2</td><td>有尺码时填写，例如 Size / M。</td><td>存在二级规格时必须成对填写。</td></tr>
-              <tr><td>价格</td><td>按越南站 VND 填数字。</td><td>当前模板规则为 1000~120000000，最高价/最低价比例不超过 5。</td></tr>
+              <tr><td>价格</td><td>按越南站 VND 填数字；也可在单个变体启用价格浮动。</td><td>当前模板规则为 1000~120000000；浮动价格会按每套商品在区间内取值。</td></tr>
               <tr><td>库存</td><td>每个变体库存。</td><td>官方范围 0~10000000。</td></tr>
               <tr><td>SKU</td><td>店铺内唯一，建议简短。</td><td>官方要求小于 100 字符；系统会加上套图父 SKU 前缀防止重复。</td></tr>
               <tr><td>SKU 参考图</td><td>每个一级规格上传一张清晰参考图。</td><td>只作为 AI 输入，最终导出使用生成后的 <code>sku_N</code>。</td></tr>
