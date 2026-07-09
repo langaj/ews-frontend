@@ -45,7 +45,7 @@ const PLATFORM_INFO = {
 const SIDEBAR = [
   {t:'概览',s:true},{t:'系统架构',s:false},
   {t:'认证',s:true},{t:'登录与验证',s:false},{t:'权限矩阵',s:false},
-  {t:'API 接口',s:true},{t:'配置',s:false},{t:'任务(通用)',s:false},{t:'JST 任务',s:false},{t:'Shopee 商品',s:false},{t:'回调',s:false},{t:'上传',s:false},{t:'用户管理',s:false},
+  {t:'API 接口',s:true},{t:'配置',s:false},{t:'任务(通用)',s:false},{t:'状态机与算力',s:false},{t:'JST 任务',s:false},{t:'Shopee 商品',s:false},{t:'回调',s:false},{t:'上传',s:false},{t:'用户管理',s:false},
   {t:'工作流推送体',s:true},{t:'标题类',s:false},{t:'图片类',s:false},
   {t:'导出格式',s:true},{t:'聚水潭导出',s:false},{t:'Shopee导出',s:false},
   {t:'数据库',s:true},{t:'表结构',s:false},{t:'初始化',s:false},
@@ -64,7 +64,7 @@ const EP = [
   {m:'PUT',p:'/api/tasks/:id',d:'更新任务(JST/Shopee，按任务平台自动识别请求体)',a:true},
   {m:'DELETE',p:'/api/tasks/:id',d:'删除任务(含R2清理)',a:true},
   {m:'PUT',p:'/api/tasks/:id/status',d:'更新状态',a:true,b:{status:'pending|processing|completed|failed'}},
-  {m:'POST',p:'/api/tasks/:id/push',d:'推送(JST/Shopee，按任务平台自动识别)',a:true,b:{test_mode:'boolean(可选，admin前端入口使用)'}},
+  {m:'POST',p:'/api/tasks/:id/push',d:'统一推送(系统按任务ID自动识别平台与工作流地址)',a:true,b:{test_mode:'boolean(可选，admin前端入口使用)'}},
   {m:'GET',p:'/api/tasks/:id/plans',d:'推送计划列表',a:true},
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
@@ -81,12 +81,12 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_task_count生成N个标题后批量回调'},
-  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',variants:'JST: [{id,name}]；Shopee: [{id,name,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length'},
+  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_task_count生成N个标题后批量回调；不需要传platform'},
+  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length；option2不存在时为空'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
-  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'变体名',variant_option2:'Shopee二级规格值',white_bg_image:'JST白底图URL / Shopee SKU参考图URL',sku_image:'Shopee SKU参考图URL',image_type:"'sku'",image_position:'变体索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'每个变体推送一次'},
+  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'变体名',variant_option2:'二级规格值(可为空)',white_bg_image:'变体参考图或白底图URL',sku_image:'变体参考图URL(可为空)',image_type:"'sku'",image_position:'变体索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'每个变体推送一次；工作流只按字段处理，不需要判断平台'},
 ];
 
 const SIDEBAR_HTML = SIDEBAR.map(function(s){return s.s?'<div class="sec-title">'+s.t+'</div>':'<a href="#'+s.t+'">'+s.t+'</a>'}).join('');
@@ -132,11 +132,11 @@ Cookie: ews_token={token}</pre>
 
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
-<div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。</div>
+<div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
-<div class="note"><strong>任务ID体系混用：</strong>JST 和 Shopee 共用同一套 8 字符 task_id。通过 <code>platform</code> 字段区分。任务列表自动标注平台标签。</div>
+<div class="note"><strong>任务ID体系：</strong>JST 和 Shopee 共用同一套 8 字符 <code>task_id</code>。平台归属只保存在系统内部的 <code>ews_tasks.platform</code>，外部推送、回调和导出接口都以 <code>task_id</code> 为路由键。</div>
 <h3>双平台 updateTask 兼容规则</h3>
 <div class="note">同一个 <code>PUT /api/tasks/:id</code> 会先读取 <code>ews_tasks.platform</code>，再进入 JST 或 Shopee 的保存逻辑。调用方不需要额外传平台字段，但必须先用 <code>POST /api/tasks/init</code> 创建正确平台的任务。</div>
 <h4>JST 请求体核心字段</h4>
@@ -207,6 +207,28 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><td><code>price_min</code>/<code>price_max</code></td><td>价格区间。Shopee 导出前仍校验最终区间在 1000~120000000。</td></tr>
 <tr><td><code>price_precision</code></td><td>-2~-1 表示百位/十位归零，0 表示整数，1/2 表示小数位数，最多两位小数。</td></tr>
 </table>
+
+<h2 id="状态机与算力">状态机与算力</h2>
+<div class="note"><strong>回答确认：</strong>Shopee 已接入与 JST 对齐的推送计划状态机和算力扣减机制。外部接口保持通用，系统内部通过 <code>task_id</code> 查询 <code>ews_tasks.platform</code> 后选择对应平台表、资源记录和 webhook 地址。</div>
+<h3>任务状态</h3>
+<table class="ftable">
+<tr><th>状态</th><th>含义</th><th>主要流转</th></tr>
+<tr><td><code>init</code></td><td>已创建任务ID，尚未提交完整任务数据。</td><td><code>POST /api/tasks/init</code> 创建。</td></tr>
+<tr><td><code>pending</code></td><td>任务数据已保存，等待触发推送。</td><td><code>PUT /api/tasks/:id</code> 保存后进入。</td></tr>
+<tr><td><code>processing</code></td><td>已创建子任务和推送计划，队列正在释放到不同工作流地址。</td><td><code>POST /api/tasks/:id/push</code> 后进入。</td></tr>
+<tr><td><code>completed</code></td><td>子任务资源完成且无待处理推送计划。</td><td>回调保存标题/图片后由系统检查完成度。</td></tr>
+<tr><td><code>failed</code></td><td>任务被标记失败，或推送计划失败后需要人工处理。</td><td>管理端更新状态，或查看推送计划失败原因后重试。</td></tr>
+</table>
+<h3>推送计划状态机</h3>
+<table class="ftable">
+<tr><th>状态</th><th>触发条件</th><th>系统动作</th></tr>
+<tr><td><code>pending</code></td><td>推送时系统按标题、SKU标题、封面图、附图、详情图、SKU图拆分计划。</td><td>写入 <code>ews_jst_push_plans</code> 或 <code>ews_shopee_push_plans</code>。</td></tr>
+<tr><td><code>processing</code></td><td>队列释放计划前检查并扣减 1 点算力。</td><td>按 <code>webhook_type</code> 推送到对应平台配置的 webhook 地址。</td></tr>
+<tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片会先下载到 R2，再写入对应平台资源表。</td></tr>
+<tr><td><code>failed</code></td><td>Webhook 地址缺失、Webhook 即时失败、算力不足、资源下载失败且重试耗尽，或人工重试失败。</td><td>记录错误；地址缺失不扣算力，已扣算力但未成功派发或重试耗尽时会退还。</td></tr>
+</table>
+<div class="note"><strong>并发与补位：</strong><code>push_batch_size</code> 是每个平台的队列并发上限。系统统计当前 <code>processing</code> 计划数，只释放剩余槽位；回调完成后再次释放后续 <code>pending</code> 计划。</div>
+<div class="note"><strong>通用推送体：</strong>n8n 工作流不需要接收或回传 <code>platform</code>。标题、图片、SKU 等工作流只需要使用 <code>task_id</code>、<code>sub_task_id</code>、<code>image_type</code>、<code>image_position</code>、<code>callback_url</code> 和 <code>callback_secret</code> 等通用字段。平台差异由 EWS 内部根据 <code>task_id</code> 调度和落库。</div>
 
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
@@ -282,7 +304,7 @@ ews_shopee_variations   — 变体（二维规格，含 price_float_enabled/pric
 ews_shopee_sub_tasks    — 子任务（一套链接/一套商品资源）
 ews_shopee_task_images  — 图片记录
 ews_shopee_sku_titles   — SKU标题
-ews_shopee_push_plans   — 推送计划
+ews_shopee_push_plans   — 推送计划（状态机）
 ews_shopee_export_records — 导出记录</pre>
 
 <h2 id="初始化">首次初始化</h2>
