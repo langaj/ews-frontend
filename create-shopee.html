@@ -1,17 +1,17 @@
 <!DOCTYPE html><html lang="zh-CN"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>创建商品(虾皮) - EWS</title>
+<title>创建任务(虾皮) - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>.ref-row{display:flex;gap:10px;margin-top:8px}.ref-zone{aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;flex:1;min-width:0}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500)}</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
-<div class="page-header"><h1 class="page-title">创建新商品 (虾皮)</h1></div>
+<div class="page-header"><h1 class="page-title">创建新任务 (虾皮)</h1></div>
 <div class="card"><div class="card-body">
 <form id="productForm" onsubmit="handleCreate(event)">
   <div class="form-group">
-    <label class="form-label">商品名称 <span class="required">*</span></label>
-    <input type="text" class="form-input" id="productName" required placeholder="如：iPhone 15 Case">
+    <label class="form-label">任务名称 <span class="required">*</span></label>
+    <input type="text" class="form-input" id="productName" required placeholder="如：手机壳批次">
   </div>
   <div class="form-group">
     <label class="form-label">参考图 <span class="required">*</span></label>
@@ -23,6 +23,10 @@
   <div class="form-group">
     <label class="form-label">商品描述</label>
     <textarea class="form-textarea" id="productDesc" rows="4" placeholder="商品功能、材质、特点等"></textarea>
+  </div>
+  <div class="form-group">
+    <label class="form-label">参考标题 <span class="required">*</span></label>
+    <textarea class="form-textarea" id="referenceTitle" rows="3" placeholder="给 AI 参考的商品标题，可每行一个"></textarea>
   </div>
   <div class="form-group">
     <label class="form-label">主图生成描述 <span class="optional">（建议）</span></label>
@@ -59,22 +63,28 @@
   </div>
   <div class="form-row">
     <div class="form-group">
+      <label class="form-label">生成套数 <span class="required">*</span></label>
+      <input type="number" class="form-input" id="generateCount" value="1" min="1" max="100" required>
+    </div>
+    <div class="form-group">
       <label class="form-label">分类 ID</label>
       <input type="text" class="form-input" id="categoryId" placeholder="如：120055">
     </div>
+  </div>
+  <div class="form-row">
     <div class="form-group">
       <label class="form-label">变体数量</label>
       <input type="number" class="form-input" id="variantCount" value="1" min="1" max="50" onchange="updateVariants()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">品牌 ID</label>
+      <input type="text" class="form-input" id="brandId" placeholder="如：2200345">
     </div>
   </div>
   <div class="form-row">
     <div class="form-group">
       <label class="form-label">重量(kg) <span class="required">*</span></label>
       <input type="number" class="form-input" id="weightKg" value="0.1" step="0.01" min="0" required>
-    </div>
-    <div class="form-group">
-      <label class="form-label">品牌 ID</label>
-      <input type="text" class="form-input" id="brandId" placeholder="如：2200345">
     </div>
   </div>
   <div class="form-row">
@@ -97,7 +107,7 @@
   <h4 style="margin-bottom:16px;color:var(--gray-700)">物流渠道</h4>
   <div class="form-row" id="shippingChannels"></div>
   <div style="display:flex;gap:12px;margin-top:24px">
-    <button type="submit" class="btn btn-primary" id="submitBtn">创建商品</button>
+    <button type="submit" class="btn btn-primary" id="submitBtn">创建任务</button>
     <a href="/" class="btn btn-outline">取消</a>
   </div>
 </form>
@@ -106,7 +116,7 @@
 <script>
 var refFiles=[];
 var variantImgFiles=[];
-var channels=[{id:'5000',label:'快速'},{id:'5001',label:'标准'},{id:'5004',label:'大件'},{id:'5012',label:'当日达'},{id:'5115',label:'快速优先'}];
+var channels=[{id:'5000',label:'Hỏa Tốc'},{id:'5001',label:'Nhanh'},{id:'5004',label:'Hàng Cồng Kềnh'},{id:'5012',label:'Trong Ngày'},{id:'5115',label:'Hỏa Tốc - Ưu Tiên'},{id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},{id:'50052',label:'Tủ nhận hàng - SPX'}];
 
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();initRefSlots();updateVariants();initShipping()});
 function initShipping(){var h='';for(var c of channels)h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"> '+c.label+'</label>';document.getElementById('shippingChannels').innerHTML=h;}
@@ -141,20 +151,33 @@ function updateVariants(){
     var price=ed?ed.querySelector('.v-pr')?.value||'':'';
     var stock=ed?ed.querySelector('.v-st')?.value||'':'';
     var sku=ed?ed.querySelector('.v-sk')?.value||'':'';
-    var skuImg=ed?ed.querySelector('.sku-img-input')?.value||'':'';
+    var hasImg=!!variantImgFiles[i];
     html+='<div class="variant-item v-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">颜色 <span class="required">*</span></label><input class="form-input v-o1" placeholder="如：红色" value="'+escapeHtml(o1)+'" required></div>';
     html+='<div class="form-group"><label style="font-size:13px">尺码</label><input class="form-input v-o2" placeholder="如：M" value="'+escapeHtml(o2)+'"></div></div>';
     html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="0" value="'+escapeHtml(price)+'" required></div>';
     html+='<div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(stock||'0')+'"></div></div>';
     html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div>';
-    html+='<div class="form-group"><label style="font-size:13px">SKU图片URL</label><input class="form-input sku-img-input" placeholder="可选，留空则由工作流生成" value="'+escapeHtml(skuImg)+'"></div></div>';
+    html+='<div class="form-group"><label style="font-size:13px">SKU参考图 <span class="required">*</span></label>';
+    html+='<div class="upload-zone'+(hasImg?' has-image':'')+'" onclick="document.getElementById(\'variantInput'+i+'\').click()">';
+    html+='<input type="file" id="variantInput'+i+'" accept="image/*" style="display:none" onchange="handleVariantUpload(event,'+i+')">';
+    html+='<div class="variant-placeholder"'+(hasImg?' style="display:none"':'')+'><div class="upload-text">点击上传SKU参考图</div></div>';
+    html+='<div class="variant-preview"'+(hasImg?'':' style="display:none"')+'><img id="variantPreviewImg'+i+'" src="" style="max-width:100%;max-height:150px;border-radius:6px"></div></div></div></div>';
   }
   container.innerHTML=html;
 }
 function removeVariant(i){
   var c=parseInt(document.getElementById('variantCount').value)||1;
   if(c<=1)return;document.getElementById('variantCount').value=c-1;updateVariants();
+}
+function handleVariantUpload(e,i){var f=e.target.files[0];if(!f)return;variantImgFiles[i]=f;
+  var reader=new FileReader();reader.onload=function(e2){
+    var item=document.querySelectorAll('.v-item')[i];
+    item.querySelector('.variant-placeholder').style.display='none';
+    item.querySelector('.variant-preview').style.display='block';
+    item.querySelector('.upload-zone').classList.add('has-image');
+    document.getElementById('variantPreviewImg'+i).src=e2.target.result;
+  };reader.readAsDataURL(f);
 }
 async function uploadFile(taskId,file,folder){
   var fd=new FormData();fd.append('file',file);fd.append('folder',folder);fd.append('task_id',taskId);
@@ -165,10 +188,13 @@ async function uploadFile(taskId,file,folder){
 async function handleCreate(e){
   e.preventDefault();
   var name=document.getElementById('productName').value.trim();
+  var referenceTitle=document.getElementById('referenceTitle').value.trim();
   if(!name){showToast('请填写商品名称','error');return}
+  if(!referenceTitle){showToast('请填写参考标题','error');return}
   if(!refFiles[0]){showToast('请上传核心参考图','error');return}
   var varItems=document.querySelectorAll('.v-item');
   for(var item of varItems){if(!item.querySelector('.v-o1').value.trim()){showToast('请填写所有变体颜色','error');return}}
+  for(var vi=0;vi<varItems.length;vi++){if(!variantImgFiles[vi]){showToast('请上传变体 #'+(vi+1)+' 的SKU参考图','error');return}}
   var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
   var initRes=await API.initTask('shopee');
   if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建商品';return}
@@ -186,7 +212,7 @@ async function handleCreate(e){
     variations.push({
       option1:varItems[i].querySelector('.v-o1').value.trim(),
       option2:varItems[i].querySelector('.v-o2').value.trim(),
-      image_per_variation:skuImgUrl||(varItems[i].querySelector('.sku-img-input')?.value.trim()||''),
+      image_per_variation:skuImgUrl,
       price:parseFloat(varItems[i].querySelector('.v-pr').value)||0,
       stock:parseInt(varItems[i].querySelector('.v-st').value)||0,
       sku:varItems[i].querySelector('.v-sk').value.trim(),
@@ -194,13 +220,14 @@ async function handleCreate(e){
   }
   btn.textContent='提交...';
   var submitRes=await API.updateTask(taskId,{
-    name,description:document.getElementById('productDesc').value.trim(),
+    name,description:document.getElementById('productDesc').value.trim(),reference_title:referenceTitle,
     main_description:document.getElementById('mainDescription').value.trim(),
     detail_description:document.getElementById('detailDescription').value.trim(),
     reference_image:refImg,auxiliary_images:JSON.stringify(auxUrls),
     cover_image:refImg,images:JSON.stringify(auxUrls),
     main_image_count:parseInt(document.getElementById('mainImageCount').value),
     detail_image_count:parseInt(document.getElementById('detailImageCount').value),
+    generate_count:parseInt(document.getElementById('generateCount').value),
     mode:document.querySelector('input[name="genMode"]:checked').value,
     weight_kg:parseFloat(document.getElementById('weightKg').value)||0,
     category_id:document.getElementById('categoryId').value.trim(),
