@@ -2,7 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>任务列表 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}</style>
+<style>.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}.task-actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:12px}</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
@@ -11,59 +11,226 @@
 <button class="btn btn-outline" onclick="refreshTasks()">刷新</button></div></div>
 <div class="card"><div class="card-body" id="taskContent"><div class="loading"><div class="spinner"></div>加载中...</div></div></div>
 </div>
+
+<div class="modal-overlay" id="opOverlay" style="z-index:400">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div class="modal-body" style="padding:40px 32px">
+      <div class="spinner" style="margin:0 auto 16px"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--gray-800)" id="opTitle">操作中...</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="downloadOverlay" style="z-index:400">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div class="modal-body" style="padding:40px 32px">
+      <div class="spinner" style="margin:0 auto 16px"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:8px" id="downloadTitle">正在打包图片...</div>
+      <div style="font-size:13px;color:var(--gray-500)" id="downloadProgress">准备中</div>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();await refreshTasks()});
+
 async function refreshTasks(){
   const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
   const res=await API.getTasks();
   if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
   const tasks=res.tasks||[];
   if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px"><a href="/create-jst.html" class="btn btn-primary">创建第一个任务(聚水潭)</a> <a href="/create-shopee.html" class="btn btn-primary">创建第一个任务(虾皮)</a></div></div>';return}
-  var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+  var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
   for(var i=0;i<tasks.length;i++){
     var t=tasks[i];
     var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
-    var stLabel={init:'初始化',pending:'待推送',processing:'处理中',completed:'已完成',failed:'失败'}[t.status]||t.status;
-    var stClass={init:'badge-default',pending:'badge-warning',processing:'badge-info',completed:'badge-success',failed:'badge-danger'}[t.status]||'badge-default';
-    html+='<tr><td>'+platTag+'</td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td><span class="badge '+stClass+'">'+stLabel+'</span></td><td>'+(t.created_at||'').slice(0,16)+'</td><td><button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button></td></tr>';
+    html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
+    html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
+    html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button>';
+    if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\')">推送</button>';
+    if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true)">测试</button>';
+    if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\')">继续</button>';
+    html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\')">删除</button>';
+    html+='</div></td></tr>';
   }
   html+='</tbody></table></div>';
   c.innerHTML=html;
 }
-function viewTask(taskId){
-  // 获取详情后根据 platform 展示不同内容
-  API.getTask(taskId).then(function(res){
-    if(!res.success||!res.task){showToast('加载失败','error');return}
-    var t=res.task;
-    if(t.platform==='jst') showJstDetail(t);
-    else showShopeeDetail(t);
-  });
+
+async function viewTask(taskId){
+  closeDetail();
+  var res=await API.getTask(taskId);
+  if(!res.success||!res.task){showToast('加载失败','error');return}
+  var t=res.task;
+  if(t.platform==='jst') await showJstDetail(t);
+  else await showShopeeDetail(t);
 }
-function showJstDetail(t){
+
+async function showJstDetail(t){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
+  var done=(t.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var html='<div class="modal"><div class="modal-header"><div class="modal-title">任务详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
   html+='<div class="detail-section"><span class="platform-tag tag-jst">聚水潭</span><strong>'+escapeHtml(t.name||'')+'</strong></div>';
-  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+(t.status||'')+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+(t.mode||'full')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(t.mode||'full')+' <span class="muted">'+done+'/'+(t.sub_tasks||[]).length+' 子任务完成</span></div></div>';
   html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">主图/附图: '+(t.main_image_count||5)+' 详情图: '+(t.detail_image_count||5)+'</div></div>';
-  if(t.variants) html+='<div class="detail-section"><div class="detail-label">变体 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return v.tier1_value||v.name||''}).join(', ')+'</div></div>';
-  html+='</div><div class="modal-footer"><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  html+=await renderPushPlans(t.id);
+  if(t.variants) html+='<div class="detail-section"><div class="detail-label">变体 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return escapeHtml(v.tier1_value||v.name||'')}).join(', ')+'</div></div>';
+  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
-function showShopeeDetail(t){
+
+async function showShopeeDetail(t){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
   var p=t.product||{};
-  var v=(p.variations||[]).map(function(v){return v.option1+(v.option2?'/'+v.option2:'')}).join(', ');
+  var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
+  var v=(p.variations||[]).map(function(v){return escapeHtml(v.option1+(v.option2?'/'+v.option2:''))}).join(', ');
   var html='<div class="modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
   html+='<div class="detail-section"><span class="platform-tag tag-shopee">虾皮</span><strong>'+escapeHtml(p.name||'')+'</strong></div>';
-  html+='<div class="detail-section"><div class="detail-label">分类</div><div class="detail-value">'+(p.category_id||'')+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">规格</div><div class="detail-value">'+(p.variation_name1||'')+(p.variation_name2?'/'+p.variation_name2:'')+' | '+v+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(p.mode||'full')+' <span class="muted">'+done+'/'+(p.sub_tasks||[]).length+' 子任务完成</span></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">分类</div><div class="detail-value">'+escapeHtml(p.category_id||'')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">规格</div><div class="detail-value">'+escapeHtml((p.variation_name1||'')+(p.variation_name2?'/'+p.variation_name2:''))+' | '+v+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">封面/附图: '+(p.main_image_count||5)+' 详情图: '+(p.detail_image_count||0)+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div>';
-  html+='</div><div class="modal-footer"><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  html+=await renderPushPlans(t.id);
+  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
+
 function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
+
+async function pushTask(taskId,testMode){
+  var ok=confirm(testMode?'测试模式只创建子任务并构造工作流请求，不触发实际工作流。确定继续？':'确定要推送该任务到工作流吗？');
+  if(!ok)return;
+  await runWithOverlay('正在推送任务...', async function(){
+    var res=await API.pushTask(taskId,!!testMode);
+    if(!res.success){showToast(res.error||'推送失败','error');return}
+    if(testMode) showToast('测试完成：已构造 '+(res.jobs_count||0)+' 个工作流请求','info');
+    else showToast(res.message||'已创建推送计划','success');
+    await refreshTasks();
+  });
+}
+
+async function retryPlan(taskId,planId){
+  if(!confirm('确定要重试这个推送计划吗？'))return;
+  await runWithOverlay('正在重试推送计划...', async function(){
+    var res=await API.retryPlan(taskId,planId);
+    if(!res.success){showToast(res.error||'重试失败','error');return}
+    showToast('计划已重试','success');
+    await refreshTasks();
+    await viewTask(taskId);
+  });
+}
+
+async function retryFailedPlans(taskId){
+  if(!confirm('确定要继续推送所有失败的推送计划吗？'))return;
+  await runWithOverlay('正在重试失败计划...', async function(){
+    var plansRes=await API.getPushPlans(taskId);
+    if(!plansRes.success){showToast('获取推送计划失败','error');return}
+    var failed=(plansRes.plans||[]).filter(function(p){return p.status==='failed'});
+    if(!failed.length){showToast('没有失败的推送计划','info');return}
+    var ok=0;
+    for(var i=0;i<failed.length;i++){
+      var res=await API.retryPlan(taskId,failed[i].id);
+      if(res.success)ok++;
+    }
+    showToast('已重试 '+ok+'/'+failed.length+' 个失败计划','success');
+    await refreshTasks();
+  });
+}
+
+async function deleteTask(taskId){
+  if(!confirm('确定要删除该任务及其R2图片吗？'))return;
+  await runWithOverlay('正在删除任务...', async function(){
+    var res=await API.deleteTask(taskId);
+    if(!res.success){showToast(res.error||'删除失败','error');return}
+    showToast('任务已删除','success');
+    closeDetail();
+    await refreshTasks();
+  });
+}
+
+async function downloadTaskImages(taskId){
+  if(!window.JSZip){showToast('打包组件加载中，请稍后再试','error');return}
+  var overlay=document.getElementById('downloadOverlay');
+  var titleEl=document.getElementById('downloadTitle');
+  var progEl=document.getElementById('downloadProgress');
+  var res=await API.getTask(taskId);
+  if(!res.success||!res.task){showToast('获取任务详情失败','error');return}
+  var task=res.task;
+  var images=getGeneratedImages(task);
+  if(!images.length){showToast('该任务暂无已生成图片','info');return}
+  titleEl.textContent='正在下载图片...';
+  progEl.textContent='0 / '+images.length;
+  overlay.classList.add('show');
+  var zip=new JSZip();
+  var total=images.length;
+  var fetched=0;
+  for(var i=0;i<total;i++){
+    var img=images[i];
+    try{
+      var resp=await fetch(img.image_url);
+      if(resp.ok){
+        var blob=await resp.blob();
+        zip.folder(img.sub_task_id||'unassigned').file(imageFileName(img),blob);
+        fetched++;
+      }
+    }catch(e){console.warn('下载失败:',img.image_url,e)}
+    progEl.textContent=fetched+' / '+total;
+    titleEl.textContent='正在下载图片... ('+(i+1)+'/'+total+')';
+  }
+  if(!fetched){overlay.classList.remove('show');showToast('所有图片下载失败','error');return}
+  titleEl.textContent='正在生成压缩包...';
+  progEl.textContent='请稍候';
+  try{
+    var content=await zip.generateAsync({type:'blob'});
+    var link=document.createElement('a');
+    link.href=URL.createObjectURL(content);
+    link.download=zipFileName(taskId);
+    link.click();
+    URL.revokeObjectURL(link.href);
+    overlay.classList.remove('show');
+    showToast('打包完成: '+fetched+'/'+total+' 张图片','success');
+  }catch(e){
+    overlay.classList.remove('show');
+    showToast('生成ZIP失败: '+e.message,'error');
+  }
+}
+
+function getGeneratedImages(task){
+  var images=task.platform==='shopee' ? ((task.product||{}).images_rec||[]) : (task.images||[]);
+  return images.filter(function(img){return img.image_url&&img.sub_task_id});
+}
+
+function imageFileName(img){
+  var pos=img.position||1;
+  var variant=img.variant_id?('_'+img.variant_id):'';
+  return (img.image_type||'image')+'_'+pos+variant+'.jpg';
+}
+
+function zipFileName(taskId){
+  var now=new Date();
+  var y=now.getFullYear();
+  var m=String(now.getMonth()+1).padStart(2,'0');
+  var d=String(now.getDate()).padStart(2,'0');
+  var hh=String(now.getHours()).padStart(2,'0');
+  var mm=String(now.getMinutes()).padStart(2,'0');
+  var ss=String(now.getSeconds()).padStart(2,'0');
+  return y+'-'+m+'-'+d+'-'+taskId+'-'+hh+mm+ss+'.zip';
+}
+
+async function runWithOverlay(title,fn){
+  var overlay=document.getElementById('opOverlay');
+  document.getElementById('opTitle').textContent=title||'操作中...';
+  overlay.classList.add('show');
+  try{return await fn()}catch(e){showToast(e.message||'操作失败','error')}finally{overlay.classList.remove('show')}
+}
+
 async function doExport(taskId){
   if(!window.XLSX){showToast('导出组件加载中，请稍后再试','error');return}
   var res=await API.exportTask(taskId);
@@ -80,6 +247,7 @@ async function doExport(taskId){
     showToast('导出成功！','success');
   }catch(err){showToast('导出失败: '+err.message,'error')}
 }
+
 async function exportShopeeTemplate(res,taskId){
   var tpl=await fetch('/templates/Shopee_mass_upload_2026-07-03_basic_template.xlsx');
   if(!tpl.ok)throw new Error('找不到Shopee官方模板文件');
@@ -92,6 +260,55 @@ async function exportShopeeTemplate(res,taskId){
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.writeFile(wb,'Shopee_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
+
+async function renderPushPlans(taskId){
+  var res=null;
+  try{res=await API.getPushPlans(taskId)}catch(e){}
+  var plans=(res&&res.success)?(res.plans||[]):[];
+  var stats=(res&&res.success&&res.stats)?res.stats:{pending:0,processing:0,done:0,failed:0,total:0};
+  var html='<div class="detail-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">';
+  html+='<div class="detail-label">推送计划 <span class="muted">共 '+(stats.total||plans.length)+' 项';
+  if(stats.done) html+='，成功 '+stats.done;
+  if(stats.failed) html+='，失败 '+stats.failed;
+  if(stats.pending) html+='，待推送 '+stats.pending;
+  if(stats.processing) html+='，处理中 '+stats.processing;
+  html+='</span></div>';
+  html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+taskId+'\')">刷新队列</button></div>';
+  if(!res||!res.success){return html+'<div class="muted">推送计划加载失败</div></div>'}
+  if(!plans.length){return html+'<div class="muted">暂无推送计划，任务推送后会在这里显示队列状态。</div></div>'}
+  html+='<div class="table-container"><table style="font-size:13px"><thead><tr><th>类型</th><th>子任务</th><th>状态</th><th>错误</th><th>操作</th></tr></thead><tbody>';
+  for(var i=0;i<plans.length;i++){
+    var p=plans[i];
+    var retry=p.status==='failed'?'<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\')">重试</button>':'<span class="muted">-</span>';
+    html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+planStatusBadge(p.status)+'</td><td>'+escapeHtml((p.error||'').slice(0,80))+'</td><td>'+retry+'</td></tr>';
+  }
+  html+='</tbody></table></div></div>';
+  return html;
+}
+
+function planTypeLabel(type){
+  type=type||'';
+  if(type==='title')return '商品标题';
+  if(type==='sku_title')return 'SKU标题';
+  if(type==='main_1'||type==='main')return '封面图';
+  if(type.indexOf('sub_')===0)return '附图 '+type.split('_')[1];
+  if(type.indexOf('detail_')===0)return '详情图 '+type.split('_')[1];
+  if(type.indexOf('sku_')===0)return 'SKU图 '+type.split('_')[1];
+  return type||'-';
+}
+
+function planStatusBadge(status){
+  var map={pending:['待推送','badge-warning'],processing:['处理中','badge-info'],done:['已完成','badge-success'],failed:['失败','badge-danger']};
+  var s=map[status]||[status||'', 'badge-default'];
+  return '<span class="badge '+s[1]+'">'+escapeHtml(s[0])+'</span>';
+}
+
+function statusBadge(status){
+  var map={init:['初始化','badge-default'],pending:['待推送','badge-warning'],processing:['处理中','badge-info'],completed:['已完成','badge-success'],failed:['失败','badge-danger']};
+  var s=map[status]||[status||'', 'badge-default'];
+  return '<span class="badge '+s[1]+'">'+escapeHtml(s[0])+'</span>';
+}
+function formatDate(s){return (s||'').slice(0,16)}
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 </script>
