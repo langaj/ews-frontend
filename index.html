@@ -2,7 +2,10 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>任务列表 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}.task-actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:12px}</style>
+<style>
+.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}.task-actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:12px}
+.btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
+</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
@@ -34,6 +37,8 @@
 <script src="/js/api.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+var ACTION_TIMEOUT_MS=120000;
+var activeActionLocks={};
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();await refreshTasks()});
 
 async function refreshTasks(){
@@ -48,11 +53,11 @@ async function refreshTasks(){
     var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
     html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
     html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
-    html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button>';
-    if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\')">推送</button>';
-    if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true)">测试</button>';
-    if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\')">继续</button>';
-    html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\')">删除</button>';
+    html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
+    if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
+    if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
+    if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
+    html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
     html+='</div></td></tr>';
   }
   html+='</tbody></table></div>';
@@ -79,7 +84,7 @@ async function showJstDetail(t){
   html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">主图/附图: '+(t.main_image_count||5)+' 详情图: '+(t.detail_image_count||5)+'</div></div>';
   html+=await renderPushPlans(t.id);
   if(t.variants) html+='<div class="detail-section"><div class="detail-label">变体 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return escapeHtml(v.tier1_value||v.name||'')}).join(', ')+'</div></div>';
-  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
 
@@ -98,64 +103,168 @@ async function showShopeeDetail(t){
   html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">封面/附图: '+(p.main_image_count||9)+' 详情图: '+(p.detail_image_count||0)+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div>';
   html+=await renderPushPlans(t.id);
-  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\')">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
+  html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
 
 function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
 
-async function pushTask(taskId,testMode){
-  var ok=confirm(testMode?'测试模式只创建子任务并构造工作流请求，不触发实际工作流。确定继续？':'确定要推送该任务到工作流吗？');
-  if(!ok)return;
-  await runWithOverlay('正在推送任务...', async function(){
-    var res=await API.pushTask(taskId,!!testMode);
-    if(!res.success){showToast(res.error||'推送失败','error');return}
-    if(testMode) showToast('测试完成：已构造 '+(res.jobs_count||0)+' 个工作流请求','info');
-    else showToast(res.message||'已创建推送计划','success');
-    await refreshTasks();
+function setActionButtonLoading(btn,label){
+  if(!btn)return;
+  if(!btn.dataset.actionOriginalHtml)btn.dataset.actionOriginalHtml=btn.innerHTML;
+  btn.dataset.actionWasDisabled=btn.disabled?'1':'0';
+  btn.disabled=true;
+  btn.classList.add('action-loading');
+  btn.setAttribute('aria-busy','true');
+  if(label)btn.innerHTML=escapeHtml(label);
+}
+
+function restoreActionButton(btn){
+  if(!btn)return;
+  if(btn.dataset.actionOriginalHtml){btn.innerHTML=btn.dataset.actionOriginalHtml;delete btn.dataset.actionOriginalHtml;}
+  btn.disabled=btn.dataset.actionWasDisabled==='1';
+  delete btn.dataset.actionWasDisabled;
+  btn.classList.remove('action-loading');
+  btn.removeAttribute('aria-busy');
+}
+
+function withActionTimeout(promise,ms){
+  var timer=null;
+  var timeout=new Promise(function(_,reject){
+    timer=setTimeout(function(){
+      var err=new Error('服务器超过120秒未响应，已解除按钮锁定，请稍后重试');
+      err.code='ACTION_TIMEOUT';
+      reject(err);
+    },ms);
+  });
+  return Promise.race([promise,timeout]).finally(function(){if(timer)clearTimeout(timer)});
+}
+
+function hideBusyOverlays(){
+  ['opOverlay','downloadOverlay'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.classList.remove('show');
   });
 }
 
-async function retryPlan(taskId,planId){
-  if(!confirm('确定要重试这个推送计划吗？'))return;
-  await runWithOverlay('正在重试推送计划...', async function(){
-    var res=await API.retryPlan(taskId,planId);
-    if(!res.success){showToast(res.error||'重试失败','error');return}
-    showToast('计划已重试','success');
-    await refreshTasks();
-    await viewTask(taskId);
-  });
+async function withActionLock(key,btn,label,fn){
+  if(activeActionLocks[key]){showToast('该操作正在处理中，请等待服务器响应','info');return}
+  activeActionLocks[key]=true;
+  setActionButtonLoading(btn,label||'处理中...');
+  try{return await withActionTimeout(Promise.resolve().then(fn),ACTION_TIMEOUT_MS)}
+  catch(e){
+    if(e&&e.code==='ACTION_TIMEOUT'){hideBusyOverlays();showToast(e.message,'error');return}
+    showToast((e&&e.message)||'操作失败','error');
+  }finally{
+    delete activeActionLocks[key];
+    restoreActionButton(btn);
+  }
 }
 
-async function retryFailedPlans(taskId){
-  if(!confirm('确定要继续推送所有失败的推送计划吗？'))return;
-  await runWithOverlay('正在重试失败计划...', async function(){
-    var plansRes=await API.getPushPlans(taskId);
-    if(!plansRes.success){showToast('获取推送计划失败','error');return}
-    var failed=(plansRes.plans||[]).filter(function(p){return p.status==='failed'});
-    if(!failed.length){showToast('没有失败的推送计划','info');return}
-    var ok=0;
-    for(var i=0;i<failed.length;i++){
-      var res=await API.retryPlan(taskId,failed[i].id);
-      if(res.success)ok++;
+function showConfirmDialog(opts){
+  if(document.getElementById('confirmModal')){showToast('请先处理当前确认弹窗','info');return Promise.resolve(false)}
+  opts=opts||{};
+  return new Promise(function(resolve){
+    var modal=document.createElement('div');
+    modal.className='modal-overlay show';
+    modal.id='confirmModal';
+    modal.style.zIndex='500';
+    modal.innerHTML='<div class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="max-width:420px">'+
+      '<div class="modal-header"><div class="modal-title" id="confirmTitle">'+escapeHtml(opts.title||'确认操作')+'</div><button class="modal-close" type="button" data-confirm-cancel>&times;</button></div>'+
+      '<div class="modal-body"><div class="confirm-message">'+escapeHtml(opts.message||'确定继续该操作吗？')+'</div>'+(opts.hint?'<div class="confirm-subtle">'+escapeHtml(opts.hint)+'</div>':'')+'</div>'+
+      '<div class="modal-footer"><button class="btn btn-outline" type="button" data-confirm-cancel>取消</button><button class="btn '+(opts.danger?'btn-danger':'btn-primary')+'" type="button" data-confirm-ok>'+escapeHtml(opts.confirmText||'确认')+'</button></div>'+
+      '</div>';
+    function finish(value){
+      document.removeEventListener('keydown',onKey);
+      modal.remove();
+      resolve(value);
     }
-    showToast('已重试 '+ok+'/'+failed.length+' 个失败计划','success');
-    await refreshTasks();
+    function onKey(e){if(e.key==='Escape')finish(false)}
+    modal.addEventListener('click',function(e){
+      if(e.target===modal||e.target.hasAttribute('data-confirm-cancel'))finish(false);
+      if(e.target.hasAttribute('data-confirm-ok'))finish(true);
+    });
+    document.addEventListener('keydown',onKey);
+    document.body.appendChild(modal);
+    setTimeout(function(){
+      var target=opts.danger?modal.querySelector('.modal-footer [data-confirm-cancel]'):modal.querySelector('[data-confirm-ok]');
+      if(target)target.focus();
+    },0);
   });
 }
 
-async function deleteTask(taskId){
-  if(!confirm('确定要删除该任务及其R2图片吗？'))return;
-  await runWithOverlay('正在删除任务...', async function(){
-    var res=await API.deleteTask(taskId);
-    if(!res.success){showToast(res.error||'删除失败','error');return}
-    showToast('任务已删除','success');
-    closeDetail();
-    await refreshTasks();
+async function pushTask(taskId,testMode,btn){
+  testMode=!!testMode;
+  var ok=await showConfirmDialog({
+    title:testMode?'测试推送':'推送任务',
+    message:testMode?'测试模式只创建子任务并构造工作流请求，不触发实际工作流。确定继续？':'确定要推送该任务到工作流吗？',
+    confirmText:testMode?'开始测试':'开始推送'
+  });
+  if(!ok)return;
+  await withActionLock((testMode?'test:':'push:')+taskId,btn,testMode?'测试中...':'推送中...',async function(){
+    await runWithOverlay(testMode?'正在测试任务...':'正在推送任务...', async function(){
+      var res=await API.pushTask(taskId,testMode);
+      if(!res.success){showToast(res.error||'推送失败','error');return}
+      if(testMode) showToast('测试完成：已构造 '+(res.jobs_count||0)+' 个工作流请求','info');
+      else showToast(res.message||'已创建推送计划','success');
+      await refreshTasks();
+    });
   });
 }
 
-async function downloadTaskImages(taskId){
+async function retryPlan(taskId,planId,btn){
+  var ok=await showConfirmDialog({title:'重试计划',message:'确定要重试这个推送计划吗？',confirmText:'重试'});
+  if(!ok)return;
+  await withActionLock('retry-plan:'+planId,btn,'重试中...',async function(){
+    await runWithOverlay('正在重试推送计划...', async function(){
+      var res=await API.retryPlan(taskId,planId);
+      if(!res.success){showToast(res.error||'重试失败','error');return}
+      showToast('计划已重试','success');
+      await refreshTasks();
+      await viewTask(taskId);
+    });
+  });
+}
+
+async function retryFailedPlans(taskId,btn){
+  var ok=await showConfirmDialog({title:'继续失败计划',message:'确定要继续推送所有失败的推送计划吗？',confirmText:'继续'});
+  if(!ok)return;
+  await withActionLock('retry-failed:'+taskId,btn,'继续中...',async function(){
+    await runWithOverlay('正在重试失败计划...', async function(){
+      var plansRes=await API.getPushPlans(taskId);
+      if(!plansRes.success){showToast('获取推送计划失败','error');return}
+      var failed=(plansRes.plans||[]).filter(function(p){return p.status==='failed'});
+      if(!failed.length){showToast('没有失败的推送计划','info');return}
+      var ok=0;
+      for(var i=0;i<failed.length;i++){
+        var res=await API.retryPlan(taskId,failed[i].id);
+        if(res.success)ok++;
+      }
+      showToast('已重试 '+ok+'/'+failed.length+' 个失败计划','success');
+      await refreshTasks();
+    });
+  });
+}
+
+async function deleteTask(taskId,btn){
+  var ok=await showConfirmDialog({title:'删除任务',message:'确定要删除该任务及其R2图片吗？',hint:'删除后无法在系统内恢复。',confirmText:'删除',danger:true});
+  if(!ok)return;
+  await withActionLock('delete:'+taskId,btn,'删除中...',async function(){
+    await runWithOverlay('正在删除任务...', async function(){
+      var res=await API.deleteTask(taskId);
+      if(!res.success){showToast(res.error||'删除失败','error');return}
+      showToast('任务已删除','success');
+      closeDetail();
+      await refreshTasks();
+    });
+  });
+}
+
+async function downloadTaskImages(taskId,btn){
+  await withActionLock('download:'+taskId,btn,'打包中...',function(){return downloadTaskImagesInner(taskId)});
+}
+
+async function downloadTaskImagesInner(taskId){
   if(!window.JSZip){showToast('打包组件加载中，请稍后再试','error');return}
   var overlay=document.getElementById('downloadOverlay');
   var titleEl=document.getElementById('downloadTitle');
@@ -279,7 +388,7 @@ async function renderPushPlans(taskId){
   html+='<div class="table-container"><table style="font-size:13px"><thead><tr><th>类型</th><th>子任务</th><th>状态</th><th>错误</th><th>操作</th></tr></thead><tbody>';
   for(var i=0;i<plans.length;i++){
     var p=plans[i];
-    var retry=p.status==='failed'?'<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\')">重试</button>':'<span class="muted">-</span>';
+    var retry=p.status==='failed'?'<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this)">重试</button>':'<span class="muted">-</span>';
     html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+planStatusBadge(p.status)+'</td><td>'+escapeHtml((p.error||'').slice(0,80))+'</td><td>'+retry+'</td></tr>';
   }
   html+='</tbody></table></div></div>';
