@@ -68,7 +68,7 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id/plans',d:'推送计划列表',a:true},
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
-  {m:'POST',p:'/api/callback',d:'n8n回调(secret验证)',a:false},
+  {m:'POST',p:'/api/callback',d:'n8n回调入队(secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2',a:true,b:{file:'File',task_id:'string',folder:'string(可选)'}},
   {m:'GET',p:'/r2/*',d:'R2公开文件访问',a:false},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
@@ -240,7 +240,7 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
@@ -288,7 +288,8 @@ ${WEBHOOKS.slice(2).map(function(w){
 <h4>共享层 (ews_)</h4>
 <pre>ews_config      (key, value, platform)  — 分平台配置
 ews_users       (id, username, password_hash, role, credits, webhook_config)
-ews_tasks       (id, platform, name, status, user_id)  — 统一任务索引</pre>
+ews_tasks       (id, platform, name, status, user_id)  — 统一任务索引
+ews_callback_queue — 共享回调队列（成功处理后删除，失败保留重试）</pre>
 
 <h4>聚水潭 (ews_jst_)</h4>
 <pre>ews_jst_tasks       — 任务扩展信息（图片数量、模式等）
