@@ -86,7 +86,7 @@ const WEBHOOKS = [
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
-  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'变体名',variant_option2:'二级规格值(可为空)',white_bg_image:'变体参考图或白底图URL',sku_image:'变体参考图URL(可为空)',image_type:"'sku'",image_position:'变体索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'每个变体推送一次；工作流只按字段处理，不需要判断平台'},
+  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'变体名',variant_option2:'二级规格值(可为空)',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'变体索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'每个变体推送一次；JST 与 Shopee 都用 sku_image 作为变体参考图，不需要判断平台'},
 ];
 
 const SIDEBAR_HTML = SIDEBAR.map(function(s){return s.s?'<div class="sec-title">'+s.t+'</div>':'<a href="#'+s.t+'">'+s.t+'</a>'}).join('');
@@ -156,7 +156,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "weight": 1,
   "variants": [{
     "name": "红色",
-    "white_bg_image": "R2 URL",
+    "sku_image": "R2 URL",
     "price": 99,
     "sku_description": "",
     "price_float_enabled": 0,
