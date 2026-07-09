@@ -2,7 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>创建任务(虾皮) - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.ref-row{display:flex;gap:10px;margin-top:8px}.ref-zone{aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;flex:1;min-width:0}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500)}</style>
+<style>.ref-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px}.ref-slot{min-width:0}.ref-zone{width:100%;aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:0}.ref-preview{display:none;width:100%;height:100%}.ref-preview img{width:100%;height:100%;object-fit:cover;border-radius:4px}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500);white-space:pre-line;line-height:1.5}.ref-label{font-size:11px;color:var(--gray-500);text-align:center;margin-top:4px}@media(max-width:640px){.ref-row{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
@@ -125,11 +125,12 @@ function initShipping(){var h='';for(var c of channels)h+='<label style="display
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];var html='';
   for(var i=0;i<5;i++){
+    html+='<div class="ref-slot">';
     html+='<div class="ref-zone upload-zone" id="refZone'+i+'" onclick="document.getElementById(\'refInput'+i+'\').click()">';
     html+='<input type="file" id="refInput'+i+'" accept="image/*" style="display:none" onchange="handleRefUpload(event,'+i+')">';
     html+='<div id="refPlaceholder'+i+'" class="ref-placeholder"><div class="upload-text">'+(i===0?'点击上传\n核心参考图\n(必填)':'点击上传\n辅助参考图\n(可选)')+'</div></div>';
-    html+='<div id="refPreview'+i+'" style="display:none;width:100%"><img id="refPreviewImg'+i+'" src="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px"></div>';
-    html+='</div><div style="font-size:11px;color:var(--gray-500);text-align:center;margin-top:4px">'+labels[i]+'</div>';
+    html+='<div id="refPreview'+i+'" class="ref-preview"><img id="refPreviewImg'+i+'" src=""></div>';
+    html+='</div><div class="ref-label">'+labels[i]+'</div></div>';
   }
   document.getElementById('refRow').innerHTML=html;
 }
