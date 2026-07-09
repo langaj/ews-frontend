@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>使用说明 - EWS</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.guide-layout{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:start}
+.guide-side{position:sticky;top:84px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:10px}
+.guide-tab{display:block;width:100%;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:6px;color:var(--gray-600);font-weight:600;cursor:pointer}
+.guide-tab.active{background:var(--primary-light);color:var(--primary)}
+.guide-content{max-width:980px}
+.guide-panel{display:none}
+.guide-panel.active{display:block}
+.guide-section{background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:20px;margin-bottom:16px}
+.guide-section h2{font-size:22px;margin:0 0 12px}
+.guide-section h3{font-size:16px;margin:22px 0 10px;color:var(--gray-800)}
+.guide-section p,.guide-section li{font-size:14px;line-height:1.8;color:var(--gray-700)}
+.guide-section ul,.guide-section ol{margin:8px 0 8px 22px;padding:0}
+.field-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.field-table th{background:var(--gray-100);text-align:left;padding:9px 10px;font-weight:700;color:var(--gray-700)}
+.field-table td{padding:9px 10px;border-bottom:1px solid var(--gray-200);vertical-align:top;line-height:1.6}
+.note-box{border:1px solid #fde68a;background:#fffbeb;color:#7c2d12;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7;margin:10px 0}
+.ok-box{border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7;margin:10px 0}
+.pill{display:inline-block;font-size:11px;border-radius:999px;padding:2px 8px;background:var(--gray-100);color:var(--gray-600);font-weight:700;margin-left:6px}
+code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px}
+@media(max-width:820px){.guide-layout{grid-template-columns:1fr}.guide-side{position:static;display:flex;gap:8px}.guide-tab{text-align:center}}
+</style>
+</head><body>
+<script src="/js/nav.js"></script>
+<div class="app-container">
+  <div class="page-header">
+    <h1 class="page-title">系统使用说明</h1>
+  </div>
+  <div class="guide-layout">
+    <aside class="guide-side">
+      <button class="guide-tab active" data-tab="jst" onclick="showGuide('jst')">国内/聚水潭</button>
+      <button class="guide-tab" data-tab="shopee" onclick="showGuide('shopee')">Shopee/虾皮</button>
+    </aside>
+    <main class="guide-content">
+      <section class="guide-panel active" id="guide-jst">
+        <div class="guide-section">
+          <h2>国内版本怎么用</h2>
+          <p>国内版本面向聚水潭上传逻辑。系统先按任务生成商品套图，再把每套图、变体、标题、SKU 标题组装成导出表。</p>
+          <ol>
+            <li>进入 <strong>创建(聚水潭)</strong>，填写任务名称、商品描述、生成套数、生成模式。</li>
+            <li>上传核心参考图和辅助参考图；核心参考图决定商品主体，辅助参考图用于补充角度、材质、细节。</li>
+            <li>填写颜色、尺码、价格、库存、SKU 等变体信息。</li>
+            <li>提交任务后在任务列表点击推送，等待标题、SKU 标题、主图、详情图、SKU 图全部完成。</li>
+            <li>完成后导出聚水潭表格，导出的图片 URL 来自系统保存到 R2 图床的生成结果。</li>
+          </ol>
+        </div>
+
+        <div class="guide-section">
+          <h2>国内字段填写建议</h2>
+          <table class="field-table">
+            <thead><tr><th>字段</th><th>怎么填</th><th>影响</th></tr></thead>
+            <tbody>
+              <tr><td>任务名称</td><td>给自己识别批次用，例如“手机壳-透明款-7月”。</td><td>影响任务列表展示，也会作为 AI 生成标题的参考。</td></tr>
+              <tr><td>参考图</td><td>核心图必须上传；辅助图可上传不同角度、包装、细节。</td><td>只作为 AI 输入，不直接写入最终导出表。</td></tr>
+              <tr><td>生成套数</td><td>需要多少个商品款式就填多少套。</td><td>每套会生成独立标题和商品图片。</td></tr>
+              <tr><td>全量生成</td><td>每套都生成完整主图、详情图、SKU 图。</td><td>成本更高，但差异最大。</td></tr>
+              <tr><td>去重生成</td><td>多套商品共享部分通用图，只保留必要差异。</td><td>适合只换封面或轻微差异的批量生成。</td></tr>
+              <tr><td>颜色/尺码</td><td>颜色是一级规格，尺码是二级规格；没有尺码可留空。</td><td>决定 SKU 组合。</td></tr>
+              <tr><td>SKU 参考图</td><td>每个颜色上传一张参考图。</td><td>用于生成变体图和 SKU 标题。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="guide-section">
+          <h2>国内图片理解</h2>
+          <ul>
+            <li>国内导出里“主图”通常包含系统生成的主图/附图，按平台上传工具要求整体使用。</li>
+            <li>“详情图”是商品详情页长图或详情模块图片。</li>
+            <li>参考图不是最终资源；最终导出的图片必须是 AI 生成并保存到 R2 后的 URL。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="guide-panel" id="guide-shopee">
+        <div class="guide-section">
+          <h2>Shopee 版本怎么用</h2>
+          <p>Shopee 版本按官方 mass upload template 组装 Excel。系统不是直接把你上传的图片写进表格，而是先生成商品套图，再把生成后的 R2 URL 写入模板。</p>
+          <ol>
+            <li>进入 <strong>创建(虾皮)</strong>，填写任务名称、商品描述、参考标题。</li>
+            <li>上传核心参考图和辅助参考图；这些图只作为 AI 生成输入。</li>
+            <li>填写生成套数、生成模式、分类 ID、重量、尺寸、规格名和变体。</li>
+            <li>每个变体上传 SKU 参考图，系统用它生成 Shopee 的变体图片。</li>
+            <li>选择至少一个物流渠道。</li>
+            <li>提交后推送任务，等待商品标题、SKU 标题、封面图、附图、详情图、SKU 图完成。</li>
+            <li>完成后导出 Shopee 官方模板，数据从第 7 行开始写入。</li>
+          </ol>
+          <div class="ok-box">官方模板依据：系统内置 <code>/templates/Shopee_mass_upload_2026-07-03_basic_template.xlsx</code> 的 <code>Template</code> 工作表。第 3 行是字段名，第 4 行是必填性，第 6 行是填写规则。</div>
+        </div>
+
+        <div class="guide-section">
+          <h2>Shopee 图片字段怎么对应</h2>
+          <table class="field-table">
+            <thead><tr><th>系统资源</th><th>Shopee 模板字段</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>AI 商品标题</td><td>B Product Name</td><td>官方要求 10~120 字符。</td></tr>
+              <tr><td>AI SKU 标题</td><td>K Option for Variation 1</td><td>官方要求 1~20 字符，按“每套资源 × 每个变体”生成。</td></tr>
+              <tr><td>封面图 <code>main_1</code></td><td>U Cover image</td><td>Shopee 的首图/封面图。</td></tr>
+              <tr><td>附图 <code>sub_2~sub_9</code></td><td>V~AC Item Image 1~8</td><td>从第 2 张开始，不重复写封面图。</td></tr>
+              <tr><td>SKU 变体图 <code>sku_N</code></td><td>L Image per Variation</td><td>映射到一级规格值，例如颜色图。</td></tr>
+              <tr><td>详情图 <code>detail_1~N</code></td><td>当前 basic template 暂无字段</td><td>系统会生成和保存，后续接类目模板或 API 时再写入。</td></tr>
+            </tbody>
+          </table>
+          <div class="note-box">导出时缺少任何必需 AI 资源会被系统阻断。参考图、辅助图、SKU 参考图不会作为最终图片 URL 写入 Excel。</div>
+        </div>
+
+        <div class="guide-section">
+          <h2>Shopee 创建页字段说明</h2>
+          <table class="field-table">
+            <thead><tr><th>字段</th><th>填写建议</th><th>官方/系统规则</th></tr></thead>
+            <tbody>
+              <tr><td>任务名称</td><td>内部批次名，例如“手机壳-越南站-透明款”。</td><td>用于任务列表，也会传给 AI 作为标题参考。</td></tr>
+              <tr><td>商品描述</td><td>写材质、功能、包装、适用场景，尽量完整。</td><td>Shopee 模板要求 Product Description 100~3000 字符。</td></tr>
+              <tr><td>参考标题</td><td>放你希望 AI 学习的标题风格，可以多行。</td><td>用于生成 Product Name 和 SKU 标题，不直接导出。</td></tr>
+              <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。</td></tr>
+              <tr><td>详情图生成描述</td><td>写卖点、结构、场景、参数表达。</td><td>影响详情图生成；当前 basic template 暂不导出详情图。</td></tr>
+              <tr><td>生成模式</td><td>新款差异大选全量；同款换封面/颜色选去重。</td><td>去重模式下第 2 套开始复用第 1 套附图、详情图、SKU 图。</td></tr>
+              <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
+              <tr><td>分类 ID</td><td>建议从 Shopee Seller Center 的 Category Tree 查。</td><td>模板说明：可从 Category Tree 选择；留空时 Shopee 可能推荐类目。准确类目有利于搜索和属性匹配。</td></tr>
+              <tr><td>品牌 ID</td><td>当前可留空。</td><td>当前 basic Template A~AP 没有 Brand 列，系统不导出品牌 ID。类目专用模板中 Brand 可能必填，应使用有效品牌或 no brand。</td></tr>
+              <tr><td>重量(kg)</td><td>按实际商品包裹重量填写 kg。</td><td>官方模板 AD Weight 单位是 g，系统导出时自动从 kg 转成 g，范围 0~100000000g。</td></tr>
+              <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
+              <tr><td>规格名1</td><td>通常填颜色、款式。</td><td>官方要求 1~14 字符。</td></tr>
+              <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
+              <tr><td>规格名2/规格值2</td><td>有尺码时填写，例如 Size / M。</td><td>存在二级规格时必须成对填写。</td></tr>
+              <tr><td>价格</td><td>按越南站 VND 填数字。</td><td>当前模板规则为 1000~120000000，最高价/最低价比例不超过 5。</td></tr>
+              <tr><td>库存</td><td>每个变体库存。</td><td>官方范围 0~10000000。</td></tr>
+              <tr><td>SKU</td><td>店铺内唯一，建议简短。</td><td>官方要求小于 100 字符；系统会加上套图父 SKU 前缀防止重复。</td></tr>
+              <tr><td>SKU 参考图</td><td>每个一级规格上传一张清晰参考图。</td><td>只作为 AI 输入，最终导出使用生成后的 <code>sku_N</code>。</td></tr>
+              <tr><td>物流渠道</td><td>至少勾选一个可用渠道。</td><td>官方模板要求每个商品至少一个渠道为 On；系统导出未选渠道为 Off。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="guide-section">
+          <h2>分类 ID 和品牌 ID</h2>
+          <h3>分类 ID 是什么</h3>
+          <p>分类 ID 是 Shopee 平台的类目编码，不是系统自定义字段。官方模板提示应从 Seller Center 的 Category Tree 选择分类 ID；准确分类有利于搜索结果和后续类目属性匹配。</p>
+          <div class="note-box">官方样例中出现过 <code>120039</code>、<code>120055</code> 这类数字，但样例不是通用类目映射表，不要直接复制。实际类目应以当前站点 Seller Center 下载的 Category Tree 或类目模板为准。</div>
+          <p>如果暂时不知道分类 ID，可以留空。官方模板写明系统会推荐类目；但留空会降低可控性，类目属性、物流、价格限制可能需要上传后再处理。</p>
+
+          <h3>品牌 ID 和“无品牌”</h3>
+          <p>当前系统导出使用 Shopee basic template 的 A~AP 列，这个模板没有 Brand 列，所以创建页的品牌 ID 目前是预留字段，不会写入导出的 Excel。</p>
+          <p>Shopee 的类目专用模板或样例表里 Brand 通常要求填写 valid brand 或 no brand；样例规则还写明：可查品牌表的 valid brand id，或者留空后在 attributes tool 里补属性值。</p>
+          <div class="note-box">本仓库这份官方模板的隐藏品牌表没有可读品牌清单，也没有给出统一的“无品牌 ID”。因此系统不会默认填一个无品牌 ID。当前建议：品牌 ID 留空；如果后续使用类目专用模板，再从 Seller Center/官方模板品牌表选择有效品牌或 no brand。</div>
+        </div>
+
+        <div class="guide-section">
+          <h2>Shopee 官方模板关键限制</h2>
+          <table class="field-table">
+            <thead><tr><th>字段</th><th>限制</th></tr></thead>
+            <tbody>
+              <tr><td>Product Name</td><td>10~120 字符。</td></tr>
+              <tr><td>Product Description</td><td>100~3000 字符。</td></tr>
+              <tr><td>Variation Name1/2</td><td>1~14 字符。</td></tr>
+              <tr><td>Option for Variation 1/2</td><td>1~20 字符。</td></tr>
+              <tr><td>Price</td><td>1000~120000000；最高 SKU 价 / 最低 SKU 价不超过 5。</td></tr>
+              <tr><td>Stock</td><td>0~10000000。</td></tr>
+              <tr><td>SKU</td><td>小于 100 字符。</td></tr>
+              <tr><td>Cover / Item / Variation Image</td><td>JPG/JPEG/PNG，单张最大 2MB，最小 1×1 px。</td></tr>
+              <tr><td>Weight</td><td>0~100000000 g。</td></tr>
+              <tr><td>Length / Width / Height</td><td>0~10000000。</td></tr>
+              <tr><td>Shipping</td><td>至少一个渠道 On，其余可 Off。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="guide-section">
+          <h2>导出前检查</h2>
+          <ul>
+            <li>任务状态已完成，推送计划没有 pending/processing。</li>
+            <li>每套都有 AI 商品标题，且长度符合 10~120。</li>
+            <li>每套都有 <code>main_1</code> 封面和 <code>sub_2~sub_N</code> 附图。</li>
+            <li>每个变体都有 AI SKU 标题和生成后的 SKU 图。</li>
+            <li>至少选择一个物流渠道。</li>
+            <li>价格、库存、重量、规格长度符合官方模板限制。</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+function showGuide(tab){
+  var tabs=document.querySelectorAll('.guide-tab');
+  var panels=document.querySelectorAll('.guide-panel');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i].dataset.tab===tab);
+  for(var j=0;j<panels.length;j++)panels[j].classList.toggle('active',panels[j].id==='guide-'+tab);
+}
+</script>
+</body></html>

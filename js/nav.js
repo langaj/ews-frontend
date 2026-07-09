@@ -11,10 +11,10 @@
     { p: '/', l: '任务列表' },
     { p: '/create-jst.html', l: '创建(聚水潭)' },
     { p: '/create-shopee.html', l: '创建(虾皮)' },
+    { p: '/guide.html', l: '使用说明' },
   ];
   if (isAdmin) {
     allPages.push({ p: '/config.html', l: '系统配置' });
-    allPages.push({ p: '/doc.html', l: 'API文档' });
   }
   for (var i = 0; i < allPages.length; i++) {
     var isActive = cur === allPages[i].p || cur.replace('.html','') === allPages[i].p.replace('.html','');

@@ -69,6 +69,7 @@
     <div class="form-group">
       <label class="form-label">分类 ID</label>
       <input type="text" class="form-input" id="categoryId" placeholder="如：120055">
+      <div style="font-size:12px;color:var(--gray-500);margin-top:4px">来自 Shopee Seller Center 的 Category Tree；不知道可留空由平台推荐。</div>
     </div>
   </div>
   <div class="form-row">
@@ -77,8 +78,9 @@
       <input type="number" class="form-input" id="variantCount" value="1" min="1" max="50" onchange="updateVariants()">
     </div>
     <div class="form-group">
-      <label class="form-label">品牌 ID</label>
-      <input type="text" class="form-input" id="brandId" placeholder="如：2200345">
+      <label class="form-label">品牌 ID <span class="optional">（可留空）</span></label>
+      <input type="text" class="form-input" id="brandId" placeholder="当前基础模板不导出品牌 ID">
+      <div style="font-size:12px;color:var(--gray-500);margin-top:4px">类目专用模板可能要求有效品牌或 no brand；当前可留空。</div>
     </div>
   </div>
   <div class="form-row">
