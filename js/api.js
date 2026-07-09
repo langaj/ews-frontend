@@ -47,7 +47,7 @@ async function _handleResponse(promise) {
 async function _upload(url, formData) {
   const token = localStorage.getItem('ews_token');
   const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-  try { const res = await fetch(url, { method: 'POST', headers, body: formData }); return await res.json(); }
+  try { const res = await fetch(API_BASE + url, { method: 'POST', headers, body: formData }); return await res.json(); }
   catch (e) { return { success: false, error: '上传失败: ' + e.message }; }
 }
 
