@@ -277,6 +277,7 @@ ${WEBHOOKS.slice(2).map(function(w){
 <h2 id="聚水潭导出">聚水潭导出格式（22列）</h2>
 <p>导出接口 <code>GET /api/tasks/:id/export</code> 为 JST 任务时返回以下列：</p>
 <pre>款式编码 | 商品编码 | 颜色 | 规格 | 商品主图(JSON数组) | 商品详情图(JSON数组) | 图片地址 | 商品名称 | 推荐文案 | 商品描述 | 宝贝链接 | 库存 | 重量(kg) | 基本售价 | 市场/吊牌价 | 最低分销控价 | 最高分销控价 | 供应商名 | 3:4主图 | 长图 | 透明素材图 | 白底图</pre>
+<div class="note">JST 导出前会阻断缺失 AI 资源：每套必须有商品标题、主图/附图、详情图；每个变体必须有 SKU 标题和 SKU 变体图。去重模式下第 2 套开始复用第 1 套的附图、详情图和 SKU 图。</div>
 
 <h2 id="Shopee导出">Shopee 导出格式（A~AP 42列）</h2>
 <p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
