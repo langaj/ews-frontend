@@ -11,7 +11,7 @@
 <div class="app-container">
 <div class="page-header"><h1 class="page-title">任务列表</h1>
 <div class="action-bar"><a href="/create-jst.html" class="btn btn-primary">创建(聚水潭)</a><a href="/create-shopee.html" class="btn btn-primary">创建(虾皮)</a>
-<button class="btn btn-outline" onclick="refreshTasks()">刷新</button></div></div>
+<button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button></div></div>
 <div class="card"><div class="card-body" id="taskContent"><div class="loading"><div class="spinner"></div>加载中...</div></div></div>
 </div>
 
@@ -35,33 +35,38 @@
 </div>
 
 <script src="/js/api.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 var ACTION_TIMEOUT_MS=120000;
 var activeActionLocks={};
+var zipLibPromise=null;
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();await refreshTasks()});
 
-async function refreshTasks(){
-  const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
-  const res=await API.getTasks();
-  if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
-  const tasks=res.tasks||[];
-  if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px"><a href="/create-jst.html" class="btn btn-primary">创建第一个任务(聚水潭)</a> <a href="/create-shopee.html" class="btn btn-primary">创建第一个任务(虾皮)</a></div></div>';return}
-  var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
-  for(var i=0;i<tasks.length;i++){
-    var t=tasks[i];
-    var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
-    html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
-    html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
-    html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
-    if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
-    if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
-    if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
-    html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
-    html+='</div></td></tr>';
+async function refreshTasks(btn){
+  if(btn) setActionButtonLoading(btn,'刷新中...');
+  try{
+    const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
+    const res=await API.getTasks();
+    if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
+    const tasks=res.tasks||[];
+    if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px"><a href="/create-jst.html" class="btn btn-primary">创建第一个任务(聚水潭)</a> <a href="/create-shopee.html" class="btn btn-primary">创建第一个任务(虾皮)</a></div></div>';return}
+    var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+    for(var i=0;i<tasks.length;i++){
+      var t=tasks[i];
+      var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
+      html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
+      html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
+      html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
+      if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
+      if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
+      if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
+      html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
+      html+='</div></td></tr>';
+    }
+    html+='</tbody></table></div>';
+    c.innerHTML=html;
+  }finally{
+    if(btn) restoreActionButton(btn);
   }
-  html+='</tbody></table></div>';
-  c.innerHTML=html;
 }
 
 async function viewTask(taskId){
@@ -264,8 +269,22 @@ async function downloadTaskImages(taskId,btn){
   await withActionLock('download:'+taskId,btn,'打包中...',function(){return downloadTaskImagesInner(taskId)});
 }
 
+function ensureZipLib(){
+  if(window.JSZip)return Promise.resolve(window.JSZip);
+  if(zipLibPromise)return zipLibPromise;
+  zipLibPromise=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.async=true;
+    s.onload=function(){window.JSZip?resolve(window.JSZip):(zipLibPromise=null,reject(new Error('JSZip not available')))};
+    s.onerror=function(){zipLibPromise=null;reject(new Error('JSZip load failed'))};
+    document.head.appendChild(s);
+  });
+  return zipLibPromise;
+}
+
 async function downloadTaskImagesInner(taskId){
-  if(!window.JSZip){showToast('打包组件加载中，请稍后再试','error');return}
+  try{await ensureZipLib()}catch(e){showToast('打包组件加载失败，请刷新后重试','error');return}
   var overlay=document.getElementById('downloadOverlay');
   var titleEl=document.getElementById('downloadTitle');
   var progEl=document.getElementById('downloadProgress');
@@ -427,6 +446,7 @@ function statusBadge(status){
 function formatDate(s){return (s||'').slice(0,16)}
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+Object.assign(window,{refreshTasks,viewTask,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body></html>
