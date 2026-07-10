@@ -58,7 +58,7 @@ const EP = [
   {m:'GET',p:'/api/auth/verify',d:'验证Token',a:true},
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
-  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',n8n_title_webhook:'string',push_batch_size:'number'}},
+  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',n8n_title_webhook:'string',push_batch_size:'number',push_global_max_active:'number(通用配置)'}},
   {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee 可选)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
@@ -231,7 +231,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片会先下载到 R2，再写入对应平台资源表。</td></tr>
 <tr><td><code>failed</code></td><td>Webhook 地址缺失、Webhook 即时失败、算力不足、资源下载失败且重试耗尽，或人工重试失败。</td><td>记录错误；地址缺失不扣算力，已扣算力但未成功派发或重试耗尽时会退还。</td></tr>
 </table>
-<div class="note"><strong>并发与补位：</strong><code>push_batch_size</code> 是每个平台的队列并发上限。系统统计当前 <code>processing</code> 计划数，只释放剩余槽位；回调完成后再次释放后续 <code>pending</code> 计划。</div>
+<div class="note"><strong>并发与补位：</strong><code>push_batch_size</code> 是单个平台单个任务的释放上限；<code>push_global_max_active</code> 是所有平台、所有任务共享的全局 <code>processing</code> 上限，默认 20。系统释放计划时同时检查单任务槽位和全局槽位，回调完成后再补位后续 <code>pending</code> 计划。</div>
 <div class="note"><strong>通用推送体：</strong>n8n 工作流不需要接收或回传 <code>platform</code>。标题、图片、SKU 等工作流只需要使用 <code>task_id</code>、<code>sub_task_id</code>、<code>image_type</code>、<code>image_position</code>、<code>callback_url</code> 和 <code>callback_secret</code> 等通用字段。平台差异由 EWS 内部根据 <code>task_id</code> 调度和落库。</div>
 
 <h2 id="JST任务">JST 任务</h2>
@@ -244,7 +244,7 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>图片队列默认最多 3 个活跃处理任务，单轮最多消费 3 条。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>回调队列默认最多 3 个活跃处理任务，单轮最多消费 3 条；图片队列默认最多 3 个活跃处理任务，单轮最多消费 3 条。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
 
 <h3>回调字段</h3>
 <table class="ftable">

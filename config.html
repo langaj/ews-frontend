@@ -20,6 +20,7 @@
     <form onsubmit="return false">
       <div class="form-group"><label class="form-label">R2 公开访问地址</label><input type="url" class="form-input" id="r2PublicUrl" placeholder="https://oss.langaj.work"></div>
       <div class="form-group"><label class="form-label">回调密钥 (callback_secret)</label><input type="text" class="form-input" id="callbackSecret" placeholder="n8n 回调时校验用"></div>
+      <div class="form-group"><label class="form-label">全局推送并发上限</label><input type="number" class="form-input" id="pushGlobalMaxActive" min="1" max="200" value="20"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">所有平台、所有任务合计最多同时处理的工作流推送数。</div></div>
       <button class="btn btn-primary" onclick="saveGeneralConfig()">保存通用配置</button>
     </form>
   </div></div>
@@ -185,9 +186,10 @@ async function loadGeneralConfig(){
   var c=res.config||{};
   s('r2PublicUrl',c.r2_public_url);
   s('callbackSecret',c.callback_secret);
+  s('pushGlobalMaxActive',c.push_global_max_active||'20');
 }
 async function saveGeneralConfig(){
-  var cfg={r2_public_url:g('r2PublicUrl'),callback_secret:g('callbackSecret')};
+  var cfg={r2_public_url:g('r2PublicUrl'),callback_secret:g('callbackSecret'),push_global_max_active:parseInt(g('pushGlobalMaxActive'))||20};
   var res=await API.updateConfig(cfg,'');
   showToast(res.success?'保存成功':(res.error||'失败'),res.success?'success':'error');
 }
