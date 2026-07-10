@@ -67,8 +67,19 @@ async function requireAuth() {
 
 async function refreshNavCredits() {
   const el = document.getElementById('navCredits'); if (!el) return;
-  const res = await API.getMyCredits();
-  if (res.success) el.textContent = res.credits ?? 0;
+  const btn = document.getElementById('navRefreshCredits');
+  const oldText = btn ? btn.textContent : '';
+  if (btn?.dataset.loading === '1') return;
+  if (btn) { btn.dataset.loading = '1'; btn.textContent = '刷新中'; btn.classList.add('is-loading'); }
+  try {
+    const res = await API.getMyCredits();
+    if (res.success) el.textContent = res.credits ?? 0;
+    else showToast(res.error || '算力刷新失败', 'error');
+  } catch (e) {
+    showToast('算力刷新失败: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.dataset.loading = '0'; btn.textContent = oldText || '刷新'; btn.classList.remove('is-loading'); }
+  }
 }
 
 // ========== 登录弹窗 ==========
@@ -127,3 +138,12 @@ function showToast(msg, type) {
   requestAnimationFrame(() => t.classList.add('show'));
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
 }
+
+window.API = API;
+window.requireAuth = requireAuth;
+window.refreshNavCredits = refreshNavCredits;
+window.showLoginModal = showLoginModal;
+window.handleLogin = handleLogin;
+window.hideLoginModal = hideLoginModal;
+window.handleLogout = handleLogout;
+window.showToast = showToast;

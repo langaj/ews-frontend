@@ -32,6 +32,7 @@ a:hover { text-decoration: underline; }
 .nav-credits b { color: var(--primary); }
 .nav-refresh { font-size: 12px; color: var(--primary); cursor: pointer; margin-left: 8px; text-decoration: none; }
 .nav-refresh:hover { text-decoration: underline; }
+.nav-refresh.is-loading { pointer-events: none; opacity: .65; text-decoration: none; }
 
 /* 页面 */
 .page-header { display: flex; justify-content: space-between; align-items: center; margin: 32px 0 24px; }

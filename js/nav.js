@@ -27,7 +27,7 @@
     if (isLoggedIn) {
       rightHtml += '<span class="nav-credits">算力: <b id="navCredits">...</b>';
       rightHtml += '<a href="javascript:void(0)" id="navRefreshCredits" class="nav-refresh">刷新</a>';
-      rightHtml += '<a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);padding:6px 12px">退出</a></span>';
+      rightHtml += '<a href="javascript:void(0)" id="navLogout" class="nav-link" style="color:var(--danger);padding:6px 12px">退出</a></span>';
     }
 
     var existing = document.getElementById('ewsNav');
@@ -41,6 +41,21 @@
       + '<div class="navbar-right">' + rightHtml + '</div>'
       + '</div>';
     document.body.insertBefore(nav, document.body.firstChild);
+
+    var refresh = document.getElementById('navRefreshCredits');
+    if (refresh) {
+      refresh.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (typeof window.refreshNavCredits === 'function') window.refreshNavCredits();
+      });
+    }
+    var logout = document.getElementById('navLogout');
+    if (logout) {
+      logout.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (typeof window.handleLogout === 'function') window.handleLogout();
+      });
+    }
   }
   window.renderEwsNav = renderNav;
   renderNav();
