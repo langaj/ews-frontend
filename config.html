@@ -80,12 +80,15 @@
       <select class="form-input" id="newRole" style="max-width:100px">
         <option value="user">普通用户</option><option value="admin">管理员</option>
       </select>
+      <select class="form-input" id="newPlatformAccess" style="max-width:120px">
+        <option value="allow">全部平台</option><option value="jst">仅聚水潭</option><option value="shopee">仅虾皮</option>
+      </select>
       <button class="btn btn-primary" onclick="handleAddUser()">添加用户</button>
     </div>
   </div></div>
   <div class="card" style="margin-top:20px"><div class="card-header">用户列表</div><div class="card-body">
     <div class="table-container">
-      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>算力</th><th>操作</th></tr></thead>
+      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>平台能力</th><th>算力</th><th>操作</th></tr></thead>
       <tbody id="userListBody"></tbody></table>
     </div>
   </div></div>
@@ -210,6 +213,13 @@ async function loadUserList(){
   var tbody=document.getElementById('userListBody');
   tbody.innerHTML=res.users.map(function(u){
     var status=u.is_active?'<span style="color:var(--success)">活跃</span>':'<span style="color:var(--danger)">已禁用</span>';
+    var access=u.role==='admin'
+      ? '<span class="muted">管理员不受限制</span>'
+      : '<select class="form-input" id="pa_'+u.id+'" onchange="updatePlatformAccess(\''+u.id+'\')" style="width:110px;font-size:12px;padding:2px 6px">'+
+          '<option value="allow" '+((u.platform_access||'allow')==='allow'?'selected':'')+'>全部平台</option>'+
+          '<option value="jst" '+(u.platform_access==='jst'?'selected':'')+'>仅聚水潭</option>'+
+          '<option value="shopee" '+(u.platform_access==='shopee'?'selected':'')+'>仅虾皮</option>'+
+        '</select>';
     var creditsHtml='<div class="user-credits-cell">'+
       '<span style="font-weight:600">'+u.credits+'</span>'+
       '<input type="number" class="form-input" id="ci_'+u.id+'" value="0" min="0" style="width:60px;font-size:12px;padding:2px 6px">'+
@@ -218,7 +228,7 @@ async function loadUserList(){
       '</select>'+
       '<button class="btn btn-sm btn-outline" onclick="updateCredits(\''+u.id+'\')" style="font-size:11px">确认</button></div>';
     var toggleBtn=u.id==='admin'?'—':'<button class="btn btn-sm btn-outline" onclick="toggleUser(\''+u.id+'\')" style="font-size:11px">'+(u.is_active?'禁用':'启用')+'</button>';
-    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+creditsHtml+'</td><td>'+toggleBtn+'</td></tr>';
+    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+access+'</td><td>'+creditsHtml+'</td><td>'+toggleBtn+'</td></tr>';
   }).join('');
 }
 function populateWebhookUserSelect(){loadUserList()}
@@ -262,10 +272,17 @@ async function handleAddUser(){
   var u=document.getElementById('newUsername').value.trim();
   var p=document.getElementById('addUserPassword').value;
   var r=document.getElementById('newRole').value;
+  var platformAccess=document.getElementById('newPlatformAccess').value;
   if(!u||p.length<6){showToast('用户名不能为空，密码至少6位','error');return}
-  var res=await API.createUser(u,p,r);
+  var res=await API.createUser(u,p,r,platformAccess);
   if(res.success){showToast('用户创建成功','success');document.getElementById('newUsername').value='';document.getElementById('addUserPassword').value='';loadUserList();}
   else showToast(res.error||'创建失败','error');
+}
+async function updatePlatformAccess(userId){
+  var access=document.getElementById('pa_'+userId).value;
+  var res=await API.updateUserPlatform(userId,access);
+  if(res.success)showToast('平台权限已更新','success');
+  else {showToast(res.error||'更新失败','error');loadUserList()}
 }
 async function toggleUser(userId){
   var res=await API.toggleUser(userId);

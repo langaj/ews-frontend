@@ -19,8 +19,9 @@ const API = {
   async retryPlan(taskId, planId) { return this._post(`/api/tasks/${taskId}/plans/${planId}/retry`, {}); },
   async getPushPlans(id) { return this._get(`/api/tasks/${id}/plans`); },
   async getUsers() { return this._get('/api/users'); },
-  async createUser(username, password, role) { return this._post('/api/users', { username, password, role }); },
+  async createUser(username, password, role, platformAccess) { return this._post('/api/users', { username, password, role, platform_access: platformAccess || 'allow' }); },
   async toggleUser(id) { return this._put(`/api/users/${id}/toggle`, {}); },
+  async updateUserPlatform(id, platformAccess) { return this._put(`/api/users/${id}/platform`, { platform_access: platformAccess || 'allow' }); },
   async updateUserCredits(id, action, amount) { return this._put(`/api/users/${id}/credits`, { action, amount }); },
   async getMyCredits() { return this._get('/api/users/me/credits'); },
   async getUserWebhook(id) { return this._get(`/api/users/${id}/webhook`); },
@@ -59,6 +60,8 @@ async function requireAuth() {
   if (!res.success) { showLoginModal(); return false; }
   localStorage.setItem('ews_role', res.role || 'user');
   localStorage.setItem('ews_username', res.username || '');
+  localStorage.setItem('ews_platform_access', res.platform_access || 'allow');
+  if (window.renderEwsNav) window.renderEwsNav();
   return true;
 }
 
@@ -97,7 +100,7 @@ async function handleLogin(e) {
   const res = await API.login(password, username);
   if (res.success) {
     API._setToken(res.token);
-    if (res.user) { localStorage.setItem('ews_username', res.user.username || ''); localStorage.setItem('ews_role', res.user.role || 'user'); }
+    if (res.user) { localStorage.setItem('ews_username', res.user.username || ''); localStorage.setItem('ews_role', res.user.role || 'user'); localStorage.setItem('ews_platform_access', res.user.platform_access || 'allow'); }
     hideLoginModal();
     location.reload();
   } else {
@@ -112,6 +115,7 @@ function handleLogout() {
   API._clearToken();
   localStorage.removeItem('ews_role');
   localStorage.removeItem('ews_username');
+  localStorage.removeItem('ews_platform_access');
   location.reload();
 }
 

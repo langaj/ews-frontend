@@ -120,7 +120,8 @@ var refFiles=[];
 var variantImgFiles=[];
 var channels=[{id:'5000',label:'Hỏa Tốc'},{id:'5001',label:'Nhanh'},{id:'5004',label:'Hàng Cồng Kềnh'},{id:'5012',label:'Trong Ngày'},{id:'5115',label:'Hỏa Tốc - Ưu Tiên'},{id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},{id:'50052',label:'Tủ nhận hàng - SPX'}];
 
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();initRefSlots();updateVariants();initShipping()});
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('shopee')){showToast('当前账号无权创建虾皮任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();updateVariants();initShipping()});
+function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
 function initShipping(){var h='';for(var c of channels)h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"> '+c.label+'</label>';document.getElementById('shippingChannels').innerHTML=h;}
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];var html='';

@@ -10,7 +10,7 @@
 <script src="/js/nav.js"></script>
 <div class="app-container">
 <div class="page-header"><h1 class="page-title">任务列表</h1>
-<div class="action-bar"><a href="/create-jst.html" class="btn btn-primary">创建(聚水潭)</a><a href="/create-shopee.html" class="btn btn-primary">创建(虾皮)</a>
+<div class="action-bar" id="taskCreateActions">
 <button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button></div></div>
 <div class="card"><div class="card-body" id="taskContent"><div class="loading"><div class="spinner"></div>加载中...</div></div></div>
 </div>
@@ -39,7 +39,21 @@
 var ACTION_TIMEOUT_MS=120000;
 var activeActionLocks={};
 var zipLibPromise=null;
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();await refreshTasks()});
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();renderCreateActions();await refreshTasks()});
+
+function userPlatformAccess(){return localStorage.getItem('ews_platform_access')||'allow'}
+function userCanCreate(platform){return localStorage.getItem('ews_role')==='admin'||userPlatformAccess()==='allow'||userPlatformAccess()===platform}
+function createTaskButtonsHtml(){
+  var html='';
+  if(userCanCreate('jst')) html+='<a href="/create-jst.html" class="btn btn-primary">创建(聚水潭)</a>';
+  if(userCanCreate('shopee')) html+='<a href="/create-shopee.html" class="btn btn-primary">创建(虾皮)</a>';
+  return html;
+}
+function renderCreateActions(){
+  var el=document.getElementById('taskCreateActions');
+  if(!el)return;
+  el.innerHTML=createTaskButtonsHtml()+'<button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button>';
+}
 
 async function refreshTasks(btn){
   if(btn) setActionButtonLoading(btn,'刷新中...');
@@ -48,7 +62,7 @@ async function refreshTasks(btn){
     const res=await API.getTasks();
     if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
     const tasks=res.tasks||[];
-    if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px"><a href="/create-jst.html" class="btn btn-primary">创建第一个任务(聚水潭)</a> <a href="/create-shopee.html" class="btn btn-primary">创建第一个任务(虾皮)</a></div></div>';return}
+    if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px">'+(createTaskButtonsHtml()||'<span class="muted">当前账号暂无可创建的平台</span>')+'</div></div>';return}
     var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
     for(var i=0;i<tasks.length;i++){
       var t=tasks[i];
@@ -56,8 +70,9 @@ async function refreshTasks(btn){
       html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
       html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
       html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
-      if(t.status==='pending') html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
-      if(t.status==='pending'&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
+      var hasPlans=(parseInt(t.plan_count)||0)>0;
+      if(t.status==='pending'&&!hasPlans) html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
+      if(t.status==='pending'&&!hasPlans&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
       if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
       html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
       html+='</div></td></tr>';

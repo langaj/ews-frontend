@@ -97,7 +97,8 @@
 <script>
 let refFiles=[],variantFiles={};
 
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();initRefSlots();updateVariants()});
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('jst')){showToast('当前账号无权创建聚水潭任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();updateVariants()});
+function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
 function toggleMode(){}
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];
