@@ -81,8 +81,8 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_task_count生成N个标题后批量回调；不需要传platform'},
-  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length；option2不存在时为空'},
+  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_tasks/sub_task_count生成N个标题后批量回调；不需要传platform'},
+  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length；option2不存在时为空'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},

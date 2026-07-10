@@ -219,13 +219,18 @@ async function pushTask(taskId,testMode,btn){
 
 async function retryPlan(taskId,planId,btn,mode){
   var isPush=mode==='push';
-  var ok=await showConfirmDialog({title:isPush?'推送计划':'重试计划',message:isPush?'确定要推送这个队列计划吗？':'确定要重试这个推送计划吗？',confirmText:isPush?'推送':'重试'});
+  var isRegen=mode==='regen';
+  var ok=await showConfirmDialog({
+    title:isPush?'推送计划':(isRegen?'重新生成':'重试计划'),
+    message:isPush?'确定要推送这个队列计划吗？':(isRegen?'确定要重新生成这个已完成的队列计划吗？生成成功后会覆盖原资源。':'确定要重试这个推送计划吗？'),
+    confirmText:isPush?'推送':(isRegen?'重新生成':'重试')
+  });
   if(!ok)return;
-  await withActionLock('retry-plan:'+planId,btn,isPush?'推送中...':'重试中...',async function(){
-    await runWithOverlay(isPush?'正在推送队列计划...':'正在重试推送计划...', async function(){
+  await withActionLock('retry-plan:'+planId,btn,isPush?'推送中...':(isRegen?'重新生成中...':'重试中...'),async function(){
+    await runWithOverlay(isPush?'正在推送队列计划...':(isRegen?'正在重新生成队列资源...':'正在重试推送计划...'), async function(){
       var res=await API.retryPlan(taskId,planId);
-      if(!res.success){showToast(res.error||(isPush?'推送失败':'重试失败'),'error');return}
-      showToast(isPush?'计划已推送':'计划已重试','success');
+      if(!res.success){showToast(res.error||(isPush?'推送失败':(isRegen?'重新生成失败':'重试失败')),'error');return}
+      showToast(isPush?'计划已推送':(isRegen?'计划已重新发送':'计划已重试'),'success');
       await refreshTasks();
       await viewTask(taskId);
     });
@@ -321,8 +326,11 @@ async function downloadTaskImagesInner(taskId){
     var link=document.createElement('a');
     link.href=URL.createObjectURL(content);
     link.download=zipFileName(taskId);
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href);
+    var href=link.href;
+    link.remove();
+    setTimeout(function(){URL.revokeObjectURL(href)},1000);
     overlay.classList.remove('show');
     showToast('打包完成: '+fetched+'/'+total+' 张图片','success');
   }catch(e){
@@ -415,9 +423,12 @@ async function renderPushPlans(taskId){
   html+='<div class="table-container"><table style="font-size:13px"><thead><tr><th>类型</th><th>子任务</th><th>状态</th><th>错误</th><th>操作</th></tr></thead><tbody>';
   for(var i=0;i<plans.length;i++){
     var p=plans[i];
-    var action='<span class="muted">-</span>';
-    if(p.status==='failed') action='<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'retry\')">重试</button>';
-    else if(p.status==='pending') action='<button class="btn btn-sm btn-primary" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'push\')">推送</button>';
+    var actions=[];
+    if(p.status==='failed') actions.push('<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'retry\')">重试</button>');
+    else if(p.status==='pending') actions.push('<button class="btn btn-sm btn-primary" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'push\')">推送</button>');
+    else if(p.status==='done') actions.push('<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'regen\')">重新生成</button>');
+    if(p.status==='done'&&p.preview_url) actions.push('<a class="btn btn-sm btn-outline" href="'+escapeHtml(p.preview_url)+'" target="_blank" rel="noopener">预览</a>');
+    var action=actions.length?actions.join(' '):'<span class="muted">-</span>';
     html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+planStatusBadge(p.status)+'</td><td>'+escapeHtml((p.error||'').slice(0,80))+'</td><td>'+action+'</td></tr>';
   }
   html+='</tbody></table></div></div>';
