@@ -16,7 +16,7 @@
     if (canUse('jst')) allPages.push({ p: '/create-jst.html', l: '创建(聚水潭)' });
     if (canUse('shopee')) allPages.push({ p: '/create-shopee.html', l: '创建(虾皮)' });
     allPages.push({ p: '/guide.html', l: '使用说明' });
-    if (isAdmin) allPages.push({ p: '/config.html', l: '系统配置' });
+    if (isLoggedIn) allPages.push({ p: '/config.html', l: isAdmin ? '系统配置' : '账号设置' });
 
     for (var i = 0; i < allPages.length; i++) {
       var isActive = cur === allPages[i].p || cur.replace('.html','') === allPages[i].p.replace('.html','');

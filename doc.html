@@ -75,6 +75,8 @@ const EP = [
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
   {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee'}},
   {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用用户(admin)',a:true},
+  {m:'PUT',p:'/api/users/:id/reset-password',d:'重置用户密码为 user123(admin)',a:true},
+  {m:'DELETE',p:'/api/users/:id',d:'删除用户(admin)',a:true},
   {m:'PUT',p:'/api/users/:id/platform',d:'设置用户平台能力(admin)',a:true,b:{platform_access:'allow|jst|shopee'}},
   {m:'GET',p:'/api/users/:id/webhook',d:'读取用户webhook(admin)',a:true},
   {m:'PUT',p:'/api/users/:id/webhook',d:'设置用户webhook(admin)',a:true},
@@ -262,7 +264,7 @@ ${eps(['POST /api/upload','GET /r2/*'])}
 <div class="note">支持 JPG/PNG/WebP/GIF，单文件 ≤10MB。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.jpg</code>。</div>
 
 <h2 id="用户管理">用户管理</h2>
-${eps(['GET /api/users','POST /api/users','PUT /api/users/:id/toggle','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
+${eps(['GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
 <div class="note"><strong>用户 webhook 配置：</strong>JSON 格式 <code>{"jst":{...}, "shopee":{...}}</code>，用户级 webhook 覆盖全局配置。</div>
 
 <h2 id="标题类">标题类 Webhook 推送体</h2>

@@ -21,6 +21,8 @@ const API = {
   async getUsers() { return this._get('/api/users'); },
   async createUser(username, password, role, platformAccess) { return this._post('/api/users', { username, password, role, platform_access: platformAccess || 'allow' }); },
   async toggleUser(id) { return this._put(`/api/users/${id}/toggle`, {}); },
+  async resetPassword(id) { return this._put(`/api/users/${id}/reset-password`, {}); },
+  async deleteUser(id) { return this._del(`/api/users/${id}`); },
   async updateUserPlatform(id, platformAccess) { return this._put(`/api/users/${id}/platform`, { platform_access: platformAccess || 'allow' }); },
   async updateUserCredits(id, action, amount) { return this._put(`/api/users/${id}/credits`, { action, amount }); },
   async getMyCredits() { return this._get('/api/users/me/credits'); },
