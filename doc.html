@@ -64,7 +64,7 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
   {m:'PUT',p:'/api/tasks/:id',d:'更新任务(JST/Shopee，按任务平台自动识别请求体)',a:true},
   {m:'DELETE',p:'/api/tasks/:id',d:'删除任务(含R2清理)',a:true},
-  {m:'PUT',p:'/api/tasks/:id/status',d:'更新状态',a:true,b:{status:'pending|processing|completed|failed'}},
+  {m:'PUT',p:'/api/tasks/:id/status',d:'更新状态',a:true,b:{status:'pending|processing|partial_failed|completed|failed'}},
   {m:'POST',p:'/api/tasks/:id/push',d:'统一推送(系统按任务ID自动识别平台与工作流地址)',a:true,b:{test_mode:'boolean(可选，admin前端入口使用)'}},
   {m:'GET',p:'/api/tasks/:id/plans',d:'推送计划列表',a:true},
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
@@ -220,8 +220,9 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><td><code>init</code></td><td>已创建任务ID，尚未提交完整任务数据。</td><td><code>POST /api/tasks/init</code> 创建。</td></tr>
 <tr><td><code>pending</code></td><td>任务数据已保存，等待触发推送。</td><td><code>PUT /api/tasks/:id</code> 保存后进入。</td></tr>
 <tr><td><code>processing</code></td><td>已创建子任务和推送计划，队列正在释放到不同工作流地址。</td><td><code>POST /api/tasks/:id/push</code> 后进入。</td></tr>
+<tr><td><code>partial_failed</code></td><td>至少一条推送计划失败，但仍存在 pending/processing 计划或可继续处理的任务。</td><td>修复 webhook/算力/资源问题后，在任务列表点击继续或在详情中重试失败计划。</td></tr>
 <tr><td><code>completed</code></td><td>子任务资源完成且无待处理推送计划。</td><td>回调保存标题/图片后由系统检查完成度。</td></tr>
-<tr><td><code>failed</code></td><td>任务被标记失败，或推送计划失败后需要人工处理。</td><td>管理端更新状态，或查看推送计划失败原因后重试。</td></tr>
+<tr><td><code>failed</code></td><td>任务进入最终失败，通常表示已无 pending/processing 计划但仍存在 failed 计划。</td><td>查看推送计划失败原因后重试，重试成功会恢复 processing 并继续释放队列。</td></tr>
 </table>
 <h3>推送计划状态机</h3>
 <table class="ftable">

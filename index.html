@@ -73,7 +73,7 @@ async function refreshTasks(btn){
       var hasPlans=(parseInt(t.plan_count)||0)>0;
       if(t.status==='pending'&&!hasPlans) html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
       if(t.status==='pending'&&!hasPlans&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
-      if(t.status==='failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
+      if(t.status==='failed'||t.status==='partial_failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
       html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
       html+='</div></td></tr>';
     }
@@ -468,6 +468,7 @@ function planStatusBadge(status){
 }
 
 function statusBadge(status){
+  if(status==='partial_failed')return '<span class="badge badge-warning">部分失败</span>';
   var map={init:['初始化','badge-default'],pending:['待推送','badge-warning'],processing:['处理中','badge-info'],completed:['已完成','badge-success'],failed:['失败','badge-danger']};
   var s=map[status]||[status||'', 'badge-default'];
   return '<span class="badge '+s[1]+'">'+escapeHtml(s[0])+'</span>';
