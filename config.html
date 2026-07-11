@@ -24,8 +24,8 @@
       <div class="form-group"><label class="form-label"><input type="checkbox" id="pushPrimaryImagesOnly"> 仅释放主图/附图工作流</label><div style="font-size:12px;color:var(--gray-500);margin-top:4px">当前标题、SKU 等工作流未完善时启用，避免无效工作流占用队列额度。</div></div>
       <div class="form-group"><label class="form-label">每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerMinute" min="1" max="120" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">平滑释放工作流请求，避免同一分钟内大量任务冲击工作流和 D1。</div></div>
       <div class="form-group"><label class="form-label">单任务每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerTaskPerMinute" min="1" max="60" value="2"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">避免单个大任务占满所有新推送额度。</div></div>
-      <div class="form-group"><label class="form-label">图片队列活跃上限</label><input type="number" class="form-input" id="imageQueueMaxActive" min="1" max="20" value="3"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">限制回调图片下载、压缩和写入 R2 的并发。</div></div>
-      <div class="form-group"><label class="form-label">图片队列单轮消费数</label><input type="number" class="form-input" id="imageQueueBatchSize" min="1" max="20" value="3"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">每轮后台最多认领的图片队列数量。</div></div>
+      <div class="form-group"><label class="form-label">图片队列活跃上限</label><input type="number" class="form-input" id="imageQueueMaxActive" min="1" max="20" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">限制回调图片下载、压缩和写入 R2 的并发。</div></div>
+      <div class="form-group"><label class="form-label">图片队列单轮消费数</label><input type="number" class="form-input" id="imageQueueBatchSize" min="1" max="20" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">每轮后台最多认领的图片队列数量。</div></div>
       <button class="btn btn-primary" onclick="saveGeneralConfig()">保存通用配置</button>
     </form>
   </div></div>
@@ -196,8 +196,8 @@ async function loadGeneralConfig(){
   chk('pushPrimaryImagesOnly',c.push_primary_images_only||'false');
   s('pushReleasePerMinute',c.push_release_per_minute||'6');
   s('pushReleasePerTaskPerMinute',c.push_release_per_task_per_minute||'2');
-  s('imageQueueMaxActive',c.image_queue_max_active||'3');
-  s('imageQueueBatchSize',c.image_queue_batch_size||'3');
+  s('imageQueueMaxActive',c.image_queue_max_active||'6');
+  s('imageQueueBatchSize',c.image_queue_batch_size||'6');
 }
 async function saveGeneralConfig(){
   var cfg={
@@ -207,8 +207,8 @@ async function saveGeneralConfig(){
     push_primary_images_only:document.getElementById('pushPrimaryImagesOnly').checked,
     push_release_per_minute:parseInt(g('pushReleasePerMinute'))||6,
     push_release_per_task_per_minute:parseInt(g('pushReleasePerTaskPerMinute'))||2,
-    image_queue_max_active:parseInt(g('imageQueueMaxActive'))||3,
-    image_queue_batch_size:parseInt(g('imageQueueBatchSize'))||3,
+    image_queue_max_active:parseInt(g('imageQueueMaxActive'))||6,
+    image_queue_batch_size:parseInt(g('imageQueueBatchSize'))||6,
   };
   var res=await API.updateConfig(cfg,'');
   showToast(res.success?'保存成功':(res.error||'失败'),res.success?'success':'error');
