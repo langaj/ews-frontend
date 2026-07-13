@@ -5,6 +5,7 @@
 <style>
 .platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}.task-actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:12px}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
+.task-detail-modal{max-width:920px}.plan-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.plan-actions{display:flex;gap:6px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
@@ -95,18 +96,19 @@ async function changeTaskPage(offset){
 }
 
 async function viewTask(taskId){
-  closeDetail();
   var res=await API.getTask(taskId);
-  if(!res.success||!res.task){showToast('加载失败','error');return}
+  if(!res.success||!res.task){showToast(res.error||'加载失败','error');return false}
+  closeDetail();
   var t=res.task;
   if(t.platform==='jst') await showJstDetail(t);
   else await showShopeeDetail(t);
+  return true;
 }
 
 async function showJstDetail(t){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
   var done=(t.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
-  var html='<div class="modal"><div class="modal-header"><div class="modal-title">任务详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
+  var html='<div class="modal task-detail-modal"><div class="modal-header"><div class="modal-title">任务详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
   html+='<div class="detail-section"><span class="platform-tag tag-jst">聚水潭</span><strong>'+escapeHtml(t.name||'')+'</strong></div>';
   html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
   html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
@@ -123,7 +125,7 @@ async function showShopeeDetail(t){
   var p=t.product||{};
   var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var v=(p.variations||[]).map(function(v){return escapeHtml(v.option1+(v.option2?'/'+v.option2:''))}).join(', ');
-  var html='<div class="modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
+  var html='<div class="modal task-detail-modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
   html+='<div class="detail-section"><span class="platform-tag tag-shopee">虾皮</span><strong>'+escapeHtml(p.name||'')+'</strong></div>';
   html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
   html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
@@ -278,7 +280,14 @@ async function retryFailedPlans(taskId,btn){
       }
       showToast('已重试 '+ok+'/'+failed.length+' 个失败计划','success');
       await refreshTasks();
+      if(document.getElementById('detailModal'))await viewTask(taskId);
     });
+  });
+}
+
+async function refreshTaskDetail(taskId,btn){
+  await withActionLock('refresh-detail:'+taskId,btn,'刷新中...',async function(){
+    await viewTask(taskId);
   });
 }
 
@@ -442,10 +451,12 @@ async function renderPushPlans(taskId){
   if(stats.pending) html+='，待推送 '+stats.pending;
   if(stats.processing) html+='，处理中 '+stats.processing;
   html+='</span></div>';
-  html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+taskId+'\')">刷新队列</button></div>';
+  html+='<div class="plan-toolbar">';
+  if(stats.failed)html+='<button class="btn btn-sm btn-danger" onclick="retryFailedPlans(\''+taskId+'\',this)">重试全部失败 ('+stats.failed+')</button>';
+  html+='<button class="btn btn-sm btn-outline" onclick="refreshTaskDetail(\''+taskId+'\',this)">刷新队列</button></div></div>';
   if(!res||!res.success){return html+'<div class="muted">推送计划加载失败</div></div>'}
   if(!plans.length){return html+'<div class="muted">暂无推送计划，任务推送后会在这里显示队列状态。</div></div>'}
-  html+='<div class="table-container"><table style="font-size:13px"><thead><tr><th>类型</th><th>子任务</th><th>状态</th><th>错误</th><th>操作</th></tr></thead><tbody>';
+  html+='<div class="table-container"><table class="plan-table" style="font-size:13px"><thead><tr><th>类型</th><th>状态</th><th>操作</th><th>子任务</th><th>错误</th></tr></thead><tbody>';
   for(var i=0;i<plans.length;i++){
     var p=plans[i];
     var actions=[];
@@ -453,8 +464,8 @@ async function renderPushPlans(taskId){
     else if(p.status==='pending') actions.push('<button class="btn btn-sm btn-primary" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'push\')">推送</button>');
     else if(p.status==='done') actions.push('<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'regen\')">重新生成</button>');
     if(p.status==='done'&&p.preview_url) actions.push('<a class="btn btn-sm btn-outline" href="'+escapeHtml(p.preview_url)+'" target="_blank" rel="noopener">预览</a>');
-    var action=actions.length?actions.join(' '):'<span class="muted">-</span>';
-    html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+planStatusBadge(p.status)+'</td><td>'+escapeHtml((p.error||'').slice(0,80))+'</td><td>'+action+'</td></tr>';
+    var action=actions.length?'<div class="plan-actions">'+actions.join('')+'</div>':'<span class="muted">-</span>';
+    html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td>'+planStatusBadge(p.status)+'</td><td>'+action+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+escapeHtml((p.error||'').slice(0,160))+'</td></tr>';
   }
   html+='</tbody></table></div></div>';
   return html;
@@ -500,7 +511,7 @@ function formatDate(s){
 }
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-Object.assign(window,{refreshTasks,changeTaskPage,viewTask,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
+Object.assign(window,{refreshTasks,changeTaskPage,viewTask,refreshTaskDetail,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body></html>
