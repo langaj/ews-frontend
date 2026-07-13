@@ -40,7 +40,7 @@
 const API_ROOT = 'https://ewsz.langaj.cc';
 const PLATFORM_INFO = {
   jst: { name:'聚水潭', prefix:'ews_jst_', desc:'电商套图批量生成，含标题/SKU标题/主图/附图/详情图/SKU图六类工作流推送' },
-  shopee: { name:'虾皮', prefix:'ews_shopee_', desc:'Shopee 商品批量上架，与JST共用同一套工作流模型' },
+  shopee: { name:'虾皮', prefix:'ews_shopee_', desc:'Shopee 商品批量上架，元数据、商品套图与官方模板导出闭环' },
 };
 
 const SIDEBAR = [
@@ -85,8 +85,8 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_tasks/sub_task_count生成N个标题后批量回调；不需要传platform；回调用 titles 或 product_title'},
-  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length，顺序为 sub_task 顺序 × variants 顺序；Shopee新任务的variants是去重后的一级规格，回调后由系统复用到二级组合'},
+  {name:'商品标题 / Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'内部任务名称',source_brief:'Shopee v2商品事实',reference_title:'参考标题',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform。JST继续使用name/reference_title/description并回调titles；Shopee v2 使用source_brief和规格结构，回调products与variation_labels。'},
+  {name:'SKU标题（旧版兼容）',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'JST与Shopee历史任务兼容字段。Shopee schema_version=2 新任务不构造SKU标题计划，规格标签由商品元数据工作流一次返回。'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
@@ -137,7 +137,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
-<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code>、<code>n8n_sku_title_enabled</code>、<code>n8n_sku_image_enabled</code> 分别控制商品标题、SKU标题、SKU图片，未配置时默认开启。关闭后系统不会构造对应新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 继续释放。开启但 Webhook 地址为空时，推送接口会直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会同时跳过标题、SKU标题、详情图和SKU图片。Shopee 的 <code>variation_image_mode=none</code> 即使开启SKU图片工作流也不会创建SKU图片计划。</div>
+<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code>、<code>n8n_sku_title_enabled</code>、<code>n8n_sku_image_enabled</code> 分别控制标题类、SKU标题兼容、SKU图片，未配置时默认开启。Shopee v2 中 <code>n8n_title_enabled</code> 控制商品元数据，<code>n8n_sku_title_enabled</code> 只影响历史计划。关闭后系统不会构造对应新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 继续释放。开启但 Webhook 地址为空时，推送接口直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会跳过元数据、SKU标题、详情图和SKU图片。Shopee 的 <code>variation_image_mode=none</code> 即使开启SKU图片工作流也不会创建SKU图片计划。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
@@ -172,11 +172,13 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 }</pre>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
-  "name": "Product Name",
-  "description": "Product Description，100~3000字符",
-  "reference_title": "参考标题",
+  "name": "内部任务名称",
+  "schema_version": 2,
+  "source_brief": "商品事实，10~2000字符",
+  "description": "",
+  "product_type": "single|one|two",
+  "reference_title": "可选参考标题",
   "main_description": "封面/附图描述",
-  "detail_description": "详情图描述",
   "reference_image": "R2 URL",
   "auxiliary_images": "[R2 URL...]",
   "generate_count": 1,
@@ -184,14 +186,21 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "main_image_count": 9,
   "detail_image_count": 0,
   "category_id": "",
-  "brand_id": "",
-  "weight_kg": 0.1,
+  "gtin": "",
+  "weight_kg": 1,
   "length_cm": null,
   "width_cm": null,
   "height_cm": null,
   "variation_name1": "Color",
   "variation_name2": "",
   "variation_image_mode": "option1|none|combination_legacy(仅历史兼容)",
+  "max_purchase_qty": null,
+  "max_purchase_start_date": "",
+  "max_purchase_period_days": null,
+  "max_purchase_end_date": "",
+  "size_chart_template_id": "",
+  "size_chart_image": "",
+  "pre_order_dts": null,
   "shipping_channels": "[\"50052\"]",
   "variations": [{
     "option1": "Red",
@@ -206,7 +215,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><code>description</code> 在用户创建页必填，长度必须为 100~3000 字符。为兼容旧 API 调用，字段缺省或为空时 Worker 会根据商品名称与规格保存一段基础描述；调用方传入非空但长度不合规则返回 400。历史空值任务导出时使用同一兼容规则并在 <code>validation.warnings</code> 中提示检查。</div>
+<div class="note"><strong>Shopee v2：</strong><code>schema_version=2</code> 时 <code>source_brief</code> 必填，<code>description</code> 保持空字符串。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>product_type=single</code> 仍传一条仅用于价格、库存和 SKU 的记录，但规格名和值必须为空。旧请求未传 <code>schema_version</code> 时按 v1 兼容并保留基础描述回退。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>
@@ -246,12 +255,12 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="Shopee商品">Shopee 商品</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
-<div class="note"><strong>Shopee 推送：</strong>已与 JST 对齐，支持标题、SKU 标题、封面图、附图、详情图、SKU 图工作流。默认 <code>main_image_count=9</code>（1封面+8附图），默认 <code>detail_image_count=0</code>；只有详情图数量大于 0 时才要求并触发详情图 webhook。去重模式第 2 套开始只生成封面图，其余图片复用第 1 套。</div>
-<div class="note"><strong>标题结构：</strong>Shopee 商品标题工作流按“主关键词 + 副关键词 + 长尾词 + 属性词”生成自然越南语标题，最终结果不包含字段括号；每个标题必须为 10~120 字符。SKU 标题对应模板的 <code>Option for Variation 1</code>，必须为 1~20 字符。</div>
+<div class="note"><strong>Shopee v2 推送：</strong>新任务支持商品元数据、封面图、附图和可选 SKU 图工作流，不再构造 SKU 标题与详情图计划。商品图固定为 9 张（1封面+8附图），<code>detail_image_count</code> 固定为 0。去重模式下每套仍生成独立封面，第 2 套开始复用第 1 套的 8 张附图与 SKU 图。</div>
+<div class="note"><strong>商品元数据：</strong>工作流按“主关键词 + 副关键词 + 长尾词 + 属性词”生成每套自然越南语 Product Name，同时生成 100~3000 字符 Product Description，并将用户规格规范为模板的 Variation Name / Option。规格标签是商品属性，不是营销式 SKU 标题；同一一级规格在二维组合中必须保持相同标签。</div>
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>回调队列默认最多 3 个活跃处理任务，单轮最多消费 3 条；图片队列默认最多 6 个活跃处理任务，单轮最多消费 6 条，可通过 <code>image_queue_max_active</code> 和 <code>image_queue_batch_size</code> 调整。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。元数据回调直接落库；图片回调再写入 <code>ews_image_queue</code>，由 Worker 限流下载并写入 R2。处理完成删除队列记录，失败保留并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>回调队列默认最多 3 个活跃处理任务，单轮最多消费 3 条；图片队列默认最多 6 个活跃处理任务，单轮最多消费 6 条，可通过 <code>image_queue_max_active</code> 和 <code>image_queue_batch_size</code> 调整。<br><strong>Shopee v2 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
@@ -263,7 +272,9 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>set_index</code></td><td>子任务索引；建议原样带回，系统会以 <code>sub_task_id</code> 查询出的索引为准并自动校准</td></tr>
 <tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
 <tr><td><code>product_title</code></td><td>string 单个标题，应用到全部</td></tr>
-<tr><td><code>sku_titles</code></td><td>[string] SKU标题，按 sub_task 顺序 × 推送体 variants 顺序映射；Shopee新任务由系统向同一一级规格的二级组合复用</td></tr>
+<tr><td><code>sku_titles</code></td><td>[string] JST 与历史任务 SKU 标题，按 sub_task 顺序 × 推送体 variants 顺序映射；Shopee v2 不使用</td></tr>
+<tr><td><code>products</code></td><td>Shopee v2 商品元数据数组：<code>[{sub_task_id,product_name,product_description}]</code></td></tr>
+<tr><td><code>variation_labels</code></td><td>Shopee v2 规格标签：<code>{name1,name2,values:[{id,option1,option2}]}</code>；无规格商品传空名称和空数组</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
 <tr><td><code>image_url</code></td><td>AI模型临时URL</td></tr>
@@ -277,6 +288,21 @@ ${eps(['POST /api/callback'])}
   "secret": "{{$json.callback_secret}}",
   "task_id": "{{$json.task_id}}",
   "titles": ["标题1", "标题2"]
+}</pre>
+<h4>Shopee v2 商品元数据成功回调</h4>
+<pre>{
+  "callback_secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "products": [{
+    "sub_task_id": "子任务ID",
+    "product_name": "越南语商品标题",
+    "product_description": "100~3000字符的越南语商品描述"
+  }],
+  "variation_labels": {
+    "name1": "Màu sắc",
+    "name2": "Kích thước",
+    "values": [{"id":"原变体ID","option1":"Đỏ","option2":"M"}]
+  }
 }</pre>
 <h4>SKU标题成功回调</h4>
 <pre>{
@@ -319,7 +345,7 @@ ${WEBHOOKS.slice(0,2).map(function(w){
 }).join('')}
 
 <h2 id="图片类">图片类 Webhook 推送体</h2>
-<div class="note"><strong>架构：</strong>主图/封面图(第1张)→主图工作流，附图(第2~N张)→附图工作流，详情图(第1~M张)→详情图工作流。每张图独立推送。JST 默认 N=5、M=5；Shopee 默认 N=9、M=0。两平台去重模式下第 2 套开始只推主图/封面图。Shopee 图片工作流以 900 秒为单次生成截止时间，超时后主动向 Worker 回调 <code>error</code> 并终止轮询；模型、查询和回调 HTTP 节点最多尝试 3 次。</div>
+<div class="note"><strong>架构：</strong>主图/封面图(第1张)进入主图工作流，附图(第2~N张)进入附图工作流，每张图独立推送。JST 默认 N=5、M=5；Shopee v2 固定 N=9、M=0，不构造详情图。两平台去重模式下第 2 套开始只推主图/封面图。Shopee 图片工作流以 900 秒为单次生成截止时间，超时后主动向 Worker 回调 <code>error</code> 并终止轮询；模型、查询和回调 HTTP 节点最多尝试 3 次。</div>
 ${WEBHOOKS.slice(2).map(function(w){
   return '<h4>'+w.name+' → <code>'+w.key+'</code></h4><div class="note">'+w.note+'</div><pre>'+JSON.stringify(w.body,null,2)+'</pre>';
 }).join('')}
@@ -332,33 +358,33 @@ ${WEBHOOKS.slice(2).map(function(w){
 <h2 id="Shopee导出">Shopee 导出格式（A~AP 42列）</h2>
 <p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
 <pre>Category | Product Name | Product Description | Max Purchase Qty | MaxPQ Start Date | MaxPQ Time Period | MaxPQ End Date | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5000) | Shipping(5001) | Shipping(5004) | Shipping(5012) | Shipping(5115) | Shipping(50039) | Shipping(50052) | Pre-order DTS | Fail Reason</pre>
-<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有封面图和配置数量内的附图；每个变体必须有 SKU 标题和 SKU 变体图。详情图当前 basic template 没有字段，默认不导出，可通过任务列表打包下载。</div>
+<div class="note">Shopee v2 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，启用规格图时每个一级规格必须有 SKU 变体图。无规格商品的 J/K/L/M/N 规格列留空。basic template 没有详情图字段，历史任务图片仍可通过任务列表打包下载。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>
-<pre>ews_config      (key, value, platform)  — 分平台配置
+<pre>ews_config      (key, value, platform)  - 分平台配置
 ews_users       (id, username, password_hash, role, credits, webhook_config)
-ews_tasks       (id, platform, name, status, user_id)  — 统一任务索引
-ews_callback_queue — 共享回调队列（成功处理后删除，失败保留重试）
-ews_image_queue    — 共享图片处理队列（限制下载/R2写入并发）</pre>
+ews_tasks       (id, platform, name, status, user_id)  - 统一任务索引
+ews_callback_queue - 共享回调队列（成功处理后删除，失败保留重试）
+ews_image_queue    - 共享图片处理队列（限制下载/R2写入并发）</pre>
 
 <h4>聚水潭 (ews_jst_)</h4>
-<pre>ews_jst_tasks       — 任务扩展信息（图片数量、模式等）
-ews_jst_sub_tasks   — 子任务（款式编码）
-ews_jst_variants    — 变体（二维规格：tier1/tier2，含 price_float_enabled/price_min/price_max/price_precision）
-ews_jst_sku_titles  — SKU标题
-ews_jst_task_images — 图片记录
-ews_jst_push_plans  — 推送计划（状态机）
-ews_jst_export_records — 导出记录</pre>
+<pre>ews_jst_tasks       - 任务扩展信息（图片数量、模式等）
+ews_jst_sub_tasks   - 子任务（款式编码）
+ews_jst_variants    - 变体（二维规格：tier1/tier2，含 price_float_enabled/price_min/price_max/price_precision）
+ews_jst_sku_titles  - SKU标题
+ews_jst_task_images - 图片记录
+ews_jst_push_plans  - 推送计划（状态机）
+ews_jst_export_records - 导出记录</pre>
 
 <h4>虾皮 (ews_shopee_)</h4>
-<pre>ews_shopee_products     — 商品（分类、图片、物流等）
-ews_shopee_variations   — 变体（二维规格，含 price_float_enabled/price_min/price_max/price_precision）
-ews_shopee_sub_tasks    — 子任务（一套链接/一套商品资源）
-ews_shopee_task_images  — 图片记录
-ews_shopee_sku_titles   — SKU标题
-ews_shopee_push_plans   — 推送计划（状态机）
-ews_shopee_export_records — 导出记录</pre>
+<pre>ews_shopee_products     - 商品（分类、图片、物流、schema_version、product_type等）
+ews_shopee_variations   - 变体（原始规格、导出规格、价格浮动）
+ews_shopee_sub_tasks    - 子任务（每套 Product Name、Product Description）
+ews_shopee_task_images  - 图片记录
+ews_shopee_sku_titles   - 历史 SKU 标题兼容表
+ews_shopee_push_plans   - 推送计划（状态机）
+ews_shopee_export_records - 导出记录</pre>
 
 <h2 id="初始化">首次初始化</h2>
 <pre onclick="cp(this)" style="cursor:pointer">npx wrangler d1 execute baseapac --file=schema.sql --remote</pre>

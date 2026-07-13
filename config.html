@@ -63,13 +63,13 @@
 <div class="tab-panel" id="tab-shopee">
   <div class="card"><div class="card-header">Shopee 工作流 Webhook</div><div class="card-body">
     <form onsubmit="return false">
-      <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
-      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_title_enabled"> 启用商品标题工作流</label><input type="url" class="form-input" id="shopee_title" placeholder="https://..."></div>
-      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_title_enabled"> 启用 SKU 标题工作流</label><input type="url" class="form-input" id="shopee_sku_title" placeholder="https://..."></div>
+      <h4 style="margin:0 0 12px;color:var(--gray-600)">商品元数据</h4>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_title_enabled"> 启用商品元数据工作流</label><input type="url" class="form-input" id="shopee_title" placeholder="https://..."><div class="form-hint">新任务由该工作流一次生成每套商品标题、商品描述和规范化规格标签。</div></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_title_enabled"> 旧版 SKU 标题兼容开关</label><input type="url" class="form-input" id="shopee_sku_title" placeholder="历史任务 Webhook"><div class="form-hint">仅供历史计划继续释放，Shopee v2 新任务不会构造 SKU 标题计划。</div></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
       <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="shopee_main" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="shopee_sub" placeholder="https://..."></div>
-      <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="shopee_detail" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">旧版详情图工作流</label><input type="url" class="form-input" id="shopee_detail" placeholder="历史任务 Webhook"><div class="form-hint">官方 basic template 没有详情图字段，Shopee v2 新任务固定不构造详情图计划。</div></div>
       <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
       <div class="form-hint">关闭后不构造新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 会继续释放。</div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
@@ -104,7 +104,7 @@
   <div class="card" style="margin-top:20px"><div class="card-header">用户 Webhook 配置</div><div class="card-body">
     <div class="form-group">
       <label class="form-label">选择用户</label>
-      <select class="form-input" id="webhookUserSelect" onchange="loadUserWebhook()"><option value="">— 请选择用户 —</option></select>
+      <select class="form-input" id="webhookUserSelect" onchange="loadUserWebhook()"><option value="">请选择用户</option></select>
     </div>
     <div id="userWebhookFields" style="display:none">
       <h4 style="margin:0 0 12px;color:var(--gray-600)">JST 工作流（留空则使用全局）</h4>
@@ -115,11 +115,11 @@
       <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_jst_detail"></div>
       <div class="form-row"><div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_jst_sku"></div><div class="form-group"><label class="form-label">SKU图片开关</label><select class="form-input workflow-override" id="uwh_jst_sku_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">Shopee 工作流（留空则使用全局）</h4>
-      <div class="form-row"><div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_shopee_title"></div><div class="form-group"><label class="form-label">商品标题开关</label><select class="form-input workflow-override" id="uwh_shopee_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
-      <div class="form-row"><div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_shopee_sku_title"></div><div class="form-group"><label class="form-label">SKU标题开关</label><select class="form-input workflow-override" id="uwh_shopee_sku_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">商品元数据</label><input type="url" class="form-input" id="uwh_shopee_title"></div><div class="form-group"><label class="form-label">商品元数据开关</label><select class="form-input workflow-override" id="uwh_shopee_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">旧版 SKU 标题</label><input type="url" class="form-input" id="uwh_shopee_sku_title"></div><div class="form-group"><label class="form-label">兼容开关</label><select class="form-input workflow-override" id="uwh_shopee_sku_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_shopee_main"></div>
       <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_shopee_sub"></div>
-      <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_shopee_detail"></div>
+      <div class="form-group"><label class="form-label">旧版详情图</label><input type="url" class="form-input" id="uwh_shopee_detail"></div>
       <div class="form-row"><div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_shopee_sku"></div><div class="form-group"><label class="form-label">SKU图片开关</label><select class="form-input workflow-override" id="uwh_shopee_sku_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <button class="btn btn-primary" onclick="saveUserWebhook()">保存该用户配置</button>
     </div>
@@ -275,7 +275,7 @@ async function loadUserList(){
   if(!res.success)return;
   var sel=document.getElementById('webhookUserSelect');
   var existing=sel.value;
-  sel.innerHTML='<option value="">— 请选择用户 —</option>';
+  sel.innerHTML='<option value="">请选择用户</option>';
   res.users.forEach(function(u){sel.innerHTML+='<option value="'+u.id+'">'+u.username+(u.role==='admin'?' (管理员)':'')+'</option>'});
   if(existing)sel.value=existing;
   var tbody=document.getElementById('userListBody');
@@ -295,7 +295,7 @@ async function loadUserList(){
         '<option value="add">增加</option><option value="subtract">减少</option><option value="set">设置</option>'+
       '</select>'+
       '<button class="btn btn-sm btn-outline" onclick="updateCredits(\''+u.id+'\')" style="font-size:11px">确认</button></div>';
-    var actions=u.id==='admin'?'—':'<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+    var actions=u.id==='admin'?'-':'<div style="display:flex;gap:4px;flex-wrap:wrap">'+
       '<button class="btn btn-sm btn-outline" onclick="toggleUser(\''+u.id+'\')" style="font-size:11px">'+(u.is_active?'禁用':'启用')+'</button>'+
       '<button class="btn btn-sm btn-outline" onclick="resetUserPwd(\''+u.id+'\')" style="font-size:11px">重置密码</button>'+
       '<button class="btn btn-sm btn-danger" onclick="deleteUserConfirm(\''+u.id+'\',\''+u.username+'\')" style="font-size:11px">删除</button>'+

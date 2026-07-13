@@ -81,15 +81,15 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
       <section class="guide-panel" id="guide-shopee">
         <div class="guide-section">
           <h2>Shopee 版本怎么用</h2>
-          <p>Shopee 版本按官方 mass upload template 组装 Excel。系统不是直接把你上传的图片写进表格，而是先生成商品套图，再把生成后的 R2 URL 写入模板。</p>
+          <p>Shopee 版本按官方 mass upload template 组装 Excel。你只提供可以确认的商品事实、参考图、规格和交易信息，系统生成越南语商品标题、商品描述与商品套图，再把 R2 URL 和规格数据写入模板。</p>
           <ol>
-            <li>进入 <strong>创建(虾皮)</strong>，填写任务名称、商品描述、参考标题。</li>
-            <li>上传核心参考图和辅助参考图；这些图只作为 AI 生成输入。</li>
-            <li>填写生成套数、生成模式、分类 ID、重量、尺寸、规格名和变体。</li>
-            <li>每个变体上传 SKU 参考图，系统用它生成 Shopee 的变体图片。</li>
-            <li>选择至少一个物流渠道。</li>
-            <li>提交后推送任务，默认等待商品标题、SKU 标题、封面图、附图、SKU 图完成；只有把详情图数量设为大于 0 时才会额外生成详情图。</li>
-            <li>完成后导出 Shopee 官方模板，数据从第 7 行开始写入。</li>
+            <li>上传 1 张核心参考图；需要补充角度、结构或包装时再添加辅助图。</li>
+            <li>填写商品事实，包括品类、材质、功能、适用场景、包装内容和不能虚构的信息。系统据此生成每套越南语标题与描述。</li>
+            <li>选择无规格、一维规格或二维规格。需要图片区分的颜色、图案、款式放在一级规格，尺码等无图维度放在二级规格。</li>
+            <li>填写每个 SKU 组合的价格、库存和可选商家 SKU。启用规格图时，为每个一级规格上传一张参考图。</li>
+            <li>填写生成套数和重量，选择至少一个物流渠道。SPX 默认开启，库存默认 999。</li>
+            <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
+            <li>任务完成后导出官方模板，数据从第 7 行开始写入。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
           <div class="ok-box">官方模板依据：系统内置 <code>/templates/Shopee_mass_upload_2026-07-03_basic_template.xlsx</code> 的 <code>Template</code> 工作表。第 3 行是字段名，第 4 行是必填性，第 6 行是填写规则。</div>
         </div>
@@ -100,11 +100,11 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <thead><tr><th>系统资源</th><th>Shopee 模板字段</th><th>说明</th></tr></thead>
             <tbody>
               <tr><td>AI 商品标题</td><td>B Product Name</td><td>官方要求 10~120 字符。</td></tr>
-              <tr><td>AI SKU 标题</td><td>K Option for Variation 1</td><td>官方要求 1~20 字符，按“每套资源 × 唯一一级规格值”生成，同一颜色的尺码组合复用。</td></tr>
+              <tr><td>AI 规范化规格值</td><td>J/K/M/N Variation Name / Option</td><td>系统把用户规格统一为越南语标签。规格名 1~14 字符，规格值 1~20 字符，不生成营销式 SKU 标题。</td></tr>
               <tr><td>封面图 <code>main_1</code></td><td>U Cover image</td><td>Shopee 的首图/封面图。</td></tr>
               <tr><td>附图 <code>sub_2~sub_9</code></td><td>V~AC Item Image 1~8</td><td>从第 2 张开始，不重复写封面图。</td></tr>
               <tr><td>SKU 变体图 <code>sku_N</code></td><td>L Image per Variation</td><td>每个一级规格值生成一次，例如同一颜色的 S/M/L 共用一张图；可选择不生成规格图。</td></tr>
-              <tr><td>详情图 <code>detail_1~N</code></td><td>当前 basic template 暂无字段</td><td>默认不生成；如果详情图数量大于 0，系统会生成并保存，任务列表可打包下载。</td></tr>
+              <tr><td>详情图</td><td>当前 basic template 无字段</td><td>Shopee 新任务固定为 0 张，不构造详情图工作流。历史任务已有图片仍可打包下载。</td></tr>
             </tbody>
           </table>
           <div class="note-box">导出时缺少任何必需 AI 资源会被系统阻断。参考图、辅助图、SKU 参考图不会作为最终图片 URL 写入 Excel。</div>
@@ -115,17 +115,14 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           <table class="field-table">
             <thead><tr><th>字段</th><th>填写建议</th><th>官方/系统规则</th></tr></thead>
             <tbody>
-              <tr><td>任务名称</td><td>内部批次名，例如“手机壳-越南站-透明款”。</td><td>用于任务列表，也会传给 AI 作为标题参考。</td></tr>
-              <tr><td>商品描述</td><td>必填。写材质、功能、包装、适用场景，保持信息准确。</td><td>Shopee 模板要求 Product Description 100~3000 字符；历史空值任务导出时系统会生成基础描述并提示检查。</td></tr>
-              <tr><td>参考标题</td><td>放你希望 AI 学习的标题风格，可以多行。</td><td>用于生成 Product Name 和 SKU 标题，不直接导出。</td></tr>
+              <tr><td>商品事实</td><td>必填。写品类、材质、功能、规格、适用场景、包装内容和限制，避免只写关键词。</td><td>10~2000 字符，只作为 AI 事实边界。每套 Product Description 由元数据工作流生成，官方要求 100~3000 字符。</td></tr>
+              <tr><td>任务名称</td><td>可选内部批次名，例如“手机壳-越南站-透明款”。</td><td>只用于任务列表，不作为最终 Product Name。</td></tr>
+              <tr><td>参考标题</td><td>可选，提供标题方向或已有关键词。</td><td>用于生成 Product Name，不直接导出；事实冲突时以商品事实为准。</td></tr>
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
-              <tr><td>详情图生成描述</td><td>写卖点、结构、场景、参数表达。</td><td>仅在详情图数量大于 0 时生效；当前 basic template 暂不导出详情图，可在任务列表打包下载。</td></tr>
-              <tr><td>详情图数量</td><td>默认 0。只有需要额外归档详情素材时才填 1~9。</td><td>Shopee basic template 没有详情图字段，填 0 时系统不会要求详情图工作流。</td></tr>
-              <tr><td>生成模式</td><td>新款差异大选全量；同款换封面/颜色选去重。</td><td>去重模式下第 2 套开始只生成封面图，并复用第 1 套附图、SKU 图；详情图数量大于 0 时也复用详情图。</td></tr>
+              <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
               <tr><td>分类 ID</td><td>建议从 Shopee Seller Center 的 Category Tree 查。</td><td>模板说明：可从 Category Tree 选择；留空时 Shopee 可能推荐类目。准确类目有利于搜索和属性匹配。</td></tr>
-              <tr><td>品牌 ID</td><td>当前可留空。</td><td>当前 basic Template A~AP 没有 Brand 列，系统不导出品牌 ID。类目专用模板中 Brand 可能必填，应使用有效品牌或 no brand。</td></tr>
-              <tr><td>重量(kg)</td><td>按实际商品包裹重量填写 kg。</td><td>官方模板 AD Weight 单位是 g，系统导出时自动从 kg 转成 g，范围 0~100000000g。</td></tr>
+              <tr><td>重量(kg)</td><td>必填，按实际商品包裹重量填写 kg。</td><td>官方模板 AD Weight 单位是 g，系统导出时自动从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
               <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
               <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
@@ -141,16 +138,16 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
         </div>
 
         <div class="guide-section">
-          <h2>分类 ID 和品牌 ID</h2>
+          <h2>分类 ID 和品牌</h2>
           <h3>分类 ID 是什么</h3>
           <p>分类 ID 是 Shopee 平台的类目编码，不是系统自定义字段。官方模板提示应从 Seller Center 的 Category Tree 选择分类 ID；准确分类有利于搜索结果和后续类目属性匹配。</p>
           <div class="note-box">官方样例中出现过 <code>120039</code>、<code>120055</code> 这类数字，但样例不是通用类目映射表，不要直接复制。实际类目应以当前站点 Seller Center 下载的 Category Tree 或类目模板为准。</div>
           <p>如果暂时不知道分类 ID，可以留空。官方模板写明系统会推荐类目；但留空会降低可控性，类目属性、物流、价格限制可能需要上传后再处理。</p>
 
-          <h3>品牌 ID 和“无品牌”</h3>
-          <p>当前系统导出使用 Shopee basic template 的 A~AP 列，这个模板没有 Brand 列，所以创建页的品牌 ID 目前是预留字段，不会写入导出的 Excel。</p>
+          <h3>品牌和“无品牌”</h3>
+          <p>当前系统导出使用 Shopee basic template 的 A~AP 列，这个模板没有 Brand 列，因此创建页不要求品牌 ID，也不会在导出的 Excel 中虚构品牌。</p>
           <p>Shopee 的类目专用模板或样例表里 Brand 通常要求填写 valid brand 或 no brand；样例规则还写明：可查品牌表的 valid brand id，或者留空后在 attributes tool 里补属性值。</p>
-          <div class="note-box">本仓库这份官方模板的隐藏品牌表没有可读品牌清单，也没有给出统一的“无品牌 ID”。因此系统不会默认填一个无品牌 ID。当前建议：品牌 ID 留空；如果后续使用类目专用模板，再从 Seller Center/官方模板品牌表选择有效品牌或 no brand。</div>
+          <div class="note-box">本仓库这份官方模板的隐藏品牌表没有可读品牌清单，也没有给出统一的“无品牌 ID”。因此系统不会默认填一个无品牌 ID。后续切换类目专用模板时，应从 Seller Center 或官方模板品牌表选择有效品牌或 no brand。</div>
         </div>
 
         <div class="guide-section">
@@ -177,9 +174,9 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           <h2>导出前检查</h2>
           <ul>
             <li>任务状态已完成，推送计划没有 pending/processing。</li>
-            <li>每套都有 AI 商品标题，且长度符合 10~120。</li>
+            <li>每套都有 AI 商品标题和商品描述，长度分别符合 10~120、100~3000。</li>
             <li>每套都有 <code>main_1</code> 封面和 <code>sub_2~sub_N</code> 附图。</li>
-            <li>每个一级规格都有 AI SKU 标题；启用规格图时，每个一级规格还有生成后的 SKU 图。</li>
+            <li>规格名和值已经规范化；启用规格图时，每个一级规格还有生成后的 SKU 图。</li>
             <li>至少选择一个物流渠道。</li>
             <li>价格、库存、重量、规格长度符合官方模板限制。</li>
           </ul>
