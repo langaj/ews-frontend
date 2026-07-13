@@ -131,7 +131,7 @@ var channels=[{id:'5000',label:'Hỏa Tốc'},{id:'5001',label:'Nhanh'},{id:'500
 
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('shopee')){showToast('当前账号无权创建虾皮任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();renderPrimaryOptions();initShipping()});
 function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
-function initShipping(){var h='';for(var c of channels)h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"> '+c.label+'</label>';document.getElementById('shippingChannels').innerHTML=h;}
+function initShipping(){var h='';for(var c of channels)h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"'+(c.id==='50052'?' checked':'')+'> '+c.label+'</label>';document.getElementById('shippingChannels').innerHTML=h;}
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];var html='';
   for(var i=0;i<5;i++){
@@ -224,10 +224,10 @@ function renderCombinations(){
   if(combos.length>50){container.innerHTML='<div class="combo-empty" style="color:var(--danger)">SKU 组合超过 Shopee 的 50 个上限，请减少规格值。</div>';return}
   var html='';
   combos.forEach(function(combo,index){
-    var state=combinationState[combo.key]||{enabled:true,price:'',floatOn:false,priceMin:'',priceMax:'',precision:'0',stock:'0',sku:''};
+    var state=combinationState[combo.key]||{enabled:true,price:'',floatOn:false,priceMin:'',priceMax:'',precision:'0',stock:'999',sku:''};
     var label=(combo.option.value||'一级规格 #'+(primaryOptions.indexOf(combo.option)+1))+(combo.option2?' / '+combo.option2:'');
     html+='<div class="variant-item v-item'+(state.enabled?'':' combo-disabled')+'" data-key="'+escapeHtml(combo.key)+'" data-primary-id="'+combo.option.id+'" data-option2="'+escapeHtml(combo.option2)+'"><div class="variant-header"><span class="variant-number">'+escapeHtml(label)+'</span><label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="v-enabled" onchange="toggleCombinationEnabled(this)"'+(state.enabled?' checked':'')+'> 启用</label></div>';
-    html+='<div class="form-row"><div class="form-group price-single" style="'+(state.floatOn?'display:none':'')+'"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="1000" value="'+escapeHtml(state.price)+'"'+(state.floatOn?'':' required')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(state.stock||'0')+'"'+(state.enabled?'':' disabled')+'></div></div>';
+    html+='<div class="form-row"><div class="form-group price-single" style="'+(state.floatOn?'display:none':'')+'"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="1000" value="'+escapeHtml(state.price)+'"'+(state.floatOn?'':' required')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(state.stock===''?'999':state.stock)+'"'+(state.enabled?'':' disabled')+'></div></div>';
     html+='<label style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;font-size:13px"><input type="checkbox" class="v-price-float" onchange="togglePriceFloat(this)"'+(state.floatOn?' checked':'')+(state.enabled?'':' disabled')+'> 启用价格浮动</label>';
     html+='<div class="form-row price-range" style="'+(state.floatOn?'':'display:none')+'"><div class="form-group"><label style="font-size:13px">最低价 <span class="required">*</span></label><input type="number" class="form-input v-price-min" step="0.01" min="1000" value="'+escapeHtml(state.priceMin)+'"'+(state.floatOn?' required':'')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">最高价 <span class="required">*</span></label><input type="number" class="form-input v-price-max" step="0.01" min="1000" value="'+escapeHtml(state.priceMax)+'"'+(state.floatOn?' required':'')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">取价精度</label><select class="form-input v-price-precision"'+(state.enabled?'':' disabled')+'>'+precisionOptions(state.precision)+'</select></div></div>';
     html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" maxlength="99" placeholder="商家SKU" value="'+escapeHtml(state.sku)+'"'+(state.enabled?'':' disabled')+'></div></div>';
@@ -291,7 +291,7 @@ async function handleCreate(e){
       price_min:pricing.price_min,
       price_max:pricing.price_max,
       price_precision:pricing.price_precision,
-      stock:parseInt(varItems[i].querySelector('.v-st').value)||0,
+      stock:Number.isNaN(parseInt(varItems[i].querySelector('.v-st').value))?999:parseInt(varItems[i].querySelector('.v-st').value),
       sku:varItems[i].querySelector('.v-sk').value.trim(),
     });
   }
