@@ -55,10 +55,10 @@ const SIDEBAR = [
 const EP = [
   {m:'GET',p:'/api/ping',d:'健康检查',a:false},
   {m:'POST',p:'/api/auth/login',d:'登录',a:false,b:{password:'string',username:'string(可选)'}},
-  {m:'GET',p:'/api/auth/verify',d:'验证Token',a:true},
+  {m:'GET',p:'/api/auth/verify',d:'验证Token',a:false},
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
-  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',n8n_title_webhook:'string',push_batch_size:'number',push_global_max_active:'number',push_primary_images_only:'boolean',push_release_per_minute:'number',push_release_per_task_per_minute:'number',image_queue_max_active:'number',image_queue_batch_size:'number'}},
+  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string',n8n_sku_title_webhook:'string',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',push_batch_size:'number',push_global_max_active:'number(通用)',push_primary_images_only:'boolean(通用)',push_release_per_minute:'number(通用)',push_release_per_task_per_minute:'number(通用)',push_plan_timeout_minutes:'number(通用)',image_queue_max_active:'number(通用)',image_queue_batch_size:'number(通用)'}},
   {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee 可选)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
@@ -85,8 +85,8 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_tasks/sub_task_count生成N个标题后批量回调；不需要传platform'},
-  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length；option2不存在时为空'},
+  {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_tasks/sub_task_count生成N个标题后批量回调；不需要传platform；回调用 titles 或 product_title'},
+  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length，顺序为 sub_task 顺序 × variants 顺序；option2不存在时为空'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
@@ -137,6 +137,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
+<div class="note"><strong>n8n 必配项：</strong>JST 至少配置需要启用的 webhook；Shopee 当前推送会要求 <code>n8n_title_webhook</code>、<code>n8n_sku_title_webhook</code>、<code>n8n_main_webhook</code>、<code>n8n_sub_image_webhook</code>、<code>n8n_sku_image_webhook</code>，当 <code>detail_image_count&gt;0</code> 时还要求 <code>n8n_detail_webhook</code>。当前阶段如只跑主图/附图，可保持 <code>push_primary_images_only=true</code>，标题/SKU/详情/SKU图计划会保留为 pending，不会自动释放到 n8n。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
@@ -246,20 +247,59 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong>body.secret === config.callback_secret<br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>回调队列默认最多 3 个活跃处理任务，单轮最多消费 3 条；图片队列默认最多 6 个活跃处理任务，单轮最多消费 6 条，可通过 <code>image_queue_max_active</code> 和 <code>image_queue_batch_size</code> 调整。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。标题类回调会直接落库；图片类回调会再写入 <code>ews_image_queue</code>，由 Worker 按活跃数限流下载图片并写入 R2。处理完成会删除队列记录；处理失败会保留记录并重试，超过次数后标记 failed。<br><strong>当前限流：</strong>回调队列默认最多 3 个活跃处理任务，单轮最多消费 3 条；图片队列默认最多 6 个活跃处理任务，单轮最多消费 6 条，可通过 <code>image_queue_max_active</code> 和 <code>image_queue_batch_size</code> 调整。<br><strong>标题校验：</strong>titles 长度必须 = sub_task_count<br><strong>SKU标题校验：</strong>sku_titles 长度必须 = sub_task_count × variant_count</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>
-<tr><td><code>secret</code></td><td>回调密钥 <span class="tag treq">必填</span></td></tr>
+<tr><td><code>secret</code></td><td>回调密钥；与 <code>callback_secret</code> 二选一 <span class="tag treq">必填</span></td></tr>
+<tr><td><code>callback_secret</code></td><td>回调密钥别名；与 <code>secret</code> 二选一 <span class="tag treq">必填</span></td></tr>
 <tr><td><code>task_id</code></td><td>母任务ID <span class="tag treq">必填</span></td></tr>
+<tr><td><code>sub_task_id</code></td><td>子任务ID；图片回调必填，直接从推送体原样带回</td></tr>
+<tr><td><code>set_index</code></td><td>子任务索引；图片回调建议原样带回，用于导出定位</td></tr>
 <tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
 <tr><td><code>product_title</code></td><td>string 单个标题，应用到全部</td></tr>
 <tr><td><code>sku_titles</code></td><td>[string] SKU标题，subIdx×vCount+vIdx 映射</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
 <tr><td><code>image_url</code></td><td>AI模型临时URL</td></tr>
+<tr><td><code>error</code></td><td>图片生成失败原因；图片工作流失败时可传，系统会按计划重试</td></tr>
 </table>
+
+<h3>n8n 回调示例</h3>
+<div class="note"><strong>返回判断：</strong>n8n 调用 <code>callback_url</code> 后，HTTP 200 且 <code>success:true</code>、<code>queued:true</code> 表示 EWS 已接收；若返回 <code>503</code> 且 <code>retryable:true</code>，n8n 应等待后重试同一回调。图片 URL 可以是工作流生成的临时公网 URL，EWS 会下载、转存到 R2 并落库。</div>
+<h4>标题成功回调</h4>
+<pre>{
+  "secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "titles": ["标题1", "标题2"]
+}</pre>
+<h4>SKU标题成功回调</h4>
+<pre>{
+  "secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "sku_titles": ["子任务1变体1", "子任务1变体2", "子任务2变体1", "子任务2变体2"]
+}</pre>
+<h4>图片成功回调</h4>
+<pre>{
+  "secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "sub_task_id": "{{$json.sub_task_id}}",
+  "set_index": {{$json.set_index}},
+  "image_type": "{{$json.image_type}}",
+  "image_position": {{$json.image_position}},
+  "image_url": "https://example.com/generated.jpg"
+}</pre>
+<h4>图片失败回调</h4>
+<pre>{
+  "secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "sub_task_id": "{{$json.sub_task_id}}",
+  "set_index": {{$json.set_index}},
+  "image_type": "{{$json.image_type}}",
+  "image_position": {{$json.image_position}},
+  "error": "AI生成失败或URL不可用"
+}</pre>
 
 <h2 id="上传">上传</h2>
 ${eps(['POST /api/upload','GET /r2/*'])}
