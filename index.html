@@ -39,6 +39,8 @@
 var ACTION_TIMEOUT_MS=120000;
 var activeActionLocks={};
 var zipLibPromise=null;
+var taskPage=1;
+var taskPageSize=50;
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();renderCreateActions();await refreshTasks()});
 
 function userPlatformAccess(){return localStorage.getItem('ews_platform_access')||'allow'}
@@ -59,7 +61,7 @@ async function refreshTasks(btn){
   if(btn) setActionButtonLoading(btn,'刷新中...');
   try{
     const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
-    const res=await API.getTasks();
+    const res=await API.getTasks('',taskPage,taskPageSize);
     if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
     const tasks=res.tasks||[];
     if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px">'+(createTaskButtonsHtml()||'<span class="muted">当前账号暂无可创建的平台</span>')+'</div></div>';return}
@@ -78,10 +80,18 @@ async function refreshTasks(btn){
       html+='</div></td></tr>';
     }
     html+='</tbody></table></div>';
+    if((res.pages||1)>1){
+      html+='<div class="modal-footer" style="justify-content:space-between"><span class="muted">第 '+res.page+' / '+res.pages+' 页，共 '+res.total+' 个任务</span><div class="task-actions"><button class="btn btn-sm btn-outline" '+(res.page<=1?'disabled':'')+' onclick="changeTaskPage(-1)">上一页</button><button class="btn btn-sm btn-outline" '+(res.page>=res.pages?'disabled':'')+' onclick="changeTaskPage(1)">下一页</button></div></div>';
+    }
     c.innerHTML=html;
   }finally{
     if(btn) restoreActionButton(btn);
   }
+}
+
+async function changeTaskPage(offset){
+  taskPage=Math.max(1,taskPage+offset);
+  await refreshTasks();
 }
 
 async function viewTask(taskId){
@@ -490,7 +500,7 @@ function formatDate(s){
 }
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-Object.assign(window,{refreshTasks,viewTask,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
+Object.assign(window,{refreshTasks,changeTaskPage,viewTask,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body></html>

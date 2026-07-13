@@ -59,7 +59,7 @@ const EP = [
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
   {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string',n8n_sku_title_webhook:'string',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',push_batch_size:'number',push_global_max_active:'number(通用)',push_primary_images_only:'boolean(通用)',push_release_per_minute:'number(通用)',push_release_per_task_per_minute:'number(通用)',push_plan_timeout_minutes:'number(通用)',image_queue_max_active:'number(通用)',image_queue_batch_size:'number(通用)'}},
-  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee 可选)',a:true},
+  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=50，limit最大100)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
   {m:'PUT',p:'/api/tasks/:id',d:'更新任务(JST/Shopee，按任务平台自动识别请求体)',a:true},
@@ -137,7 +137,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
-<div class="note"><strong>n8n 必配项：</strong>JST 至少配置需要启用的 webhook；Shopee 当前推送会要求 <code>n8n_title_webhook</code>、<code>n8n_sku_title_webhook</code>、<code>n8n_main_webhook</code>、<code>n8n_sub_image_webhook</code>、<code>n8n_sku_image_webhook</code>，当 <code>detail_image_count&gt;0</code> 时还要求 <code>n8n_detail_webhook</code>。当前阶段如只跑主图/附图，可保持 <code>push_primary_images_only=true</code>，标题/SKU/详情/SKU图计划会保留为 pending，不会自动释放到 n8n。</div>
+<div class="note"><strong>n8n 必配项：</strong>JST 至少配置需要启用的 webhook；Shopee 当前推送会要求 <code>n8n_title_webhook</code>、<code>n8n_sku_title_webhook</code>、<code>n8n_main_webhook</code>、<code>n8n_sub_image_webhook</code>、<code>n8n_sku_image_webhook</code>。Shopee basic template 不包含详情图字段，建议保持 <code>detail_image_count=0</code>，详情图只作为可选打包素材。当前阶段如只跑主图/附图，可保持 <code>push_primary_images_only=true</code>；全部工作流启用后必须改为 <code>false</code>。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
@@ -244,6 +244,7 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 <h2 id="Shopee商品">Shopee 商品</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
 <div class="note"><strong>Shopee 推送：</strong>已与 JST 对齐，支持标题、SKU 标题、封面图、附图、详情图、SKU 图工作流。默认 <code>main_image_count=9</code>（1封面+8附图），默认 <code>detail_image_count=0</code>；只有详情图数量大于 0 时才要求并触发详情图 webhook。去重模式第 2 套开始只生成封面图，其余图片复用第 1 套。</div>
+<div class="note"><strong>标题结构：</strong>Shopee 商品标题工作流按“主关键词 + 副关键词 + 长尾词 + 属性词”生成自然越南语标题，最终结果不包含字段括号；每个标题必须为 10~120 字符。SKU 标题对应模板的 <code>Option for Variation 1</code>，必须为 1~20 字符。</div>
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback'])}
@@ -256,7 +257,7 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>callback_secret</code></td><td>回调密钥别名；与 <code>secret</code> 二选一 <span class="tag treq">必填</span></td></tr>
 <tr><td><code>task_id</code></td><td>母任务ID <span class="tag treq">必填</span></td></tr>
 <tr><td><code>sub_task_id</code></td><td>子任务ID；图片回调必填，直接从推送体原样带回</td></tr>
-<tr><td><code>set_index</code></td><td>子任务索引；图片回调建议原样带回，用于导出定位</td></tr>
+<tr><td><code>set_index</code></td><td>子任务索引；建议原样带回，系统会以 <code>sub_task_id</code> 查询出的索引为准并自动校准</td></tr>
 <tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
 <tr><td><code>product_title</code></td><td>string 单个标题，应用到全部</td></tr>
 <tr><td><code>sku_titles</code></td><td>[string] SKU标题，subIdx×vCount+vIdx 映射</td></tr>

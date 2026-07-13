@@ -9,7 +9,14 @@ const API = {
   async changePassword(oldPwd, newPwd) { return this._put('/api/auth/password', { old_password: oldPwd, new_password: newPwd }); },
   async getConfig(platform) { return this._get('/api/config' + (platform ? '?platform=' + platform : '')); },
   async updateConfig(config, platform) { const d = { ...config, _platform: platform || '' }; return this._put('/api/config', d); },
-  async getTasks(platform) { return this._get('/api/tasks' + (platform ? '?platform=' + platform : '')); },
+  async getTasks(platform, page, limit) {
+    const params = new URLSearchParams();
+    if (platform) params.set('platform', platform);
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    const query = params.toString();
+    return this._get('/api/tasks' + (query ? '?' + query : ''));
+  },
   async getTask(id) { return this._get(`/api/tasks/${id}`); },
   async initTask(platform) { return this._post('/api/tasks/init', { platform: platform || 'jst' }); },
   async updateTask(id, data) { return this._put(`/api/tasks/${id}`, data); },
