@@ -2,7 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>系统配置 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.user-credits-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap}</style>
+<style>.user-credits-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.workflow-toggle{display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;margin-bottom:8px}.workflow-override{max-width:180px}</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
@@ -21,7 +21,7 @@
       <div class="form-group"><label class="form-label">R2 公开访问地址</label><input type="url" class="form-input" id="r2PublicUrl" placeholder="https://oss.langaj.work"></div>
       <div class="form-group"><label class="form-label">回调密钥 (callback_secret)</label><input type="text" class="form-input" id="callbackSecret" placeholder="n8n 回调时校验用"></div>
       <div class="form-group"><label class="form-label">全局推送并发上限</label><input type="number" class="form-input" id="pushGlobalMaxActive" min="1" max="200" value="20"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">所有平台、所有任务合计最多同时处理的工作流推送数。</div></div>
-      <div class="form-group"><label class="form-label"><input type="checkbox" id="pushPrimaryImagesOnly"> 仅释放主图/附图工作流</label><div style="font-size:12px;color:var(--gray-500);margin-top:4px">当前标题、SKU 等工作流未完善时启用，避免无效工作流占用队列额度。</div></div>
+      <div class="form-group"><label class="form-label"><input type="checkbox" id="pushPrimaryImagesOnly"> 仅启用主图/附图工作流</label><div style="font-size:12px;color:var(--gray-500);margin-top:4px">最高优先级总开关；启用后不构造标题、SKU、详情图计划，平台独立开关暂时失效。</div></div>
       <div class="form-group"><label class="form-label">每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerMinute" min="1" max="120" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">平滑释放工作流请求，避免同一分钟内大量任务冲击工作流和 D1。</div></div>
       <div class="form-group"><label class="form-label">单任务每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerTaskPerMinute" min="1" max="60" value="2"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">避免单个大任务占满所有新推送额度。</div></div>
       <div class="form-group"><label class="form-label">图片队列活跃上限</label><input type="number" class="form-input" id="imageQueueMaxActive" min="1" max="20" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">限制回调图片下载、压缩和写入 R2 的并发。</div></div>
@@ -44,13 +44,14 @@
   <div class="card"><div class="card-header">JST 工作流 Webhook</div><div class="card-body">
     <form onsubmit="return false">
       <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
-      <div class="form-group"><label class="form-label">商品标题 Webhook</label><input type="url" class="form-input" id="jst_title" placeholder="https://..."></div>
-      <div class="form-group"><label class="form-label">SKU标题 Webhook</label><input type="url" class="form-input" id="jst_sku_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_title_enabled"> 启用商品标题工作流</label><input type="url" class="form-input" id="jst_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_sku_title_enabled"> 启用 SKU 标题工作流</label><input type="url" class="form-input" id="jst_sku_title" placeholder="https://..."></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
       <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="jst_main" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="jst_sub" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="jst_detail" placeholder="https://..."></div>
-      <div class="form-group"><label class="form-label">SKU图工作流</label><input type="url" class="form-input" id="jst_sku" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="jst_sku" placeholder="https://..."></div>
+      <div class="form-hint">关闭的工作流不会构造推送计划；重新开启只影响之后重新推送或重新生成的任务。</div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
       <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="jst_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="saveJstConfig()">保存 JST 配置</button>
@@ -63,13 +64,14 @@
   <div class="card"><div class="card-header">Shopee 工作流 Webhook</div><div class="card-body">
     <form onsubmit="return false">
       <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
-      <div class="form-group"><label class="form-label">商品标题 Webhook</label><input type="url" class="form-input" id="shopee_title" placeholder="https://..."></div>
-      <div class="form-group"><label class="form-label">SKU标题 Webhook</label><input type="url" class="form-input" id="shopee_sku_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_title_enabled"> 启用商品标题工作流</label><input type="url" class="form-input" id="shopee_title" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_title_enabled"> 启用 SKU 标题工作流</label><input type="url" class="form-input" id="shopee_sku_title" placeholder="https://..."></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
       <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="shopee_main" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="shopee_sub" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="shopee_detail" placeholder="https://..."></div>
-      <div class="form-group"><label class="form-label">SKU图工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
+      <div class="form-hint">关闭的工作流不会构造推送计划；重新开启只影响之后重新推送或重新生成的任务。</div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
       <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="shopee_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="saveShopeeConfig()">保存 Shopee 配置</button>
@@ -106,19 +108,19 @@
     </div>
     <div id="userWebhookFields" style="display:none">
       <h4 style="margin:0 0 12px;color:var(--gray-600)">JST 工作流（留空则使用全局）</h4>
-      <div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_jst_title"></div>
-      <div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_jst_sku_title"></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_jst_title"></div><div class="form-group"><label class="form-label">商品标题开关</label><select class="form-input workflow-override" id="uwh_jst_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_jst_sku_title"></div><div class="form-group"><label class="form-label">SKU标题开关</label><select class="form-input workflow-override" id="uwh_jst_sku_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_jst_main"></div>
       <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_jst_sub"></div>
       <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_jst_detail"></div>
-      <div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_jst_sku"></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_jst_sku"></div><div class="form-group"><label class="form-label">SKU图片开关</label><select class="form-input workflow-override" id="uwh_jst_sku_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">Shopee 工作流（留空则使用全局）</h4>
-      <div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_shopee_title"></div>
-      <div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_shopee_sku_title"></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_shopee_title"></div><div class="form-group"><label class="form-label">商品标题开关</label><select class="form-input workflow-override" id="uwh_shopee_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_shopee_sku_title"></div><div class="form-group"><label class="form-label">SKU标题开关</label><select class="form-input workflow-override" id="uwh_shopee_sku_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_shopee_main"></div>
       <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_shopee_sub"></div>
       <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_shopee_detail"></div>
-      <div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_shopee_sku"></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">SKU图</label><input type="url" class="form-input" id="uwh_shopee_sku"></div><div class="form-group"><label class="form-label">SKU图片开关</label><select class="form-input workflow-override" id="uwh_shopee_sku_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <button class="btn btn-primary" onclick="saveUserWebhook()">保存该用户配置</button>
     </div>
   </div></div>
@@ -184,6 +186,9 @@ function switchTab(name){
 function g(id){return document.getElementById(id).value.trim()}
 function s(id,v){document.getElementById(id).value=v||''}
 function chk(id,v){document.getElementById(id).checked=v===true||v===1||v==='1'||v==='true'}
+function workflowValue(v){return v===undefined||v===null||v===''?'true':v}
+function setWorkflowOverride(id,v){s(id,v===true||v==='true'?'true':v===false||v==='false'?'false':'inherit')}
+function addWorkflowOverride(target,key,id){var value=g(id);if(value!=='inherit')target[key]=value==='true'}
 
 // 通用
 async function loadGeneralConfig(){
@@ -220,15 +225,19 @@ async function loadJstConfig(){
   if(!res.success)return;
   var c=res.config||{};
   s('jst_title',c.n8n_title_webhook);s('jst_sku_title',c.n8n_sku_title_webhook);
+  chk('jst_title_enabled',workflowValue(c.n8n_title_enabled));chk('jst_sku_title_enabled',workflowValue(c.n8n_sku_title_enabled));
   s('jst_main',c.n8n_main_webhook);s('jst_sub',c.n8n_sub_image_webhook);
   s('jst_detail',c.n8n_detail_webhook);s('jst_sku',c.n8n_sku_image_webhook);
+  chk('jst_sku_enabled',workflowValue(c.n8n_sku_image_enabled));
   s('jst_batch',c.push_batch_size||'20');
 }
 async function saveJstConfig(){
   var cfg={
     n8n_title_webhook:g('jst_title'),n8n_sku_title_webhook:g('jst_sku_title'),
+    n8n_title_enabled:document.getElementById('jst_title_enabled').checked,n8n_sku_title_enabled:document.getElementById('jst_sku_title_enabled').checked,
     n8n_main_webhook:g('jst_main'),n8n_sub_image_webhook:g('jst_sub'),
     n8n_detail_webhook:g('jst_detail'),n8n_sku_image_webhook:g('jst_sku'),
+    n8n_sku_image_enabled:document.getElementById('jst_sku_enabled').checked,
     push_batch_size:parseInt(g('jst_batch'))||20,
   };
   var res=await API.updateConfig(cfg,'jst');
@@ -241,15 +250,19 @@ async function loadShopeeConfig(){
   if(!res.success)return;
   var c=res.config||{};
   s('shopee_title',c.n8n_title_webhook);s('shopee_sku_title',c.n8n_sku_title_webhook);
+  chk('shopee_title_enabled',workflowValue(c.n8n_title_enabled));chk('shopee_sku_title_enabled',workflowValue(c.n8n_sku_title_enabled));
   s('shopee_main',c.n8n_main_webhook);s('shopee_sub',c.n8n_sub_image_webhook);
   s('shopee_detail',c.n8n_detail_webhook);s('shopee_sku',c.n8n_sku_image_webhook);
+  chk('shopee_sku_enabled',workflowValue(c.n8n_sku_image_enabled));
   s('shopee_batch',c.push_batch_size||'20');
 }
 async function saveShopeeConfig(){
   var cfg={
     n8n_title_webhook:g('shopee_title'),n8n_sku_title_webhook:g('shopee_sku_title'),
+    n8n_title_enabled:document.getElementById('shopee_title_enabled').checked,n8n_sku_title_enabled:document.getElementById('shopee_sku_title_enabled').checked,
     n8n_main_webhook:g('shopee_main'),n8n_sub_image_webhook:g('shopee_sub'),
     n8n_detail_webhook:g('shopee_detail'),n8n_sku_image_webhook:g('shopee_sku'),
+    n8n_sku_image_enabled:document.getElementById('shopee_sku_enabled').checked,
     push_batch_size:parseInt(g('shopee_batch'))||20,
   };
   var res=await API.updateConfig(cfg,'shopee');
@@ -299,17 +312,22 @@ async function loadUserWebhook(){
   fields.style.display='block';
   // 清空
   ['jst_title','jst_sku_title','jst_main','jst_sub','jst_detail','jst_sku','shopee_title','shopee_sku_title','shopee_main','shopee_sub','shopee_detail','shopee_sku'].forEach(function(k){s('uwh_'+k,'')});
+  ['jst_title_enabled','jst_sku_title_enabled','jst_sku_enabled','shopee_title_enabled','shopee_sku_title_enabled','shopee_sku_enabled'].forEach(function(k){s('uwh_'+k,'inherit')});
   try{
     var res=await API.getUserWebhook(userId);
     if(res.success&&res.webhook){
       var w=res.webhook;
       var jst=w.jst||{};var shopee=w.shopee||{};
       s('uwh_jst_title',jst.n8n_title_webhook);s('uwh_jst_sku_title',jst.n8n_sku_title_webhook);
+      setWorkflowOverride('uwh_jst_title_enabled',jst.n8n_title_enabled);setWorkflowOverride('uwh_jst_sku_title_enabled',jst.n8n_sku_title_enabled);
       s('uwh_jst_main',jst.n8n_main_webhook);s('uwh_jst_sub',jst.n8n_sub_image_webhook);
       s('uwh_jst_detail',jst.n8n_detail_webhook);s('uwh_jst_sku',jst.n8n_sku_image_webhook);
+      setWorkflowOverride('uwh_jst_sku_enabled',jst.n8n_sku_image_enabled);
       s('uwh_shopee_title',shopee.n8n_title_webhook);s('uwh_shopee_sku_title',shopee.n8n_sku_title_webhook);
+      setWorkflowOverride('uwh_shopee_title_enabled',shopee.n8n_title_enabled);setWorkflowOverride('uwh_shopee_sku_title_enabled',shopee.n8n_sku_title_enabled);
       s('uwh_shopee_main',shopee.n8n_main_webhook);s('uwh_shopee_sub',shopee.n8n_sub_image_webhook);
       s('uwh_shopee_detail',shopee.n8n_detail_webhook);s('uwh_shopee_sku',shopee.n8n_sku_image_webhook);
+      setWorkflowOverride('uwh_shopee_sku_enabled',shopee.n8n_sku_image_enabled);
     }
   }catch(e){}
 }
@@ -320,9 +338,11 @@ async function saveUserWebhook(){
   cfg.jst.n8n_title_webhook=g('uwh_jst_title');cfg.jst.n8n_sku_title_webhook=g('uwh_jst_sku_title');
   cfg.jst.n8n_main_webhook=g('uwh_jst_main');cfg.jst.n8n_sub_image_webhook=g('uwh_jst_sub');
   cfg.jst.n8n_detail_webhook=g('uwh_jst_detail');cfg.jst.n8n_sku_image_webhook=g('uwh_jst_sku');
+  addWorkflowOverride(cfg.jst,'n8n_title_enabled','uwh_jst_title_enabled');addWorkflowOverride(cfg.jst,'n8n_sku_title_enabled','uwh_jst_sku_title_enabled');addWorkflowOverride(cfg.jst,'n8n_sku_image_enabled','uwh_jst_sku_enabled');
   cfg.shopee.n8n_title_webhook=g('uwh_shopee_title');cfg.shopee.n8n_sku_title_webhook=g('uwh_shopee_sku_title');
   cfg.shopee.n8n_main_webhook=g('uwh_shopee_main');cfg.shopee.n8n_sub_image_webhook=g('uwh_shopee_sub');
   cfg.shopee.n8n_detail_webhook=g('uwh_shopee_detail');cfg.shopee.n8n_sku_image_webhook=g('uwh_shopee_sku');
+  addWorkflowOverride(cfg.shopee,'n8n_title_enabled','uwh_shopee_title_enabled');addWorkflowOverride(cfg.shopee,'n8n_sku_title_enabled','uwh_shopee_sku_title_enabled');addWorkflowOverride(cfg.shopee,'n8n_sku_image_enabled','uwh_shopee_sku_enabled');
   var res=await API.updateUserWebhook(userId,cfg);
   showToast(res.success?'已保存':(res.error||'保存失败'),res.success?'success':'error');
 }
