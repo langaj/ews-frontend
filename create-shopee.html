@@ -21,8 +21,9 @@
     <input type="hidden" id="auxiliaryImages">
   </div>
   <div class="form-group">
-    <label class="form-label">商品描述</label>
-    <textarea class="form-textarea" id="productDesc" rows="4" placeholder="商品功能、材质、特点等"></textarea>
+    <label class="form-label">商品描述 <span class="required">*</span></label>
+    <div class="form-hint">Shopee 模板必填，填写 100~3000 字符</div>
+    <textarea class="form-textarea" id="productDesc" rows="4" required minlength="100" maxlength="3000" placeholder="商品功能、材质、特点、包装和适用场景等"></textarea>
   </div>
   <div class="form-group">
     <label class="form-label">参考标题 <span class="required">*</span></label>

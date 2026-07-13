@@ -173,7 +173,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
   "name": "Product Name",
-  "description": "Product Description",
+  "description": "Product Description，100~3000字符",
   "reference_title": "参考标题",
   "main_description": "封面/附图描述",
   "detail_description": "详情图描述",
@@ -206,6 +206,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
+<div class="note"><code>description</code> 在用户创建页必填，长度必须为 100~3000 字符。为兼容旧 API 调用，字段缺省或为空时 Worker 会根据商品名称与规格保存一段基础描述；调用方传入非空但长度不合规则返回 400。历史空值任务导出时使用同一兼容规则并在 <code>validation.warnings</code> 中提示检查。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>

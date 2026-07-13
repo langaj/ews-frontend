@@ -116,7 +116,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <thead><tr><th>字段</th><th>填写建议</th><th>官方/系统规则</th></tr></thead>
             <tbody>
               <tr><td>任务名称</td><td>内部批次名，例如“手机壳-越南站-透明款”。</td><td>用于任务列表，也会传给 AI 作为标题参考。</td></tr>
-              <tr><td>商品描述</td><td>写材质、功能、包装、适用场景，尽量完整。</td><td>Shopee 模板要求 Product Description 100~3000 字符。</td></tr>
+              <tr><td>商品描述</td><td>必填。写材质、功能、包装、适用场景，保持信息准确。</td><td>Shopee 模板要求 Product Description 100~3000 字符；历史空值任务导出时系统会生成基础描述并提示检查。</td></tr>
               <tr><td>参考标题</td><td>放你希望 AI 学习的标题风格，可以多行。</td><td>用于生成 Product Name 和 SKU 标题，不直接导出。</td></tr>
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>详情图生成描述</td><td>写卖点、结构、场景、参数表达。</td><td>仅在详情图数量大于 0 时生效；当前 basic template 暂不导出详情图，可在任务列表打包下载。</td></tr>
