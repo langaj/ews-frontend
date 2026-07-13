@@ -51,7 +51,7 @@
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="jst_sub" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="jst_detail" placeholder="https://..."></div>
       <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="jst_sku" placeholder="https://..."></div>
-      <div class="form-hint">关闭的工作流不会构造推送计划；重新开启只影响之后重新推送或重新生成的任务。</div>
+      <div class="form-hint">关闭后不构造新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 会继续释放。</div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
       <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="jst_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="saveJstConfig()">保存 JST 配置</button>
@@ -71,7 +71,7 @@
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="shopee_sub" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="shopee_detail" placeholder="https://..."></div>
       <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
-      <div class="form-hint">关闭的工作流不会构造推送计划；重新开启只影响之后重新推送或重新生成的任务。</div>
+      <div class="form-hint">关闭后不构造新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 会继续释放。</div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
       <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="shopee_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="saveShopeeConfig()">保存 Shopee 配置</button>

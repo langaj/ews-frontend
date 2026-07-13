@@ -137,7 +137,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
-<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code>、<code>n8n_sku_title_enabled</code>、<code>n8n_sku_image_enabled</code> 分别控制商品标题、SKU标题、SKU图片，未配置时默认开启。关闭后系统不会构造对应推送计划；开启但 Webhook 地址为空时，推送接口会直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会同时跳过标题、SKU标题、详情图和SKU图片。Shopee 的 <code>variation_image_mode=none</code> 即使开启SKU图片工作流也不会创建SKU图片计划。</div>
+<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code>、<code>n8n_sku_title_enabled</code>、<code>n8n_sku_image_enabled</code> 分别控制商品标题、SKU标题、SKU图片，未配置时默认开启。关闭后系统不会构造对应新计划，并暂停同类历史 pending 计划；重新开启后历史 pending 继续释放。开启但 Webhook 地址为空时，推送接口会直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会同时跳过标题、SKU标题、详情图和SKU图片。Shopee 的 <code>variation_image_mode=none</code> 即使开启SKU图片工作流也不会创建SKU图片计划。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
