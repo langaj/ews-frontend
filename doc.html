@@ -239,7 +239,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
-<div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划，通过 releaseTaskQueue 动态补位（并发上限 batch_size）。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余附图/详情图/SKU图在导出时复用第 1 套。</div>
+<div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划，通过 releaseTaskQueue 动态补位（并发上限 batch_size）。定时消费的回调、图片、状态对账和计划释放彼此隔离，单阶段失败不会阻断其他阶段；任务列表读取还会异步触发一次受相同限流保护的计划释放，作为 cron 兜底。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余附图/详情图/SKU图在导出时复用第 1 套。</div>
 <div class="note"><strong>失败重试：</strong>任务详情会为 <code>failed</code> 计划提供单条重试，也可一次重试当前任务的全部失败计划。图片计划重试时会清理该图片对应的旧失败消费记录，再重新进入统一推送队列；<code>processing</code> 计划仍会拒绝重复提交。</div>
 <div class="note"><strong>阶段性图片优先：</strong>当 <code>push_primary_images_only=true</code> 时，系统只构造 <code>main/main_1</code> 和 <code>sub_*</code> 主图/附图计划；标题、SKU标题、详情图、SKU图不会创建计划。关闭总开关只影响之后重新推送或重新生成的任务，不会自动补建历史任务计划。</div>
 
