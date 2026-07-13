@@ -96,7 +96,7 @@ function showLoginModal() {
     <div class="login-title">EWS</div>
     <div class="login-subtitle">电商套图批量生成系统</div>
     <form onsubmit="handleLogin(event)" style="max-width:360px;margin:0 auto">
-      <div class="form-group"><label class="form-label">用户名</label><input type="text" class="form-input" id="loginUsername" value="admin" style="width:100%"></div>
+      <div class="form-group"><label class="form-label">用户名</label><input type="text" class="form-input" id="loginUsername" style="width:100%"></div>
       <div class="form-group"><label class="form-label">密码</label><input type="password" class="form-input" id="loginPassword" style="width:100%"></div>
       <button type="submit" class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center">登录</button>
       <div id="loginError" style="color:var(--danger);font-size:13px;margin-top:8px;text-align:center"></div>
