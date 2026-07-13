@@ -86,11 +86,11 @@ const EP = [
 
 const WEBHOOKS = [
   {name:'商品标题',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'工作流按sub_tasks/sub_task_count生成N个标题后批量回调；不需要传platform；回调用 titles 或 product_title'},
-  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length，顺序为 sub_task 顺序 × variants 顺序；option2不存在时为空'},
+  {name:'SKU标题',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',variants:'[{id,name,option2?}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'sku_titles长度=sub_task_count×variants.length，顺序为 sub_task 顺序 × variants 顺序；Shopee新任务的variants是去重后的一级规格，回调后由系统复用到二级组合'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
-  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'变体名',variant_option2:'二级规格值(可为空)',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'变体索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'每个变体推送一次；JST 与 Shopee 都用 sku_image 作为变体参考图，不需要判断平台'},
+  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'一级规格值',variant_option2:'历史任务兼容字段(可为空)',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'一级规格索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'JST按变体推送；Shopee新任务按唯一一级规格推送并复用到二级组合，none模式不推送SKU图；工作流只需使用sku_image'},
 ];
 
 const SIDEBAR_HTML = SIDEBAR.map(function(s){return s.s?'<div class="sec-title">'+s.t+'</div>':'<a href="#'+s.t+'">'+s.t+'</a>'}).join('');
@@ -137,7 +137,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
-<div class="note"><strong>n8n 必配项：</strong>JST 至少配置需要启用的 webhook；Shopee 当前推送会要求 <code>n8n_title_webhook</code>、<code>n8n_sku_title_webhook</code>、<code>n8n_main_webhook</code>、<code>n8n_sub_image_webhook</code>、<code>n8n_sku_image_webhook</code>。Shopee basic template 不包含详情图字段，建议保持 <code>detail_image_count=0</code>，详情图只作为可选打包素材。当前阶段如只跑主图/附图，可保持 <code>push_primary_images_only=true</code>；全部工作流启用后必须改为 <code>false</code>。</div>
+<div class="note"><strong>n8n 必配项：</strong>JST 至少配置需要启用的 webhook；Shopee 要求 <code>n8n_title_webhook</code>、<code>n8n_sku_title_webhook</code>、<code>n8n_main_webhook</code>、<code>n8n_sub_image_webhook</code>；仅在 <code>variation_image_mode=option1</code> 时要求 <code>n8n_sku_image_webhook</code>。Shopee basic template 不包含详情图字段，建议保持 <code>detail_image_count=0</code>，详情图只作为可选打包素材。当前阶段如只跑主图/附图，可保持 <code>push_primary_images_only=true</code>；全部工作流启用后必须改为 <code>false</code>。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
@@ -191,6 +191,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "height_cm": null,
   "variation_name1": "Color",
   "variation_name2": "",
+  "variation_image_mode": "option1|none|combination_legacy(仅历史兼容)",
   "shipping_channels": "[\"5000\"]",
   "variations": [{
     "option1": "Red",
@@ -260,7 +261,7 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>set_index</code></td><td>子任务索引；建议原样带回，系统会以 <code>sub_task_id</code> 查询出的索引为准并自动校准</td></tr>
 <tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
 <tr><td><code>product_title</code></td><td>string 单个标题，应用到全部</td></tr>
-<tr><td><code>sku_titles</code></td><td>[string] SKU标题，subIdx×vCount+vIdx 映射</td></tr>
+<tr><td><code>sku_titles</code></td><td>[string] SKU标题，按 sub_task 顺序 × 推送体 variants 顺序映射；Shopee新任务由系统向同一一级规格的二级组合复用</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
 <tr><td><code>image_url</code></td><td>AI模型临时URL</td></tr>

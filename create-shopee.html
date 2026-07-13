@@ -2,7 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>创建任务(虾皮) - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.ref-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px}.ref-slot{min-width:0}.ref-zone{width:100%;aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:0}.ref-preview{display:none;width:100%;height:100%}.ref-preview img{width:100%;height:100%;object-fit:cover;border-radius:4px}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500);white-space:pre-line;line-height:1.5}.ref-label{font-size:11px;color:var(--gray-500);text-align:center;margin-top:4px}@media(max-width:640px){.ref-row{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
+<style>.ref-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px}.ref-slot{min-width:0}.ref-zone{width:100%;aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:0}.ref-preview{display:none;width:100%;height:100%}.ref-preview img{width:100%;height:100%;object-fit:cover;border-radius:4px}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500);white-space:pre-line;line-height:1.5}.ref-label{font-size:11px;color:var(--gray-500);text-align:center;margin-top:4px}.spec-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}.spec-toolbar h4{margin:0;color:var(--gray-700)}.spec-option-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,260px) auto;gap:12px;align-items:end;padding:14px 0;border-bottom:1px solid var(--gray-200)}.spec-option-row:last-child{border-bottom:0}.spec-upload{min-height:72px;padding:8px}.spec-upload img{width:64px;height:56px;object-fit:cover}.spec-switch{display:flex;align-items:center;gap:8px;margin:18px 0 12px;cursor:pointer}.combo-summary{font-size:13px;color:var(--gray-500)}.combo-disabled{opacity:.58}.combo-disabled input:not(.v-enabled),.combo-disabled select{pointer-events:none}.combo-empty{padding:18px 0;color:var(--gray-500);font-size:13px}.btn-compact{padding:7px 11px;font-size:13px}@media(max-width:760px){.ref-row{grid-template-columns:repeat(2,minmax(0,1fr))}.spec-option-row{grid-template-columns:1fr}.spec-option-row .variant-remove{justify-self:start}}</style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
@@ -74,10 +74,6 @@
   </div>
   <div class="form-row">
     <div class="form-group">
-      <label class="form-label">变体数量</label>
-      <input type="number" class="form-input" id="variantCount" value="1" min="1" max="50" onchange="updateVariants()">
-    </div>
-    <div class="form-group">
       <label class="form-label">品牌 ID <span class="optional">（可留空）</span></label>
       <input type="text" class="form-input" id="brandId" placeholder="当前基础模板不导出品牌 ID">
       <div style="font-size:12px;color:var(--gray-500);margin-top:4px">类目专用模板可能要求有效品牌或 no brand；当前可留空。</div>
@@ -99,11 +95,22 @@
     <div class="form-group"><label class="form-label">HS Code</label><input type="text" class="form-input" id="hsCode" placeholder="4/6/8位数字"></div>
   </div>
   <hr style="margin:20px 0">
-  <h4 style="margin-bottom:16px;color:var(--gray-700)">变体设置 (颜色+尺码二维)</h4>
+  <h4 style="margin-bottom:16px;color:var(--gray-700)">商品规格</h4>
   <div class="form-row">
-    <div class="form-group"><label class="form-label">颜色(变体名)</label><input type="text" class="form-input" id="varName1" value="Color" placeholder="第一层规格名"></div>
-    <div class="form-group"><label class="form-label">尺码(第二层)</label><input type="text" class="form-input" id="varName2" placeholder="如：Size"></div>
+    <div class="form-group"><label class="form-label">一级规格名 <span class="required">*</span></label><input type="text" class="form-input" id="varName1" value="Color" maxlength="14" placeholder="如：Color"></div>
+    <div class="form-group"><label class="form-label">规格图模式</label><select class="form-input" id="variationImageMode" onchange="renderPrimaryOptions()"><option value="option1">按一级规格生成（官方推荐）</option><option value="none">不生成规格图</option></select></div>
   </div>
+  <div class="form-hint">Shopee 的 Image per Variation 映射一级规格值；同一颜色的不同尺码共用一张规格图。</div>
+  <div class="spec-toolbar"><h4>一级规格值</h4><button type="button" class="btn btn-outline btn-compact" onclick="addPrimaryOption()">添加规格值</button></div>
+  <div id="primaryOptionsContainer"></div>
+  <label class="spec-switch"><input type="checkbox" id="enableTier2" onchange="toggleTier2()"> 启用二级规格</label>
+  <div id="tier2Panel" style="display:none">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">二级规格名 <span class="required">*</span></label><input type="text" class="form-input" id="varName2" maxlength="14" placeholder="如：Size"></div>
+      <div class="form-group"><label class="form-label">二级规格值 <span class="required">*</span></label><textarea class="form-textarea" id="tier2Values" rows="2" placeholder="如：S, M, L（逗号或换行分隔）" oninput="renderCombinations()"></textarea></div>
+    </div>
+  </div>
+  <div class="spec-toolbar"><h4>SKU 组合</h4><span class="combo-summary" id="combinationSummary"></span></div>
   <div id="variantsContainer"></div>
   <hr style="margin:20px 0">
   <h4 style="margin-bottom:16px;color:var(--gray-700)">物流渠道</h4>
@@ -117,10 +124,12 @@
 <script src="/js/api.js"></script>
 <script>
 var refFiles=[];
-var variantImgFiles=[];
+var primaryOptionCounter=1;
+var primaryOptions=[{id:'primary-1',value:'',file:null,preview:''}];
+var combinationState={};
 var channels=[{id:'5000',label:'Hỏa Tốc'},{id:'5001',label:'Nhanh'},{id:'5004',label:'Hàng Cồng Kềnh'},{id:'5012',label:'Trong Ngày'},{id:'5115',label:'Hỏa Tốc - Ưu Tiên'},{id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},{id:'50052',label:'Tủ nhận hàng - SPX'}];
 
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('shopee')){showToast('当前账号无权创建虾皮任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();updateVariants();initShipping()});
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('shopee')){showToast('当前账号无权创建虾皮任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();renderPrimaryOptions();initShipping()});
 function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
 function initShipping(){var h='';for(var c of channels)h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="shipping-chk" value="'+c.id+'"> '+c.label+'</label>';document.getElementById('shippingChannels').innerHTML=h;}
 function initRefSlots(){
@@ -175,53 +184,55 @@ function readPriceConfig(item,index,requiredPrice){
   if(requiredPrice&&!raw){showToast('请填写变体 #'+(index+1)+' 的价格','error');return null}
   return {price:parseFloat(raw)||0,price_float_enabled:0,price_precision:precision};
 }
-function updateVariants(){
-  var count=parseInt(document.getElementById('variantCount').value)||1;
-  var container=document.getElementById('variantsContainer');
-  var existing=container.querySelectorAll('.v-item');
+function getPrimaryOption(id){return primaryOptions.find(function(option){return option.id===id})}
+function addPrimaryOption(){captureCombinationState();primaryOptionCounter++;primaryOptions.push({id:'primary-'+primaryOptionCounter,value:'',file:null,preview:''});renderPrimaryOptions()}
+function removePrimaryOption(id){if(primaryOptions.length<=1)return;captureCombinationState();primaryOptions=primaryOptions.filter(function(option){return option.id!==id});renderPrimaryOptions()}
+function handlePrimaryValue(input,id){var option=getPrimaryOption(id);if(option)option.value=input.value;renderCombinations()}
+function handlePrimaryUpload(event,id){var file=event.target.files[0];if(!file)return;var option=getPrimaryOption(id);if(!option)return;option.file=file;var reader=new FileReader();reader.onload=function(result){option.preview=result.target.result;renderPrimaryOptions()};reader.readAsDataURL(file)}
+function renderPrimaryOptions(){
+  captureCombinationState();
+  var imageEnabled=document.getElementById('variationImageMode').value==='option1';
   var html='';
-  for(var i=0;i<count;i++){
-    var ed=existing[i];
-    var o1=ed?ed.querySelector('.v-o1')?.value||'':'';
-    var o2=ed?ed.querySelector('.v-o2')?.value||'':'';
-    var price=ed?ed.querySelector('.v-pr')?.value||'':'';
-    var floatOn=ed?ed.querySelector('.v-price-float')?.checked||false:false;
-    var priceMin=ed?ed.querySelector('.v-price-min')?.value||'':'';
-    var priceMax=ed?ed.querySelector('.v-price-max')?.value||'':'';
-    var precision=ed?ed.querySelector('.v-price-precision')?.value||'0':'0';
-    var stock=ed?ed.querySelector('.v-st')?.value||'':'';
-    var sku=ed?ed.querySelector('.v-sk')?.value||'':'';
-    var hasImg=!!variantImgFiles[i];
-    html+='<div class="variant-item v-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
-    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px">颜色 <span class="required">*</span></label><input class="form-input v-o1" placeholder="如：红色" value="'+escapeHtml(o1)+'" required></div>';
-    html+='<div class="form-group"><label style="font-size:13px">尺码</label><input class="form-input v-o2" placeholder="如：M" value="'+escapeHtml(o2)+'"></div></div>';
-    html+='<div class="form-row"><div class="form-group price-single" style="'+(floatOn?'display:none':'')+'"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="0" value="'+escapeHtml(price)+'"'+(floatOn?'':' required')+'></div>';
-    html+='<div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(stock||'0')+'"></div></div>';
-    html+='<label style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;font-size:13px"><input type="checkbox" class="v-price-float" onchange="togglePriceFloat(this)"'+(floatOn?' checked':'')+'> 启用价格浮动</label>';
-    html+='<div class="form-row price-range" style="'+(floatOn?'':'display:none')+'"><div class="form-group"><label style="font-size:13px">最低价 <span class="required">*</span></label><input type="number" class="form-input v-price-min" step="0.01" min="0" value="'+escapeHtml(priceMin)+'"'+(floatOn?' required':'')+'></div>';
-    html+='<div class="form-group"><label style="font-size:13px">最高价 <span class="required">*</span></label><input type="number" class="form-input v-price-max" step="0.01" min="0" value="'+escapeHtml(priceMax)+'"'+(floatOn?' required':'')+'></div>';
-    html+='<div class="form-group"><label style="font-size:13px">取价精度</label><select class="form-input v-price-precision">'+precisionOptions(precision)+'</select></div></div>';
-    html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" placeholder="商家SKU" value="'+escapeHtml(sku)+'"></div>';
-    html+='<div class="form-group"><label style="font-size:13px">SKU参考图 <span class="required">*</span></label>';
-    html+='<div class="upload-zone'+(hasImg?' has-image':'')+'" onclick="document.getElementById(\'variantInput'+i+'\').click()">';
-    html+='<input type="file" id="variantInput'+i+'" accept="image/*" style="display:none" onchange="handleVariantUpload(event,'+i+')">';
-    html+='<div class="variant-placeholder"'+(hasImg?' style="display:none"':'')+'><div class="upload-text">点击上传SKU参考图</div></div>';
-    html+='<div class="variant-preview"'+(hasImg?'':' style="display:none"')+'><img id="variantPreviewImg'+i+'" src="" style="max-width:100%;max-height:150px;border-radius:6px"></div></div></div></div>';
-  }
+  primaryOptions.forEach(function(option,index){
+    html+='<div class="spec-option-row"><div class="form-group"><label class="form-label">规格值 #'+(index+1)+' <span class="required">*</span></label><input class="form-input primary-value" maxlength="20" value="'+escapeHtml(option.value)+'" placeholder="如：红色" oninput="handlePrimaryValue(this,\''+option.id+'\')"></div>';
+    if(imageEnabled){
+      html+='<div class="form-group"><label class="form-label">SKU 参考图 <span class="required">*</span></label><div class="upload-zone spec-upload'+(option.preview?' has-image':'')+'" onclick="document.getElementById(\'primaryInput-'+option.id+'\').click()"><input type="file" id="primaryInput-'+option.id+'" accept="image/*" style="display:none" onchange="handlePrimaryUpload(event,\''+option.id+'\')">'+(option.preview?'<img src="'+option.preview+'" alt="规格参考图">':'<div class="upload-text">点击上传</div>')+'</div></div>';
+    }else html+='<div class="form-group"><label class="form-label">SKU 参考图</label><div class="form-hint" style="padding:12px 0">当前模式不生成或导出规格图</div></div>';
+    html+='<button type="button" class="variant-remove" onclick="removePrimaryOption(\''+option.id+'\')"'+(primaryOptions.length<=1?' disabled':'')+'>删除</button></div>';
+  });
+  document.getElementById('primaryOptionsContainer').innerHTML=html;
+  renderCombinations();
+}
+function toggleTier2(){document.getElementById('tier2Panel').style.display=document.getElementById('enableTier2').checked?'':'none';renderCombinations()}
+function getTier2Values(){
+  if(!document.getElementById('enableTier2').checked)return [''];
+  var seen={};return document.getElementById('tier2Values').value.split(/[\n,，]+/).map(function(value){return value.trim()}).filter(function(value){var key=value.toLowerCase();if(!value||seen[key])return false;seen[key]=true;return true});
+}
+function captureCombinationState(){
+  document.querySelectorAll('.v-item').forEach(function(item){
+    combinationState[item.dataset.key]={enabled:item.querySelector('.v-enabled').checked,price:item.querySelector('.v-pr').value,floatOn:item.querySelector('.v-price-float').checked,priceMin:item.querySelector('.v-price-min').value,priceMax:item.querySelector('.v-price-max').value,precision:item.querySelector('.v-price-precision').value,stock:item.querySelector('.v-st').value,sku:item.querySelector('.v-sk').value};
+  });
+}
+function toggleCombinationEnabled(input){var item=input.closest('.v-item');item.classList.toggle('combo-disabled',!input.checked);item.querySelectorAll('input:not(.v-enabled),select').forEach(function(control){control.disabled=!input.checked});if(input.checked)togglePriceFloat(item.querySelector('.v-price-float'))}
+function renderCombinations(){
+  captureCombinationState();
+  var tier2Values=getTier2Values();var combos=[];
+  primaryOptions.forEach(function(option){tier2Values.forEach(function(option2){combos.push({option:option,option2:option2,key:JSON.stringify([option.id,option2])})})});
+  document.getElementById('combinationSummary').textContent=combos.length+' / 50 个组合';
+  var container=document.getElementById('variantsContainer');
+  if(!tier2Values.length){container.innerHTML='<div class="combo-empty">填写二级规格值后将自动生成 SKU 组合。</div>';return}
+  if(combos.length>50){container.innerHTML='<div class="combo-empty" style="color:var(--danger)">SKU 组合超过 Shopee 的 50 个上限，请减少规格值。</div>';return}
+  var html='';
+  combos.forEach(function(combo,index){
+    var state=combinationState[combo.key]||{enabled:true,price:'',floatOn:false,priceMin:'',priceMax:'',precision:'0',stock:'0',sku:''};
+    var label=(combo.option.value||'一级规格 #'+(primaryOptions.indexOf(combo.option)+1))+(combo.option2?' / '+combo.option2:'');
+    html+='<div class="variant-item v-item'+(state.enabled?'':' combo-disabled')+'" data-key="'+escapeHtml(combo.key)+'" data-primary-id="'+combo.option.id+'" data-option2="'+escapeHtml(combo.option2)+'"><div class="variant-header"><span class="variant-number">'+escapeHtml(label)+'</span><label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="v-enabled" onchange="toggleCombinationEnabled(this)"'+(state.enabled?' checked':'')+'> 启用</label></div>';
+    html+='<div class="form-row"><div class="form-group price-single" style="'+(state.floatOn?'display:none':'')+'"><label style="font-size:13px">价格 <span class="required">*</span></label><input type="number" class="form-input v-pr" step="0.01" min="1000" value="'+escapeHtml(state.price)+'"'+(state.floatOn?'':' required')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">库存</label><input type="number" class="form-input v-st" min="0" value="'+escapeHtml(state.stock||'0')+'"'+(state.enabled?'':' disabled')+'></div></div>';
+    html+='<label style="display:flex;align-items:center;gap:6px;margin:8px 0 10px;font-size:13px"><input type="checkbox" class="v-price-float" onchange="togglePriceFloat(this)"'+(state.floatOn?' checked':'')+(state.enabled?'':' disabled')+'> 启用价格浮动</label>';
+    html+='<div class="form-row price-range" style="'+(state.floatOn?'':'display:none')+'"><div class="form-group"><label style="font-size:13px">最低价 <span class="required">*</span></label><input type="number" class="form-input v-price-min" step="0.01" min="1000" value="'+escapeHtml(state.priceMin)+'"'+(state.floatOn?' required':'')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">最高价 <span class="required">*</span></label><input type="number" class="form-input v-price-max" step="0.01" min="1000" value="'+escapeHtml(state.priceMax)+'"'+(state.floatOn?' required':'')+(state.enabled?'':' disabled')+'></div><div class="form-group"><label style="font-size:13px">取价精度</label><select class="form-input v-price-precision"'+(state.enabled?'':' disabled')+'>'+precisionOptions(state.precision)+'</select></div></div>';
+    html+='<div class="form-group"><label style="font-size:13px">SKU</label><input class="form-input v-sk" maxlength="99" placeholder="商家SKU" value="'+escapeHtml(state.sku)+'"'+(state.enabled?'':' disabled')+'></div></div>';
+  });
   container.innerHTML=html;
-}
-function removeVariant(i){
-  var c=parseInt(document.getElementById('variantCount').value)||1;
-  if(c<=1)return;document.getElementById('variantCount').value=c-1;updateVariants();
-}
-function handleVariantUpload(e,i){var f=e.target.files[0];if(!f)return;variantImgFiles[i]=f;
-  var reader=new FileReader();reader.onload=function(e2){
-    var item=document.querySelectorAll('.v-item')[i];
-    item.querySelector('.variant-placeholder').style.display='none';
-    item.querySelector('.variant-preview').style.display='block';
-    item.querySelector('.upload-zone').classList.add('has-image');
-    document.getElementById('variantPreviewImg'+i).src=e2.target.result;
-  };reader.readAsDataURL(f);
 }
 async function uploadFile(taskId,file,folder){
   var fd=new FormData();fd.append('file',file);fd.append('folder',folder);fd.append('task_id',taskId);
@@ -236,9 +247,19 @@ async function handleCreate(e){
   if(!name){showToast('请填写商品名称','error');return}
   if(!referenceTitle){showToast('请填写参考标题','error');return}
   if(!refFiles[0]){showToast('请上传核心参考图','error');return}
-  var varItems=document.querySelectorAll('.v-item');
-  for(var item of varItems){if(!item.querySelector('.v-o1').value.trim()){showToast('请填写所有变体颜色','error');return}}
-  for(var vi=0;vi<varItems.length;vi++){if(!variantImgFiles[vi]){showToast('请上传变体 #'+(vi+1)+' 的SKU参考图','error');return}}
+  var variationName1=document.getElementById('varName1').value.trim();
+  if(!variationName1){showToast('请填写一级规格名','error');return}
+  var optionNames=primaryOptions.map(function(option){return option.value.trim()});var optionNameKeys={};
+  for(var oi=0;oi<optionNames.length;oi++){var optionKey=optionNames[oi].toLowerCase();if(!optionNames[oi]){showToast('请填写所有一级规格值','error');return}if(optionNameKeys[optionKey]){showToast('一级规格值不能重复','error');return}optionNameKeys[optionKey]=true}
+  var tier2Enabled=document.getElementById('enableTier2').checked;var tier2Values=getTier2Values();
+  if(tier2Enabled&&!document.getElementById('varName2').value.trim()){showToast('请填写二级规格名','error');return}
+  if(tier2Enabled&&!tier2Values.length){showToast('请填写二级规格值','error');return}
+  var varItems=Array.from(document.querySelectorAll('.v-item')).filter(function(item){return item.querySelector('.v-enabled').checked});
+  if(!varItems.length){showToast('至少启用一个 SKU 组合','error');return}
+  if(varItems.length>50){showToast('SKU 组合不能超过 50 个','error');return}
+  var imageMode=document.getElementById('variationImageMode').value;var usedPrimaryIds={};
+  varItems.forEach(function(item){usedPrimaryIds[item.dataset.primaryId]=true});
+  if(imageMode==='option1'){for(var primary of primaryOptions){if(usedPrimaryIds[primary.id]&&!primary.file){showToast('请上传“'+primary.value+'”的 SKU 参考图','error');return}}}
   for(var pi=0;pi<varItems.length;pi++){if(!readPriceConfig(varItems[pi],pi,true))return}
   var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
   var initRes=await API.initTask('shopee');
@@ -249,17 +270,22 @@ async function handleCreate(e){
     var upRes=await uploadFile(taskId,rf,'references');if(!upRes.success){showToast('参考图上传失败','error');btn.disabled=false;return}
     if(ri===0)refImg=upRes.url||upRes.key;else auxUrls.push(upRes.url||upRes.key);
   }
+  var primaryImageUrls={};var usedPrimaryOptions=primaryOptions.filter(function(primary){return usedPrimaryIds[primary.id]});
+  if(imageMode==='option1')for(var ui=0;ui<usedPrimaryOptions.length;ui++){
+    btn.textContent='上传SKU参考图 '+(ui+1)+'/'+usedPrimaryOptions.length+'...';
+    var sRes=await uploadFile(taskId,usedPrimaryOptions[ui].file,'variants');
+    if(!sRes.success){showToast('SKU参考图上传失败','error');btn.disabled=false;btn.textContent='创建任务';return}
+    primaryImageUrls[usedPrimaryOptions[ui].id]=sRes.url||sRes.key;
+  }
   var variations=[];
   for(var i=0;i<varItems.length;i++){
-    btn.textContent='上传SKU参考图 '+(i+1)+'/'+varItems.length+'...';
-    var skuImgUrl='';var skuFile=variantImgFiles[i];
-    if(skuFile){var sRes=await uploadFile(taskId,skuFile,'variants');if(sRes.success) skuImgUrl=sRes.url||sRes.key;}
+    var primaryOption=getPrimaryOption(varItems[i].dataset.primaryId);
     var pricing=readPriceConfig(varItems[i],i,true);
     if(!pricing){btn.disabled=false;btn.textContent='创建商品';return}
     variations.push({
-      option1:varItems[i].querySelector('.v-o1').value.trim(),
-      option2:varItems[i].querySelector('.v-o2').value.trim(),
-      image_per_variation:skuImgUrl,
+      option1:primaryOption.value.trim(),
+      option2:tier2Enabled?varItems[i].dataset.option2:'',
+      image_per_variation:primaryImageUrls[primaryOption.id]||'',
       price:pricing.price,
       price_float_enabled:pricing.price_float_enabled,
       price_min:pricing.price_min,
@@ -288,8 +314,9 @@ async function handleCreate(e){
     height_cm:parseFloat(document.getElementById('height').value)||null,
     gtin:document.getElementById('gtin').value.trim(),
     hs_code:document.getElementById('hsCode').value.trim(),
-    variation_name1:document.getElementById('varName1').value.trim(),
-    variation_name2:document.getElementById('varName2').value.trim(),
+    variation_name1:variationName1,
+    variation_name2:tier2Enabled?document.getElementById('varName2').value.trim():'',
+    variation_image_mode:imageMode,
     shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-chk:checked')).map(function(cb){return cb.value})),
     variations:variations,
   });

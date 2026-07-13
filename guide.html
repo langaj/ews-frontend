@@ -100,10 +100,10 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <thead><tr><th>系统资源</th><th>Shopee 模板字段</th><th>说明</th></tr></thead>
             <tbody>
               <tr><td>AI 商品标题</td><td>B Product Name</td><td>官方要求 10~120 字符。</td></tr>
-              <tr><td>AI SKU 标题</td><td>K Option for Variation 1</td><td>官方要求 1~20 字符，按“每套资源 × 每个变体”生成。</td></tr>
+              <tr><td>AI SKU 标题</td><td>K Option for Variation 1</td><td>官方要求 1~20 字符，按“每套资源 × 唯一一级规格值”生成，同一颜色的尺码组合复用。</td></tr>
               <tr><td>封面图 <code>main_1</code></td><td>U Cover image</td><td>Shopee 的首图/封面图。</td></tr>
               <tr><td>附图 <code>sub_2~sub_9</code></td><td>V~AC Item Image 1~8</td><td>从第 2 张开始，不重复写封面图。</td></tr>
-              <tr><td>SKU 变体图 <code>sku_N</code></td><td>L Image per Variation</td><td>映射到一级规格值，例如颜色图。</td></tr>
+              <tr><td>SKU 变体图 <code>sku_N</code></td><td>L Image per Variation</td><td>每个一级规格值生成一次，例如同一颜色的 S/M/L 共用一张图；可选择不生成规格图。</td></tr>
               <tr><td>详情图 <code>detail_1~N</code></td><td>当前 basic template 暂无字段</td><td>默认不生成；如果详情图数量大于 0，系统会生成并保存，任务列表可打包下载。</td></tr>
             </tbody>
           </table>
@@ -127,13 +127,14 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>品牌 ID</td><td>当前可留空。</td><td>当前 basic Template A~AP 没有 Brand 列，系统不导出品牌 ID。类目专用模板中 Brand 可能必填，应使用有效品牌或 no brand。</td></tr>
               <tr><td>重量(kg)</td><td>按实际商品包裹重量填写 kg。</td><td>官方模板 AD Weight 单位是 g，系统导出时自动从 kg 转成 g，范围 0~100000000g。</td></tr>
               <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
-              <tr><td>规格名1</td><td>通常填颜色、款式。</td><td>官方要求 1~14 字符。</td></tr>
+              <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
               <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
-              <tr><td>规格名2/规格值2</td><td>有尺码时填写，例如 Size / M。</td><td>存在二级规格时必须成对填写。</td></tr>
+              <tr><td>二级规格名/值</td><td>放不需要独立图片的维度，例如 Size / S、M、L。</td><td>启用后系统自动生成笛卡尔组合，可逐个关闭不售卖组合；二级规格不会新增图片工作流。</td></tr>
+              <tr><td>规格图模式</td><td>通常选择“按一级规格生成”；无需规格图时选择“不生成规格图”。</td><td><code>option1</code> 每套按唯一一级规格出图；<code>none</code> 不创建 SKU 图计划，Excel 的 Image per Variation 留空。</td></tr>
               <tr><td>价格</td><td>按越南站 VND 填数字；也可在单个变体启用价格浮动。</td><td>当前模板规则为 1000~120000000；浮动价格会按每套商品在区间内取值。</td></tr>
               <tr><td>库存</td><td>每个变体库存。</td><td>官方范围 0~10000000。</td></tr>
               <tr><td>SKU</td><td>店铺内唯一，建议简短。</td><td>官方要求小于 100 字符；系统会加上套图父 SKU 前缀防止重复。</td></tr>
-              <tr><td>SKU 参考图</td><td>每个一级规格上传一张清晰参考图。</td><td>只作为 AI 输入，最终导出使用生成后的 <code>sku_N</code>。</td></tr>
+              <tr><td>SKU 参考图</td><td>每个一级规格上传一张清晰参考图，不要按尺码重复上传。</td><td>只作为 AI 输入，最终导出使用生成后的 <code>sku_N</code>，同一一级规格的组合行复用该 URL。</td></tr>
               <tr><td>物流渠道</td><td>至少勾选一个可用渠道。</td><td>官方模板要求每个商品至少一个渠道为 On；系统导出未选渠道为 Off。</td></tr>
             </tbody>
           </table>
@@ -178,7 +179,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>任务状态已完成，推送计划没有 pending/processing。</li>
             <li>每套都有 AI 商品标题，且长度符合 10~120。</li>
             <li>每套都有 <code>main_1</code> 封面和 <code>sub_2~sub_N</code> 附图。</li>
-            <li>每个变体都有 AI SKU 标题和生成后的 SKU 图。</li>
+            <li>每个一级规格都有 AI SKU 标题；启用规格图时，每个一级规格还有生成后的 SKU 图。</li>
             <li>至少选择一个物流渠道。</li>
             <li>价格、库存、重量、规格长度符合官方模板限制。</li>
           </ul>
