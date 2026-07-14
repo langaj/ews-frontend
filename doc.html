@@ -63,7 +63,7 @@ const EP = [
   {m:'GET',p:'/api/auth/verify',d:'验证Token',a:false},
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
-  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string',n8n_title_enabled:'boolean',n8n_sku_title_webhook:'string',n8n_sku_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'number(通用)'}},
+  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string',n8n_title_enabled:'boolean',n8n_sku_title_webhook:'string',n8n_sku_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'number(默认15分钟/900秒)'}},
   {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=10，limit默认10、最大100)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
@@ -258,18 +258,18 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <h3>推送计划状态机</h3>
 <table class="ftable">
 <tr><th>状态</th><th>触发条件</th><th>系统动作</th></tr>
-<tr><td><code>pending</code></td><td>推送时系统按标题、SKU标题、封面图、附图、详情图、SKU图拆分计划。</td><td>写入 <code>ews_jst_push_plans</code> 或 <code>ews_shopee_push_plans</code>。</td></tr>
+<tr><td><code>pending</code></td><td>新计划，或可重试错误进入30/120/300秒退避等待。</td><td>达到 <code>next_retry_at</code> 后重新参加用户公平调度。</td></tr>
 <tr><td><code>processing</code></td><td>队列释放计划前检查并扣减 1 点算力。</td><td>按 <code>webhook_type</code> 推送到对应平台配置的 webhook 地址。</td></tr>
 <tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片会先下载到 R2，再写入对应平台资源表。</td></tr>
-<tr><td><code>failed</code></td><td>Webhook 地址缺失、Webhook 即时失败、算力不足、资源下载失败且重试耗尽，或人工重试失败。</td><td>记录错误；地址缺失不扣算力，已扣算力但未成功派发或重试耗尽时会退还。</td></tr>
+<tr><td><code>failed</code></td><td>永久错误、算力不足，或自动重试3次后仍失败。</td><td>记录最终错误；已扣算力会退还，用户仍可人工重试。</td></tr>
 </table>
 <div class="note"><strong>并发与补位：</strong>系统不再设置跨用户的全局 processing 上限，也不使用平台 batch_size 或每分钟释放窗口。<code>main/main_1</code>、<code>sub_*</code>、<code>detail_*</code>、<code>sku_数字</code> 统一计入任务所有者的图片并发额度；JST 与 Shopee 跨平台合并统计，默认且最高为 20。D1 在认领计划的同一条更新语句中原子检查额度；正常回调或工作流错误回调释放槽位后即时补位，超时计划在同一轮恢复与调度中补位。<code>title</code> 与 <code>sku_title</code> 不计图片并发，可直接释放。</div>
-<div class="note"><strong>通用推送体：</strong>n8n 工作流不需要接收或回传 <code>platform</code>。标题、图片、SKU 等工作流只需要使用 <code>task_id</code>、<code>sub_task_id</code>、<code>image_type</code>、<code>image_position</code>、<code>callback_url</code> 和 <code>callback_secret</code> 等通用字段。平台差异由 EWS 内部根据 <code>task_id</code> 调度和落库。</div>
+<div class="note"><strong>通用推送体：</strong>n8n 工作流不需要接收或回传 <code>platform</code>。系统会在所有推送体中增加 <code>workflow_type</code>，错误回调应原样带回；其余使用 <code>task_id</code>、<code>sub_task_id</code>、<code>image_type</code>、<code>image_position</code>、<code>callback_url</code> 和 <code>callback_secret</code> 等通用字段。平台差异由 EWS 内部根据 <code>task_id</code> 调度和落库。</div>
 
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
 <div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划，通过用户级图片并发额度动态补位；标题类计划不占图片额度。SKU 标题按完整 SKU 组合生成；SKU 图片只按唯一一级规格生成，二维规格复用一级规格图。定时消费的回调、图片、状态对账和计划释放彼此隔离，单阶段失败不会阻断其他阶段。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余附图/详情图/SKU图在导出时复用第 1 套。</div>
-<div class="note"><strong>失败重试：</strong>任务详情会为 <code>failed</code> 计划提供单条重试，也可一次重试当前任务的全部失败计划。图片计划重试时会清理该图片对应的旧失败消费记录，再重新进入统一推送队列；<code>processing</code> 计划仍会拒绝重复提交。</div>
+<div class="note"><strong>失败重试：</strong>网络异常、HTTP 408/425/429/5xx、900秒无回调及工作流临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>processing</code> 计划拒绝重复提交。</div>
 <div class="note"><strong>阶段性图片优先：</strong>当 <code>push_primary_images_only=true</code> 时，系统只构造 <code>main/main_1</code> 和 <code>sub_*</code> 主图/附图计划；标题、SKU标题、详情图、SKU图不会创建计划。关闭总开关只影响之后重新推送或重新生成的任务，不会自动补建已有任务计划。</div>
 
 <h2 id="Shopee商品">Shopee 商品</h2>
@@ -287,6 +287,7 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>secret</code></td><td>回调密钥；与 <code>callback_secret</code> 二选一 <span class="tag treq">必填</span></td></tr>
 <tr><td><code>callback_secret</code></td><td>回调密钥别名；与 <code>secret</code> 二选一 <span class="tag treq">必填</span></td></tr>
 <tr><td><code>task_id</code></td><td>母任务ID <span class="tag treq">必填</span></td></tr>
+<tr><td><code>workflow_type</code></td><td>推送计划类型；系统推送时自动提供，错误回调必须原样带回</td></tr>
 <tr><td><code>sub_task_id</code></td><td>子任务ID；图片回调必填，直接从推送体原样带回</td></tr>
 <tr><td><code>set_index</code></td><td>子任务索引；建议原样带回，系统会以 <code>sub_task_id</code> 查询出的索引为准并自动校准</td></tr>
 <tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
@@ -297,7 +298,8 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
 <tr><td><code>image_url</code></td><td>AI模型临时URL</td></tr>
-<tr><td><code>error</code></td><td>图片生成失败原因；图片工作流失败时可传，系统会按计划重试</td></tr>
+<tr><td><code>error</code></td><td>工作流失败原因；默认进入自动重试</td></tr>
+<tr><td><code>retryable</code></td><td>boolean；错误确定无法恢复时传 <code>false</code>，系统直接标记失败</td></tr>
 </table>
 
 <h3>n8n 回调示例</h3>
@@ -329,10 +331,19 @@ ${eps(['POST /api/callback'])}
   "task_id": "{{$json.task_id}}",
   "sku_titles": ["子任务1变体1", "子任务1变体2", "子任务2变体1", "子任务2变体2"]
 }</pre>
+<h4>通用工作流失败回调</h4>
+<pre>{
+  "secret": "{{$json.callback_secret}}",
+  "task_id": "{{$json.task_id}}",
+  "workflow_type": "{{$json.workflow_type}}",
+  "error": "工作流临时失败",
+  "retryable": true
+}</pre>
 <h4>图片成功回调</h4>
 <pre>{
   "secret": "{{$json.callback_secret}}",
   "task_id": "{{$json.task_id}}",
+  "workflow_type": "{{$json.workflow_type}}",
   "sub_task_id": "{{$json.sub_task_id}}",
   "set_index": {{$json.set_index}},
   "image_type": "{{$json.image_type}}",
@@ -343,11 +354,13 @@ ${eps(['POST /api/callback'])}
 <pre>{
   "secret": "{{$json.callback_secret}}",
   "task_id": "{{$json.task_id}}",
+  "workflow_type": "{{$json.workflow_type}}",
   "sub_task_id": "{{$json.sub_task_id}}",
   "set_index": {{$json.set_index}},
   "image_type": "{{$json.image_type}}",
   "image_position": {{$json.image_position}},
-  "error": "AI生成失败或URL不可用"
+  "error": "AI生成失败或URL不可用",
+  "retryable": true
 }</pre>
 
 <h2 id="上传">上传</h2>
