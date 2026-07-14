@@ -91,8 +91,8 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题 / Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'JST任务名称（Shopee不发送）',source_brief:'Shopee商品事实',reference_title:'参考标题',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform。JST使用name/reference_title/description并回调titles；Shopee任务名称仅作内部备注，不进入推送体，工作流使用source_brief和规格结构并回调products与variation_labels。'},
-  {name:'SKU标题（仅聚水潭）',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variants:'[{id,name,option2,tier1_name,tier2_name}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅用于聚水潭，按子任务顺序 × 完整SKU组合顺序返回。Shopee规格标签由商品元数据工作流一次返回。'},
+  {name:'商品标题 / Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',source_brief:'Shopee商品事实',reference_title:'参考标题',description:'JST商品描述',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform和内部任务名称。JST使用reference_title/description并回调titles；Shopee使用source_brief和规格结构并回调products与variation_labels。'},
+  {name:'SKU标题（仅聚水潭）',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variants:'[{id,name,option2,tier1_name,tier2_name}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅用于聚水潭，不发送内部任务名称；按子任务顺序 × 完整SKU组合顺序返回。Shopee规格标签由商品元数据工作流一次返回。'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
@@ -213,10 +213,6 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "variation_name1": "Color",
   "variation_name2": "",
   "variation_image_mode": "option1|none",
-  "max_purchase_qty": null,
-  "max_purchase_start_date": "",
-  "max_purchase_period_days": null,
-  "max_purchase_end_date": "",
   "size_chart_template_id": "",
   "size_chart_image": "",
   "pre_order_dts": null,
@@ -387,10 +383,10 @@ ${WEBHOOKS.slice(2).map(function(w){
 <pre>款式编码 | 商品编码 | 颜色 | 规格 | 商品主图(JSON数组) | 商品详情图(JSON数组) | 图片地址 | 商品名称 | 推荐文案 | 商品描述 | 宝贝链接 | 库存 | 重量(kg) | 基本售价 | 市场/吊牌价 | 最低分销控价 | 最高分销控价 | 供应商名 | 3:4主图 | 长图 | 透明素材图 | 白底图</pre>
 <div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量、基本售价、市场价保持数值类型。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的标题或图片会阻断；管理员关闭的 SKU 标题、SKU 图片等可选工作流不会阻断，相关列使用用户规格值或留空。去重模式第 2 套开始复用第 1 套的附图、详情图和 SKU 图。</div>
 
-<h2 id="Shopee导出">Shopee 导出格式（A~AP 42列）</h2>
-<p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
-<pre>Category | Product Name | Product Description | Max Purchase Qty | MaxPQ Start Date | MaxPQ Time Period | MaxPQ End Date | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5000) | Shipping(5001) | Shipping(5004) | Shipping(5012) | Shipping(5115) | Shipping(50039) | Shipping(50052) | Pre-order DTS | Fail Reason</pre>
-<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，启用规格图时每个一级规格必须有 SKU 变体图。无规格商品的 J/K/L/M/N 规格列留空。basic template 没有详情图字段，任务图片可通过任务列表打包下载。</div>
+<h2 id="Shopee导出">Shopee 导出格式（A~AL 38列）</h2>
+<p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入 2026-07-14 官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
+<pre>Category | Product Name | Product Description | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5000) | Shipping(5001) | Shipping(5004) | Shipping(5012) | Shipping(50039) | Shipping(50052) | Shipping(50053) | Pre-order DTS | Fail Reason</pre>
+<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，启用规格图时每个一级规格必须有 SKU 变体图。无规格商品的 E~J 规格列留空。2026-07-14 basic template 已移除 4 个限购字段和物流渠道 5115，并新增渠道 50053；模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>

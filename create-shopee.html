@@ -118,7 +118,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
       <h1>创建 Shopee 任务</h1>
       <p>提供商品事实与交易参数，系统生成越南语商品元数据和整套图片。</p>
     </div>
-    <div class="template-mark">Shopee Basic Template A-AP</div>
+    <div class="template-mark">Shopee Basic Template A-AL</div>
   </header>
 
   <form id="productForm" onsubmit="handleCreate(event)">
@@ -201,7 +201,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 
         <section class="advanced-wrap">
           <details class="advanced" id="advancedSettings">
-            <summary>高级平台设置 <span class="form-hint">分类、尺寸、尺码表、限购、预售、物流与 AI 偏好</span></summary>
+            <summary>高级平台设置 <span class="form-hint">分类、尺寸、尺码表、预售、物流与 AI 偏好</span></summary>
             <div class="advanced-content">
               <div class="advanced-group">
                 <h3>AI 生成偏好</h3>
@@ -226,16 +226,6 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                   <div class="form-group"><label class="form-label" for="widthCm">宽</label><div class="input-suffix"><input type="number" class="form-input" id="widthCm" min="0" step="0.1"><span>cm</span></div></div>
                   <div class="form-group"><label class="form-label" for="heightCm">高</label><div class="input-suffix"><input type="number" class="form-input" id="heightCm" min="0" step="0.1"><span>cm</span></div></div>
                   <div class="form-group"><label class="form-label" for="preOrderDts">Pre-order DTS</label><div class="input-suffix"><input type="number" class="form-input" id="preOrderDts" min="5" max="30"><span>天</span></div></div>
-                </div>
-              </div>
-
-              <div class="advanced-group">
-                <h3>限购设置</h3>
-                <div class="field-grid three">
-                  <div class="form-group"><label class="form-label" for="maxPurchaseQty">限购数量</label><input type="number" class="form-input" id="maxPurchaseQty" min="1" max="999999"></div>
-                  <div class="form-group"><label class="form-label" for="maxPurchaseStart">开始日期</label><input type="date" class="form-input" id="maxPurchaseStart"></div>
-                  <div class="form-group"><label class="form-label" for="maxPurchasePeriod">周期</label><div class="input-suffix"><input type="number" class="form-input" id="maxPurchasePeriod" min="1" max="365"><span>天</span></div></div>
-                  <div class="form-group"><label class="form-label" for="maxPurchaseEnd">结束日期</label><input type="date" class="form-input" id="maxPurchaseEnd"></div>
                 </div>
               </div>
 
@@ -282,9 +272,9 @@ var channels=[
   {id:'5001',label:'Nhanh',limit:100000000},
   {id:'5004',label:'Hàng Cồng Kềnh',limit:100000000},
   {id:'5012',label:'Trong Ngày'},
-  {id:'5115',label:'Hỏa Tốc - Ưu Tiên',limit:5000000},
   {id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},
-  {id:'50052',label:'Tủ nhận hàng - SPX'}
+  {id:'50052',label:'Tủ nhận hàng - SPX'},
+  {id:'50053',label:'Điểm nhận hàng',limit:3000000}
 ];
 
 document.addEventListener('DOMContentLoaded',async function(){
@@ -383,8 +373,6 @@ function validateModel(){
   var gtin=document.getElementById('gtin').value.trim();if(gtin&&!/^\d{8,14}$/.test(gtin))return'GTIN 必须为8-14位数字';
   var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=document.getElementById('sizeChartFile').files[0];if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
   var preOrder=document.getElementById('preOrderDts').value;if(preOrder&&(Number(preOrder)<5||Number(preOrder)>30))return'预售出货天数必须为5-30天';
-  var purchaseFields=['maxPurchaseStart','maxPurchasePeriod','maxPurchaseEnd'].map(function(id){return document.getElementById(id).value});if(purchaseFields.some(Boolean)&&(!document.getElementById('maxPurchaseQty').value||purchaseFields.some(function(value){return!value})))return'周期限购必须完整填写数量、开始日期、周期和结束日期';
-  if(purchaseFields[0]&&purchaseFields[2]&&purchaseFields[2]<purchaseFields[0])return'周期限购结束日期不能早于开始日期';
   return'';
 }
 
@@ -406,7 +394,7 @@ async function handleCreate(event){
     var sizeChartUrl='';var sizeChartFile=document.getElementById('sizeChartFile').files[0];if(sizeChartFile){var chartResult=await API.uploadFile(taskId,sizeChartFile,'size-chart');if(!chartResult.success)throw new Error(chartResult.error||'尺码表上传失败');sizeChartUrl=chartResult.url;if(await stopExpiredOperation(token,taskId,savedTask))return}
     var brief=document.getElementById('sourceBrief').value.trim();var taskName=document.getElementById('taskName').value.trim();
     var variations=getEnabledCombinations().map(function(combo){var state=ensureCombinationState(combo);return{option1:combo.option1,option2:combo.option2,image_per_variation:primaryUrls[combo.primaryId]||'',price:state.float?Number(state.min):Number(state.price),price_float_enabled:state.float?1:0,price_min:state.float?Number(state.min):null,price_max:state.float?Number(state.max):null,price_precision:Number(state.precision)||0,stock:Number(state.stock),sku:state.sku.trim()}});
-    var payload={name:taskName,source_brief:brief,product_type:productType,reference_title:document.getElementById('referenceTitle').value.trim(),main_description:document.getElementById('mainDescription').value.trim(),reference_image:coreUrl,auxiliary_images:JSON.stringify(auxiliaryUrls),cover_image:coreUrl,images:JSON.stringify(auxiliaryUrls),generate_count:Number(document.getElementById('generateCount').value),mode:selectedValue('generationMode'),main_image_count:9,detail_image_count:0,weight_kg:Number(document.getElementById('weightKg').value),category_id:document.getElementById('categoryId').value.trim(),gtin:document.getElementById('gtin').value.trim(),length_cm:document.getElementById('lengthCm').value||null,width_cm:document.getElementById('widthCm').value||null,height_cm:document.getElementById('heightCm').value||null,variation_name1:productType==='single'?'':document.getElementById('variationName1').value.trim(),variation_name2:productType==='two'?document.getElementById('variationName2').value.trim():'',variation_image_mode:productType==='single'?'none':imageMode,max_purchase_qty:document.getElementById('maxPurchaseQty').value||null,max_purchase_start_date:document.getElementById('maxPurchaseStart').value,max_purchase_period_days:document.getElementById('maxPurchasePeriod').value||null,max_purchase_end_date:document.getElementById('maxPurchaseEnd').value,size_chart_template_id:document.getElementById('sizeChartTemplate').value.trim(),size_chart_image:sizeChartUrl,pre_order_dts:document.getElementById('preOrderDts').value||null,shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value})),variations:variations};
+    var payload={name:taskName,source_brief:brief,product_type:productType,reference_title:document.getElementById('referenceTitle').value.trim(),main_description:document.getElementById('mainDescription').value.trim(),reference_image:coreUrl,auxiliary_images:JSON.stringify(auxiliaryUrls),cover_image:coreUrl,images:JSON.stringify(auxiliaryUrls),generate_count:Number(document.getElementById('generateCount').value),mode:selectedValue('generationMode'),main_image_count:9,detail_image_count:0,weight_kg:Number(document.getElementById('weightKg').value),category_id:document.getElementById('categoryId').value.trim(),gtin:document.getElementById('gtin').value.trim(),length_cm:document.getElementById('lengthCm').value||null,width_cm:document.getElementById('widthCm').value||null,height_cm:document.getElementById('heightCm').value||null,variation_name1:productType==='single'?'':document.getElementById('variationName1').value.trim(),variation_name2:productType==='two'?document.getElementById('variationName2').value.trim():'',variation_image_mode:productType==='single'?'none':imageMode,size_chart_template_id:document.getElementById('sizeChartTemplate').value.trim(),size_chart_image:sizeChartUrl,pre_order_dts:document.getElementById('preOrderDts').value||null,shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value})),variations:variations};
     var saved=await API.updateTask(taskId,payload);if(!saved.success)throw new Error(saved.error||'任务保存失败');savedTask=true;if(await stopExpiredOperation(token,taskId,savedTask))return;
     if(action==='start'){var pushed=await API.pushTask(taskId,false);if(!pushed.success)throw new Error(pushed.error||'任务推送失败');if(await stopExpiredOperation(token,taskId,savedTask))return;showToast('任务已创建并进入生成队列','success')}else showToast('任务已保存，尚未开始生成','success');
     clearTimeout(timeout);location.href='/?task='+encodeURIComponent(taskId);
