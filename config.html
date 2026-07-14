@@ -3,14 +3,14 @@
 <title>系统配置 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-.config-page{max-width:1220px}.account-chip{display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid var(--gray-200);border-radius:7px;background:#fff;color:var(--gray-600);font-size:12px}.user-credits-cell{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.workflow-toggle{display:flex;align-items:center;gap:8px;font-weight:650;cursor:pointer;margin-bottom:8px}.workflow-override{max-width:180px}.config-page .card{box-shadow:none}.general-settings-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.general-settings-form>.form-group:nth-child(-n+2),.general-settings-form>.btn{grid-column:1/-1}.workflow-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.workflow-form h4,.workflow-form>.form-hint,.workflow-form>.btn{grid-column:1/-1}.workflow-form h4{margin:4px 0 14px;padding-top:4px;color:var(--gray-500);font-size:11px;text-transform:uppercase}.workflow-form h4:not(:first-child){margin-top:10px;padding-top:18px;border-top:1px solid var(--gray-200)}.workflow-form>.btn,.general-settings-form>.btn{justify-self:start}.user-add-row{display:grid;grid-template-columns:1.1fr 1.3fr .8fr .9fr auto auto;gap:8px}.user-add-row .form-input{max-width:none!important}.user-table table{min-width:960px}#userWebhookFields{padding-top:4px}#userWebhookFields>h4{margin:18px 0 12px!important;padding-top:16px;border-top:1px solid var(--gray-200);color:var(--gray-900)!important;font-size:14px}.confirm-panel{text-align:left;padding:28px}.confirm-panel .confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+.config-page{max-width:1220px}.account-chip{display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid var(--gray-200);border-radius:7px;background:#fff;color:var(--gray-600);font-size:12px}.user-credits-cell,.user-concurrency-cell{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.workflow-toggle{display:flex;align-items:center;gap:8px;font-weight:650;cursor:pointer;margin-bottom:8px}.workflow-override{max-width:180px}.config-page .card{box-shadow:none}.general-settings-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.general-settings-form>.form-group,.general-settings-form>.btn{grid-column:1/-1}.workflow-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.workflow-form h4,.workflow-form>.form-hint,.workflow-form>.btn{grid-column:1/-1}.workflow-form h4{margin:4px 0 14px;padding-top:4px;color:var(--gray-500);font-size:11px;text-transform:uppercase}.workflow-form h4:not(:first-child){margin-top:10px;padding-top:18px;border-top:1px solid var(--gray-200)}.workflow-form>.btn,.general-settings-form>.btn{justify-self:start}.user-add-row{display:grid;grid-template-columns:1.1fr 1.3fr .8fr .9fr .8fr auto auto;gap:8px}.user-add-row .form-input{max-width:none!important}.user-table table{min-width:1080px}#userWebhookFields{padding-top:4px}#userWebhookFields>h4{margin:18px 0 12px!important;padding-top:16px;border-top:1px solid var(--gray-200);color:var(--gray-900)!important;font-size:14px}.confirm-panel{text-align:left;padding:28px}.confirm-panel .confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 @media(max-width:900px){.user-add-row{grid-template-columns:repeat(2,minmax(0,1fr))}.user-add-row .btn{width:100%}}
 @media(max-width:680px){.general-settings-form,.workflow-form{grid-template-columns:1fr}.general-settings-form>*{grid-column:1!important}.user-add-row{grid-template-columns:1fr}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container config-page">
-<div class="page-header"><div class="page-heading"><div class="page-kicker">管理中心</div><h1 class="page-title">系统配置</h1><p class="page-subtitle">管理工作流地址、全局队列参数、用户权限与算力。</p></div><div class="account-chip" id="userInfo"></div></div>
+  <div class="page-header"><div class="page-heading"><div class="page-kicker">管理中心</div><h1 class="page-title">系统配置</h1><p class="page-subtitle">管理工作流地址、用户权限、图片并发额度与算力。</p></div><div class="account-chip" id="userInfo"></div></div>
 <div class="tab-bar" id="adminTabs">
   <button class="tab-btn active" onclick="switchTab('general')">通用</button>
   <button class="tab-btn" onclick="switchTab('jst')">JST 工作流</button>
@@ -24,12 +24,7 @@
     <form class="general-settings-form" onsubmit="return false">
       <div class="form-group"><label class="form-label">R2 公开访问地址</label><input type="url" class="form-input" id="r2PublicUrl" placeholder="https://oss.langaj.work"></div>
       <div class="form-group"><label class="form-label">回调密钥 (callback_secret)</label><input type="text" class="form-input" id="callbackSecret" placeholder="n8n 回调时校验用"></div>
-      <div class="form-group"><label class="form-label">全局推送并发上限</label><input type="number" class="form-input" id="pushGlobalMaxActive" min="1" max="200" value="20"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">所有平台、所有任务合计最多同时处理的工作流推送数。</div></div>
       <div class="form-group"><label class="form-label"><input type="checkbox" id="pushPrimaryImagesOnly"> 仅启用主图/附图工作流</label><div style="font-size:12px;color:var(--gray-500);margin-top:4px">最高优先级总开关；启用后不构造标题、SKU、详情图计划，平台独立开关暂时失效。</div></div>
-      <div class="form-group"><label class="form-label">每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerMinute" min="1" max="120" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">平滑释放工作流请求，避免同一分钟内大量任务冲击工作流和 D1。</div></div>
-      <div class="form-group"><label class="form-label">单任务每分钟新推送上限</label><input type="number" class="form-input" id="pushReleasePerTaskPerMinute" min="1" max="60" value="2"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">避免单个大任务占满所有新推送额度。</div></div>
-      <div class="form-group"><label class="form-label">图片队列活跃上限</label><input type="number" class="form-input" id="imageQueueMaxActive" min="1" max="20" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">限制回调图片下载、压缩和写入 R2 的并发。</div></div>
-      <div class="form-group"><label class="form-label">图片队列单轮消费数</label><input type="number" class="form-input" id="imageQueueBatchSize" min="1" max="20" value="6"><div style="font-size:12px;color:var(--gray-500);margin-top:4px">每轮后台最多认领的图片队列数量。</div></div>
       <button class="btn btn-primary" onclick="runConfigAction('save-general',this,'保存中...',saveGeneralConfig)">保存通用配置</button>
     </form>
   </div></div>
@@ -56,8 +51,6 @@
       <div class="form-group"><label class="form-label">详情图工作流</label><input type="url" class="form-input" id="jst_detail" placeholder="https://..."></div>
       <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="jst_sku" placeholder="https://..."></div>
       <div class="form-hint">关闭后不构造新计划，并暂停同类 pending 计划；重新开启后会继续释放。</div>
-      <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
-      <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="jst_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="runConfigAction('save-jst',this,'保存中...',saveJstConfig)">保存 JST 配置</button>
     </form>
   </div></div>
@@ -74,8 +67,6 @@
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="shopee_sub" placeholder="https://..."></div>
       <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="shopee_sku_enabled"> 启用 SKU 图片工作流</label><input type="url" class="form-input" id="shopee_sku" placeholder="https://..."></div>
       <div class="form-hint">关闭后不构造新计划，并暂停同类 pending 计划；重新开启后会继续释放。</div>
-      <h4 style="margin:16px 0 12px;color:var(--gray-600)">推送设置</h4>
-      <div class="form-group"><label class="form-label">并发窗口 (batch_size)</label><input type="number" class="form-input" id="shopee_batch" value="20" min="1"></div>
       <button class="btn btn-primary" onclick="runConfigAction('save-shopee',this,'保存中...',saveShopeeConfig)">保存 Shopee 配置</button>
     </form>
   </div></div>
@@ -93,13 +84,14 @@
       <select class="form-input" id="newPlatformAccess" style="max-width:120px">
         <option value="allow">全部平台</option><option value="jst">仅聚水潭</option><option value="shopee">仅虾皮</option>
       </select>
+      <input type="number" class="form-input" id="newImageConcurrency" value="20" min="1" max="20" title="图片并发上限" placeholder="图片并发">
       <button class="btn btn-primary" onclick="runConfigAction('add-user',this,'添加中...',handleAddUser)">添加用户</button>
       <button class="btn btn-outline" onclick="runConfigAction('load-users',this,'刷新中...',loadUserList)">刷新列表</button>
     </div>
   </div></div>
   <div class="card" style="margin-top:20px"><div class="card-header">用户列表</div><div class="card-body">
     <div class="table-container user-table">
-      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>平台能力</th><th>算力</th><th>操作</th></tr></thead>
+      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>平台能力</th><th>图片并发</th><th>算力</th><th>操作</th></tr></thead>
       <tbody id="userListBody"></tbody></table>
     </div>
   </div></div>
@@ -213,23 +205,13 @@ async function loadGeneralConfig(){
   var c=res.config||{};
   s('r2PublicUrl',c.r2_public_url);
   s('callbackSecret',c.callback_secret);
-  s('pushGlobalMaxActive',c.push_global_max_active||'20');
   chk('pushPrimaryImagesOnly',c.push_primary_images_only||'false');
-  s('pushReleasePerMinute',c.push_release_per_minute||'6');
-  s('pushReleasePerTaskPerMinute',c.push_release_per_task_per_minute||'2');
-  s('imageQueueMaxActive',c.image_queue_max_active||'6');
-  s('imageQueueBatchSize',c.image_queue_batch_size||'6');
 }
 async function saveGeneralConfig(){
   var cfg={
     r2_public_url:g('r2PublicUrl'),
     callback_secret:g('callbackSecret'),
-    push_global_max_active:parseInt(g('pushGlobalMaxActive'))||20,
     push_primary_images_only:document.getElementById('pushPrimaryImagesOnly').checked,
-    push_release_per_minute:parseInt(g('pushReleasePerMinute'))||6,
-    push_release_per_task_per_minute:parseInt(g('pushReleasePerTaskPerMinute'))||2,
-    image_queue_max_active:parseInt(g('imageQueueMaxActive'))||6,
-    image_queue_batch_size:parseInt(g('imageQueueBatchSize'))||6,
   };
   var res=await API.updateConfig(cfg,'');
   showToast(res.success?'保存成功':(res.error||'失败'),res.success?'success':'error');
@@ -245,7 +227,6 @@ async function loadJstConfig(){
   s('jst_main',c.n8n_main_webhook);s('jst_sub',c.n8n_sub_image_webhook);
   s('jst_detail',c.n8n_detail_webhook);s('jst_sku',c.n8n_sku_image_webhook);
   chk('jst_sku_enabled',workflowValue(c.n8n_sku_image_enabled));
-  s('jst_batch',c.push_batch_size||'20');
 }
 async function saveJstConfig(){
   var cfg={
@@ -254,7 +235,6 @@ async function saveJstConfig(){
     n8n_main_webhook:g('jst_main'),n8n_sub_image_webhook:g('jst_sub'),
     n8n_detail_webhook:g('jst_detail'),n8n_sku_image_webhook:g('jst_sku'),
     n8n_sku_image_enabled:document.getElementById('jst_sku_enabled').checked,
-    push_batch_size:parseInt(g('jst_batch'))||20,
   };
   var res=await API.updateConfig(cfg,'jst');
   showToast(res.success?'JST配置保存成功':(res.error||'失败'),res.success?'success':'error');
@@ -270,7 +250,6 @@ async function loadShopeeConfig(){
   s('shopee_main',c.n8n_main_webhook);s('shopee_sub',c.n8n_sub_image_webhook);
   s('shopee_sku',c.n8n_sku_image_webhook);
   chk('shopee_sku_enabled',workflowValue(c.n8n_sku_image_enabled));
-  s('shopee_batch',c.push_batch_size||'20');
 }
 async function saveShopeeConfig(){
   var cfg={
@@ -279,7 +258,6 @@ async function saveShopeeConfig(){
     n8n_main_webhook:g('shopee_main'),n8n_sub_image_webhook:g('shopee_sub'),
     n8n_sku_image_webhook:g('shopee_sku'),
     n8n_sku_image_enabled:document.getElementById('shopee_sku_enabled').checked,
-    push_batch_size:parseInt(g('shopee_batch'))||20,
   };
   var res=await API.updateConfig(cfg,'shopee');
   showToast(res.success?'Shopee配置保存成功':(res.error||'失败'),res.success?'success':'error');
@@ -311,12 +289,14 @@ async function loadUserList(){
         '<option value="add">增加</option><option value="subtract">减少</option><option value="set">设置</option>'+
       '</select>'+
       '<button class="btn btn-sm btn-outline" onclick="updateCredits(\''+u.id+'\')" style="font-size:11px">确认</button></div>';
+    var concurrencyHtml='<div class="user-concurrency-cell"><input type="number" class="form-input" id="ic_'+u.id+'" value="'+(u.image_concurrency_limit||20)+'" min="1" max="20" style="width:64px;font-size:12px;padding:2px 6px">'+
+      '<button class="btn btn-sm btn-outline" onclick="updateImageConcurrency(\''+u.id+'\',this)" style="font-size:11px">保存</button></div>';
     var actions=u.id==='admin'?'-':'<div style="display:flex;gap:4px;flex-wrap:wrap">'+
       '<button class="btn btn-sm btn-outline" onclick="toggleUser(\''+u.id+'\')" style="font-size:11px">'+(u.is_active?'禁用':'启用')+'</button>'+
       '<button class="btn btn-sm btn-outline" onclick="resetUserPwd(\''+u.id+'\')" style="font-size:11px">重置密码</button>'+
       '<button class="btn btn-sm btn-danger" onclick="deleteUserConfirm(\''+u.id+'\',\''+u.username+'\')" style="font-size:11px">删除</button>'+
       '</div>';
-    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+access+'</td><td>'+creditsHtml+'</td><td>'+actions+'</td></tr>';
+    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+access+'</td><td>'+concurrencyHtml+'</td><td>'+creditsHtml+'</td><td>'+actions+'</td></tr>';
   }).join('');
 }
 function populateWebhookUserSelect(){loadUserList()}
@@ -368,8 +348,10 @@ async function handleAddUser(){
   var p=document.getElementById('addUserPassword').value;
   var r=document.getElementById('newRole').value;
   var platformAccess=document.getElementById('newPlatformAccess').value;
+  var imageConcurrency=parseInt(document.getElementById('newImageConcurrency').value);
   if(!u||p.length<6){showToast('用户名不能为空，密码至少6位','error');return}
-  var res=await API.createUser(u,p,r,platformAccess);
+  if(!Number.isInteger(imageConcurrency)||imageConcurrency<1||imageConcurrency>20){showToast('图片并发必须为1~20','error');return}
+  var res=await API.createUser(u,p,r,platformAccess,imageConcurrency);
   if(res.success){showToast('用户创建成功','success');document.getElementById('newUsername').value='';document.getElementById('addUserPassword').value='';loadUserList();}
   else showToast(res.error||'创建失败','error');
 }
@@ -378,6 +360,15 @@ async function updatePlatformAccess(userId){
   var res=await API.updateUserPlatform(userId,access);
   if(res.success)showToast('平台权限已更新','success');
   else {showToast(res.error||'更新失败','error');loadUserList()}
+}
+async function updateImageConcurrency(userId,button){
+  var limit=parseInt(document.getElementById('ic_'+userId).value);
+  if(!Number.isInteger(limit)||limit<1||limit>20){showToast('图片并发必须为1~20','error');return}
+  await runConfigAction('user-concurrency:'+userId,button,'保存中...',async function(){
+    var res=await API.updateUserConcurrency(userId,limit);
+    if(res.success)showToast('图片并发上限已更新','success');
+    else {showToast(res.error||'更新失败','error');loadUserList()}
+  });
 }
 async function toggleUser(userId){
   var res=await API.toggleUser(userId);
