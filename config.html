@@ -42,9 +42,8 @@
 <div class="tab-panel" id="tab-jst">
   <div class="card"><div class="card-header">JST 工作流 Webhook</div><div class="card-body">
     <form class="workflow-form" onsubmit="return false">
-      <h4 style="margin:0 0 12px;color:var(--gray-600)">标题类</h4>
-      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_title_enabled"> 启用商品标题工作流</label><input type="url" class="form-input" id="jst_title" placeholder="https://..."></div>
-      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_sku_title_enabled"> 启用 SKU 标题工作流</label><input type="url" class="form-input" id="jst_sku_title" placeholder="https://..."></div>
+      <h4 style="margin:0 0 12px;color:var(--gray-600)">商品元数据</h4>
+      <div class="form-group"><label class="workflow-toggle"><input type="checkbox" id="jst_title_enabled"> 启用商品元数据工作流</label><input type="url" class="form-input" id="jst_title" placeholder="https://..."><div class="form-hint">分批生成每套商品标题、推荐文案、商品描述和全部 SKU 标题。</div></div>
       <h4 style="margin:16px 0 12px;color:var(--gray-600)">图片工作流</h4>
       <div class="form-group"><label class="form-label">主图工作流（第1张）</label><input type="url" class="form-input" id="jst_main" placeholder="https://..."></div>
       <div class="form-group"><label class="form-label">附图工作流（第2~N张）</label><input type="url" class="form-input" id="jst_sub" placeholder="https://..."></div>
@@ -102,8 +101,7 @@
     </div>
     <div id="userWebhookFields" style="display:none">
       <h4 style="margin:0 0 12px;color:var(--gray-600)">JST 工作流（留空则使用全局）</h4>
-      <div class="form-row"><div class="form-group"><label class="form-label">商品标题</label><input type="url" class="form-input" id="uwh_jst_title"></div><div class="form-group"><label class="form-label">商品标题开关</label><select class="form-input workflow-override" id="uwh_jst_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
-      <div class="form-row"><div class="form-group"><label class="form-label">SKU标题</label><input type="url" class="form-input" id="uwh_jst_sku_title"></div><div class="form-group"><label class="form-label">SKU标题开关</label><select class="form-input workflow-override" id="uwh_jst_sku_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">商品元数据</label><input type="url" class="form-input" id="uwh_jst_title"></div><div class="form-group"><label class="form-label">商品元数据开关</label><select class="form-input workflow-override" id="uwh_jst_title_enabled"><option value="inherit">继承全局</option><option value="true">单独开启</option><option value="false">单独关闭</option></select></div></div>
       <div class="form-group"><label class="form-label">主图</label><input type="url" class="form-input" id="uwh_jst_main"></div>
       <div class="form-group"><label class="form-label">附图</label><input type="url" class="form-input" id="uwh_jst_sub"></div>
       <div class="form-group"><label class="form-label">详情图</label><input type="url" class="form-input" id="uwh_jst_detail"></div>
@@ -222,16 +220,16 @@ async function loadJstConfig(){
   var res=await API.getConfig('jst');
   if(!res.success)return;
   var c=res.config||{};
-  s('jst_title',c.n8n_title_webhook);s('jst_sku_title',c.n8n_sku_title_webhook);
-  chk('jst_title_enabled',workflowValue(c.n8n_title_enabled));chk('jst_sku_title_enabled',workflowValue(c.n8n_sku_title_enabled));
+  s('jst_title',c.n8n_title_webhook);
+  chk('jst_title_enabled',workflowValue(c.n8n_title_enabled));
   s('jst_main',c.n8n_main_webhook);s('jst_sub',c.n8n_sub_image_webhook);
   s('jst_detail',c.n8n_detail_webhook);s('jst_sku',c.n8n_sku_image_webhook);
   chk('jst_sku_enabled',workflowValue(c.n8n_sku_image_enabled));
 }
 async function saveJstConfig(){
   var cfg={
-    n8n_title_webhook:g('jst_title'),n8n_sku_title_webhook:g('jst_sku_title'),
-    n8n_title_enabled:document.getElementById('jst_title_enabled').checked,n8n_sku_title_enabled:document.getElementById('jst_sku_title_enabled').checked,
+    n8n_title_webhook:g('jst_title'),
+    n8n_title_enabled:document.getElementById('jst_title_enabled').checked,
     n8n_main_webhook:g('jst_main'),n8n_sub_image_webhook:g('jst_sub'),
     n8n_detail_webhook:g('jst_detail'),n8n_sku_image_webhook:g('jst_sku'),
     n8n_sku_image_enabled:document.getElementById('jst_sku_enabled').checked,
@@ -307,15 +305,15 @@ async function loadUserWebhook(){
   if(!userId){fields.style.display='none';return}
   fields.style.display='block';
   // 清空
-  ['jst_title','jst_sku_title','jst_main','jst_sub','jst_detail','jst_sku','shopee_title','shopee_main','shopee_sub','shopee_sku'].forEach(function(k){s('uwh_'+k,'')});
-  ['jst_title_enabled','jst_sku_title_enabled','jst_sku_enabled','shopee_title_enabled','shopee_sku_enabled'].forEach(function(k){s('uwh_'+k,'inherit')});
+  ['jst_title','jst_main','jst_sub','jst_detail','jst_sku','shopee_title','shopee_main','shopee_sub','shopee_sku'].forEach(function(k){s('uwh_'+k,'')});
+  ['jst_title_enabled','jst_sku_enabled','shopee_title_enabled','shopee_sku_enabled'].forEach(function(k){s('uwh_'+k,'inherit')});
   try{
     var res=await API.getUserWebhook(userId);
     if(res.success&&res.webhook){
       var w=res.webhook;
       var jst=w.jst||{};var shopee=w.shopee||{};
-      s('uwh_jst_title',jst.n8n_title_webhook);s('uwh_jst_sku_title',jst.n8n_sku_title_webhook);
-      setWorkflowOverride('uwh_jst_title_enabled',jst.n8n_title_enabled);setWorkflowOverride('uwh_jst_sku_title_enabled',jst.n8n_sku_title_enabled);
+      s('uwh_jst_title',jst.n8n_title_webhook);
+      setWorkflowOverride('uwh_jst_title_enabled',jst.n8n_title_enabled);
       s('uwh_jst_main',jst.n8n_main_webhook);s('uwh_jst_sub',jst.n8n_sub_image_webhook);
       s('uwh_jst_detail',jst.n8n_detail_webhook);s('uwh_jst_sku',jst.n8n_sku_image_webhook);
       setWorkflowOverride('uwh_jst_sku_enabled',jst.n8n_sku_image_enabled);
@@ -331,10 +329,10 @@ async function saveUserWebhook(){
   var userId=document.getElementById('webhookUserSelect').value;
   if(!userId){showToast('请选择用户','error');return}
   var cfg={jst:{},shopee:{}};
-  cfg.jst.n8n_title_webhook=g('uwh_jst_title');cfg.jst.n8n_sku_title_webhook=g('uwh_jst_sku_title');
+  cfg.jst.n8n_title_webhook=g('uwh_jst_title');
   cfg.jst.n8n_main_webhook=g('uwh_jst_main');cfg.jst.n8n_sub_image_webhook=g('uwh_jst_sub');
   cfg.jst.n8n_detail_webhook=g('uwh_jst_detail');cfg.jst.n8n_sku_image_webhook=g('uwh_jst_sku');
-  addWorkflowOverride(cfg.jst,'n8n_title_enabled','uwh_jst_title_enabled');addWorkflowOverride(cfg.jst,'n8n_sku_title_enabled','uwh_jst_sku_title_enabled');addWorkflowOverride(cfg.jst,'n8n_sku_image_enabled','uwh_jst_sku_enabled');
+  addWorkflowOverride(cfg.jst,'n8n_title_enabled','uwh_jst_title_enabled');addWorkflowOverride(cfg.jst,'n8n_sku_image_enabled','uwh_jst_sku_enabled');
   cfg.shopee.n8n_title_webhook=g('uwh_shopee_title');
   cfg.shopee.n8n_main_webhook=g('uwh_shopee_main');cfg.shopee.n8n_sub_image_webhook=g('uwh_shopee_sub');
   cfg.shopee.n8n_sku_image_webhook=g('uwh_shopee_sku');
