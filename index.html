@@ -6,7 +6,9 @@
 .task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
 .task-detail-modal{max-width:980px}.detail-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--gray-200);margin-bottom:18px}.detail-hero h3{margin-top:7px;color:var(--gray-900);font-size:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-200);overflow:hidden;margin-bottom:20px}.detail-grid .detail-section{min-height:76px;margin:0;padding:13px;background:#fff}.plan-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.plan-actions{display:flex;gap:5px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
+.image-preview-overlay{z-index:650;padding:24px;background:rgba(16,24,40,.76)}.image-preview-modal{display:grid;width:min(1120px,calc(100vw - 48px));height:min(88dvh,900px);max-height:none;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.image-preview-stage{position:relative;display:grid;min-height:280px;padding:24px;place-items:center;overflow:hidden;background:var(--gray-100);cursor:zoom-out}.image-preview-stage img{display:block;max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity var(--transition);cursor:default}.image-preview-stage img.is-loaded{opacity:1}.image-preview-state{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-600);font-size:13px}.image-preview-error{display:none;max-width:420px;color:var(--danger);text-align:center}.image-preview-stage.has-error .image-preview-loading{display:none}.image-preview-stage.has-error .image-preview-error{display:block}
 @media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.image-preview-overlay{align-items:center;padding:10px}.image-preview-modal{width:100%;height:min(88dvh,780px);border-radius:8px}.image-preview-stage{padding:12px}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
@@ -165,6 +167,54 @@ async function showShopeeDetail(t){
 }
 
 function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
+
+var imagePreviewTrigger=null;
+function openImagePreview(button){
+  var url=button&&button.dataset?button.dataset.previewUrl:'';
+  if(!url){showToast('图片地址无效','error');return}
+  closeImagePreview(false);
+  imagePreviewTrigger=button;
+  var title=(button.dataset.previewTitle||'图片预览').trim();
+  var overlay=document.createElement('div');
+  overlay.className='modal-overlay image-preview-overlay show';
+  overlay.id='imagePreviewModal';
+  overlay.innerHTML='<div class="modal image-preview-modal" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle">'+
+    '<div class="modal-header"><div class="modal-title" id="imagePreviewTitle">'+escapeHtml(title)+'</div><button class="modal-close" type="button" data-preview-close aria-label="关闭图片预览">&times;</button></div>'+
+    '<div class="image-preview-stage" data-preview-stage><div class="image-preview-state image-preview-loading"><span class="spinner" aria-hidden="true"></span><span>正在加载图片...</span></div><div class="image-preview-error" role="alert">图片加载失败，请稍后重试。</div></div></div>';
+  var onKey=function(event){if(event.key==='Escape')closeImagePreview()};
+  overlay._previewKeyHandler=onKey;
+  overlay.addEventListener('click',function(event){
+    if(event.target===overlay||event.target.hasAttribute('data-preview-close')||event.target.hasAttribute('data-preview-stage'))closeImagePreview();
+  });
+  document.addEventListener('keydown',onKey);
+  document.body.appendChild(overlay);
+  var closeButton=overlay.querySelector('[data-preview-close]');
+  if(closeButton)closeButton.focus();
+  var stage=overlay.querySelector('[data-preview-stage]');
+  var image=new Image();
+  image.alt=title;
+  image.decoding='async';
+  image.addEventListener('load',function(){
+    var loading=stage.querySelector('.image-preview-loading');
+    if(loading)loading.remove();
+    image.classList.add('is-loaded');
+  });
+  image.addEventListener('error',function(){image.remove();stage.classList.add('has-error')});
+  stage.appendChild(image);
+  image.src=url;
+}
+
+function closeImagePreview(restoreFocus){
+  var overlay=document.getElementById('imagePreviewModal');
+  if(overlay){
+    if(overlay._previewKeyHandler)document.removeEventListener('keydown',overlay._previewKeyHandler);
+    var image=overlay.querySelector('img');
+    if(image)image.removeAttribute('src');
+    overlay.remove();
+  }
+  if(restoreFocus!==false&&imagePreviewTrigger&&document.contains(imagePreviewTrigger))imagePreviewTrigger.focus();
+  imagePreviewTrigger=null;
+}
 
 function setActionButtonLoading(btn,label){
   if(!btn)return;
@@ -504,7 +554,7 @@ async function renderPushPlans(taskId){
     if(p.status==='failed') actions.push('<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'retry\')">重试</button>');
     else if(p.status==='pending') actions.push('<button class="btn btn-sm btn-primary" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'push\')">推送</button>');
     else if(p.status==='done') actions.push('<button class="btn btn-sm btn-outline" onclick="retryPlan(\''+taskId+'\',\''+p.id+'\',this,\'regen\')">重新生成</button>');
-    if(p.status==='done'&&p.preview_url) actions.push('<a class="btn btn-sm btn-outline" href="'+escapeHtml(p.preview_url)+'" target="_blank" rel="noopener">预览</a>');
+    if(p.status==='done'&&p.preview_url) actions.push('<button type="button" class="btn btn-sm btn-outline" data-preview-url="'+escapeHtml(p.preview_url)+'" data-preview-title="'+escapeHtml(planTypeLabel(p.webhook_type)+' 图片预览')+'" onclick="openImagePreview(this)">预览</button>');
     var action=actions.length?'<div class="plan-actions">'+actions.join('')+'</div>':'<span class="muted">-</span>';
     html+='<tr><td>'+escapeHtml(planTypeLabel(p.webhook_type))+'</td><td>'+planStatusBadge(p.status)+'</td><td>'+action+'</td><td><code class="muted">'+escapeHtml((p.sub_task_id||'').slice(0,8)||'-')+'</code></td><td>'+escapeHtml((p.error||'').slice(0,160))+'</td></tr>';
   }
@@ -552,7 +602,7 @@ function formatDate(s){
 }
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-Object.assign(window,{refreshTasks,changeTaskPage,viewTask,refreshTaskDetail,closeDetail,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
+Object.assign(window,{refreshTasks,changeTaskPage,viewTask,refreshTaskDetail,closeDetail,openImagePreview,closeImagePreview,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body></html>
