@@ -2,104 +2,58 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>创建任务(聚水潭) - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
-<style>.ref-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px}.ref-slot{min-width:0}.ref-zone{width:100%;aspect-ratio:1;padding:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:0}.ref-preview{display:none;width:100%;height:100%}.ref-preview img{width:100%;height:100%;object-fit:cover;border-radius:4px}.ref-placeholder .upload-text{font-size:13px;color:var(--gray-500);white-space:pre-line;line-height:1.5}.ref-label{font-size:11px;color:var(--gray-500);text-align:center;margin-top:4px}@media(max-width:640px){.ref-row{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
+<style>
+.app-container.jst-create{max-width:1380px}.create-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:30px 0 22px}.create-header h1{margin:4px 0 6px;color:var(--gray-900);font-size:26px;line-height:1.25}.create-header p{color:var(--gray-500);font-size:13px}.back-link{color:var(--gray-500);font-size:12px}.create-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;align-items:start}.form-surface{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.form-section{display:grid;grid-template-columns:180px minmax(0,1fr);gap:30px;padding:28px;border-bottom:1px solid var(--gray-200)}.form-section:last-child{border-bottom:0}.section-title h2{margin:0 0 5px;color:var(--gray-900);font-size:16px}.section-title p{color:var(--gray-500);font-size:12px;line-height:1.6}.section-fields{min-width:0}.segmented{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-100)}.segmented label{position:relative;cursor:pointer}.segmented input{position:absolute;opacity:0}.segmented span{display:flex;align-items:center;justify-content:center;min-height:36px;border-radius:6px;color:var(--gray-500);font-size:13px;font-weight:650}.segmented input:checked+span{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.ref-row{display:grid;grid-template-columns:1.55fr repeat(4,minmax(80px,1fr));gap:10px;margin-top:10px}.ref-slot{min-width:0}.ref-zone{width:100%;aspect-ratio:1;min-height:0;padding:8px;flex-direction:column}.ref-slot:first-child .ref-zone{aspect-ratio:4/3}.ref-preview{display:none;width:100%;height:100%}.ref-preview img{width:100%;height:100%;object-fit:cover;border-radius:6px}.ref-placeholder .upload-text{font-size:12px;white-space:pre-line}.ref-label{margin-top:5px;color:var(--gray-500);font-size:11px;text-align:center}.variant-toolbar{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}.variant-toolbar .form-group{width:170px}.variant-item{background:var(--gray-50)}.variant-item .upload-zone{background:#fff}.summary-rail{position:sticky;top:82px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.summary-head{padding:19px;border-bottom:1px solid var(--gray-200)}.summary-head h2{color:var(--gray-900);font-size:16px}.summary-head p{margin-top:4px;color:var(--gray-500);font-size:11px}.summary-body{padding:6px 19px}.summary-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;color:var(--gray-500);font-size:12px}.summary-row+.summary-row{border-top:1px solid var(--gray-100)}.summary-row strong{color:var(--gray-900);font-variant-numeric:tabular-nums}.summary-note{margin:10px 19px 17px;padding:11px 12px;border-left:3px solid var(--primary);background:#f7f7ff;color:var(--gray-600);font-size:11px;line-height:1.6}.summary-actions{display:grid;gap:8px;padding:0 19px 19px}.summary-actions .btn{width:100%}
+@media(max-width:1050px){.create-layout{grid-template-columns:1fr}.summary-rail{position:static}.summary-actions{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.app-container.jst-create{padding-inline:14px}.create-header{align-items:flex-start}.form-section{grid-template-columns:1fr;gap:16px;padding:21px 17px}.ref-row{grid-template-columns:repeat(2,minmax(0,1fr))}.ref-slot:first-child{grid-column:1/-1}.variant-toolbar{align-items:stretch;flex-direction:column}.variant-toolbar .form-group{width:100%}.summary-actions{grid-template-columns:1fr}}
+</style>
 </head><body>
 <script src="/js/nav.js"></script>
-<div class="app-container">
-<div class="page-header"><h1 class="page-title">创建新任务 (聚水潭)</h1></div>
-<div class="card"><div class="card-body">
-<form id="taskForm" onsubmit="handleCreate(event)">
-  <div class="form-group">
-    <label class="form-label">任务名称 <span class="required">*</span></label>
-    <input type="text" class="form-input" id="taskName" maxlength="12" placeholder="如：夏季连衣裙批次" required>
-    <div class="form-hint">仅用于展示，最多12字符</div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">参考图 <span class="required">*</span></label>
-    <div class="form-hint">核心参考图必填，辅助图可选（最多4张）</div>
-    <div class="ref-row" id="refRow"></div>
-    <input type="hidden" id="referenceImage" required>
-    <input type="hidden" id="auxiliaryImages">
-  </div>
-  <div class="form-group">
-    <label class="form-label">生成模式 <span class="required">*</span></label>
-    <div style="display:flex;gap:16px;padding:8px 0">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="radio" name="genMode" value="full" checked onchange="toggleMode()">
-        <span style="font-weight:500">全量生成</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="radio" name="genMode" value="dedup" onchange="toggleMode()">
-        <span style="font-weight:500">去重生成</span>
-      </label>
+<div class="app-container jst-create">
+  <header class="create-header"><div><a class="back-link" href="/">返回任务列表</a><h1>创建聚水潭任务</h1><p>配置商品素材、图片输出和变体，系统生成国内平台套图与导出数据。</p></div><span class="page-kicker">JST</span></header>
+  <form id="taskForm" onsubmit="handleCreate(event)">
+    <div class="create-layout">
+      <main class="form-surface">
+        <section class="form-section"><div class="section-title"><h2>商品素材</h2><p>核心参考图决定商品主体，文本用于约束标题和图片生成。</p></div><div class="section-fields">
+          <div class="form-group"><label class="form-label">任务名称 <span class="required">*</span></label><input type="text" class="form-input" id="taskName" maxlength="30" placeholder="如：夏季连衣裙批次" required></div>
+          <div class="form-group"><label class="form-label">参考图 <span class="required">*</span></label><div class="form-hint">核心参考图必填，最多添加 4 张辅助图。</div><div class="ref-row" id="refRow"></div><input type="hidden" id="referenceImage" required><input type="hidden" id="auxiliaryImages"></div>
+          <div class="form-group"><label class="form-label">参考标题 <span class="required">*</span></label><textarea class="form-textarea" id="refTitle" rows="4" placeholder="每行一个参考标题" required></textarea></div>
+          <div class="form-group"><label class="form-label">商品描述 <span class="optional">建议填写</span></label><textarea class="form-textarea" id="description" rows="3" placeholder="商品功能、材质、包装和适用场景"></textarea></div>
+        </div></section>
+        <section class="form-section"><div class="section-title"><h2>图片生成</h2><p>设置全量或去重模式，以及每套商品的图片输出数量。</p></div><div class="section-fields">
+          <div class="form-group"><label class="form-label">生成模式</label><div class="segmented"><label><input type="radio" name="genMode" value="full" checked onchange="toggleMode()"><span>全量生成</span></label><label><input type="radio" name="genMode" value="dedup" onchange="toggleMode()"><span>去重生成</span></label></div></div>
+          <div class="form-row"><div class="form-group"><label class="form-label">主图/附图总量</label><input type="number" class="form-input" id="mainImageCount" value="5" min="5" max="9" required oninput="updateJstSummary()"><div class="form-hint">默认 5 张，最多 9 张。</div></div><div class="form-group"><label class="form-label">详情图数量</label><input type="number" class="form-input" id="detailImageCount" value="5" min="5" max="9" required oninput="updateJstSummary()"><div class="form-hint">默认 5 张，最多 9 张。</div></div></div>
+          <div class="form-group"><label class="form-label">主图描述 <span class="optional">建议填写</span></label><textarea class="form-textarea" id="mainDescription" rows="3" placeholder="画面场景、构图、光线和背景要求"></textarea></div>
+          <div class="form-group"><label class="form-label">详情图描述 <span class="optional">建议填写</span></label><textarea class="form-textarea" id="detailDescription" rows="3" placeholder="卖点、结构、材质和使用场景"></textarea></div>
+        </div></section>
+        <section class="form-section"><div class="section-title"><h2>商品参数</h2><p>这些参数会复制到每套商品及其变体中。</p></div><div class="section-fields"><div class="form-row"><div class="form-group"><label class="form-label">生成套数 <span class="required">*</span></label><input type="number" class="form-input" id="generateCount" value="1" min="1" max="100" required oninput="updateJstSummary()"></div><div class="form-group"><label class="form-label">库存</label><input type="number" class="form-input" id="stock" value="999" min="0"></div></div><div class="form-group"><label class="form-label">重量 (kg)</label><input type="number" class="form-input" id="weight" value="1" min="0" step="0.1"></div></div></section>
+        <section class="form-section"><div class="section-title"><h2>变体设置</h2><p>变体可补充 SKU 参考图，并可单独设置固定价格或浮动区间。</p></div><div class="section-fields"><div class="variant-toolbar"><div><strong>二维规格组合</strong><div class="form-hint">颜色作为一级规格，尺码可作为二级规格。</div></div><div class="form-group"><label class="form-label">变体数量</label><input type="number" class="form-input" id="variantCount" value="1" min="1" max="10" required onchange="updateVariants()"></div></div><div id="variantsContainer"></div></div></section>
+      </main>
+      <aside class="summary-rail"><div class="summary-head"><h2>任务摘要</h2><p>提交前核对本次生成范围</p></div><div class="summary-body"><div class="summary-row"><span>生成模式</span><strong id="summaryMode">全量</strong></div><div class="summary-row"><span>商品套数</span><strong id="summarySets">1</strong></div><div class="summary-row"><span>变体数量</span><strong id="summaryVariants">1</strong></div><div class="summary-row"><span>每套商品图</span><strong id="summaryImages">10</strong></div></div><div class="summary-note" id="summaryNote">每套生成 5 张主图/附图、5 张详情图和对应变体图。</div><div class="summary-actions"><button type="submit" class="btn btn-primary" id="submitBtn">创建任务</button><a href="/" class="btn btn-outline">取消</a></div></aside>
     </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">参考标题 <span class="required">*</span></label>
-    <textarea class="form-textarea" id="refTitle" rows="4" placeholder="每行一个参考标题" style="font-family:inherit"></textarea>
-  </div>
-  <div class="form-group">
-    <label class="form-label">商品描述 <span class="optional">（建议）</span></label>
-    <textarea class="form-textarea" id="description" rows="3" placeholder="商品功能、材质等文字描述"></textarea>
-  </div>
-  <div class="form-group">
-    <label class="form-label">主图描述 <span class="optional">（建议）</span></label>
-    <textarea class="form-textarea" id="mainDescription" rows="3" placeholder="主图生成描述，如场景、光线要求"></textarea>
-  </div>
-  <div class="form-group">
-    <label class="form-label">详情图描述 <span class="optional">（建议）</span></label>
-    <textarea class="form-textarea" id="detailDescription" rows="3" placeholder="详情图生成描述"></textarea>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label class="form-label">生成套数 <span class="required">*</span></label>
-      <input type="number" class="form-input" id="generateCount" value="1" min="1" max="100" required>
-    </div>
-    <div class="form-group">
-      <label class="form-label">变体数量 <span class="required">*</span></label>
-      <input type="number" class="form-input" id="variantCount" value="1" min="1" max="10" required onchange="updateVariants()">
-      <div class="form-hint">每个变体需上传白底图，最多10个</div>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label class="form-label">主图/附图总量</label>
-      <input type="number" class="form-input" id="mainImageCount" value="5" min="5" max="9" required>
-      <div class="form-hint">默认5(1主图+4附图)，最多9</div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">详情图数量</label>
-      <input type="number" class="form-input" id="detailImageCount" value="5" min="5" max="9" required>
-      <div class="form-hint">默认5，最多9</div>
-    </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label class="form-label">库存</label>
-      <input type="number" class="form-input" id="stock" value="999" min="0">
-    </div>
-    <div class="form-group">
-      <label class="form-label">重量(kg)</label>
-      <input type="number" class="form-input" id="weight" value="1" min="0" step="0.1">
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="form-label">变体详细设置（二维规格）</label>
-    <div id="variantsContainer"></div>
-  </div>
-  <div style="display:flex;gap:12px;margin-top:24px">
-    <button type="submit" class="btn btn-primary" id="submitBtn">创建任务</button>
-    <a href="/" class="btn btn-outline">取消</a>
-  </div>
-</form>
-</div></div></div>
+  </form>
+</div>
 <script src="/js/api.js"></script>
 <script>
-let refFiles=[],variantFiles={};
+let refFiles=[],variantFiles={},submitting=false,operationToken=0;
 
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('jst')){showToast('当前账号无权创建聚水潭任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();updateVariants()});
+document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;if(!canCreatePlatform('jst')){showToast('当前账号无权创建聚水潭任务','error');setTimeout(function(){location.href='/'},800);return}refreshNavCredits();initRefSlots();updateVariants();updateJstSummary()});
 function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
-function toggleMode(){}
+function toggleMode(){updateJstSummary()}
+function updateJstSummary(){
+  var mode=document.querySelector('input[name="genMode"]:checked')?.value||'full';
+  var sets=Math.max(parseInt(document.getElementById('generateCount')?.value)||1,1);
+  var variants=Math.max(parseInt(document.getElementById('variantCount')?.value)||1,1);
+  var main=Math.max(parseInt(document.getElementById('mainImageCount')?.value)||5,5);
+  var detail=Math.max(parseInt(document.getElementById('detailImageCount')?.value)||5,5);
+  document.getElementById('summaryMode').textContent=mode==='dedup'?'去重':'全量';
+  document.getElementById('summarySets').textContent=sets;
+  document.getElementById('summaryVariants').textContent=variants;
+  document.getElementById('summaryImages').textContent=main+detail;
+  document.getElementById('summaryNote').textContent=mode==='dedup'
+    ? '每套保留独立主图，其余通用图片和变体图按首套资源复用。'
+    : '每套生成 '+main+' 张主图/附图、'+detail+' 张详情图和 '+variants+' 张变体图。';
+}
 function initRefSlots(){
   var labels=['核心','辅助1','辅助2','辅助3','辅助4'];
   var html='';
@@ -171,10 +125,10 @@ function updateVariants(){
     var skuDesc=ed?ed.querySelector('.v-sku-desc')?.value||'':'';
     html+='<div class="variant-item"><div class="variant-header"><span class="variant-number">变体 #'+(i+1)+'</span>'+(count>1?'<button type="button" class="variant-remove" onclick="removeVariant('+i+')">删除</button>':'')+'</div>';
     html+='<div class="form-group"><label style="font-size:13px;font-weight:600">变体名称 <span class="required">*</span></label><input class="form-input v-name" placeholder="如：红色" value="'+escapeHtml(tier1Val)+'" required></div>';
-    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px;font-weight:600">白底参考图 <span class="required">*</span></label>';
+    html+='<div class="form-row"><div class="form-group"><label style="font-size:13px;font-weight:600">SKU 参考图 <span class="optional">(可选)</span></label>';
     html+='<div class="upload-zone'+(hasImg?' has-image':'')+'" onclick="document.getElementById(\'variantInput'+i+'\').click()">';
     html+='<input type="file" id="variantInput'+i+'" accept="image/*" style="display:none" onchange="handleVariantUpload(event,'+i+')">';
-    html+='<div class="variant-placeholder"'+(hasImg?'style="display:none"':'')+'><div class="upload-text">点击上传白底参考图</div></div>';
+    html+='<div class="variant-placeholder"'+(hasImg?'style="display:none"':'')+'><div class="upload-text">点击上传 SKU 参考图</div></div>';
     html+='<div class="variant-preview"'+(hasImg?'':'style="display:none"')+'><img src="'+imgUrl+'" style="max-width:100%;max-height:150px;border-radius:6px" id="variantPreviewImg'+i+'"></div></div>';
     html+='<input type="hidden" class="v-img-input" value="'+escapeHtml(imgUrl)+'" required></div>';
     html+='<div class="form-group price-single" style="'+(floatOn?'display:none':'')+'"><label style="font-size:13px;font-weight:600">基本售价(¥)</label><input type="number" class="form-input v-price" step="0.01" min="0" value="'+escapeHtml(price)+'"></div></div>';
@@ -186,10 +140,14 @@ function updateVariants(){
     html+='</div>';
   }
   container.innerHTML=html;
+  updateJstSummary();
 }
 function removeVariant(i){
   var c=parseInt(document.getElementById('variantCount').value)||1;
-  if(c<=1)return;document.getElementById('variantCount').value=c-1;updateVariants();
+  if(c<=1)return;
+  var item=document.querySelectorAll('.variant-item')[i];if(item)item.remove();
+  var shifted={};Object.keys(variantFiles).forEach(function(key){var index=parseInt(key);if(index<i)shifted[index]=variantFiles[index];if(index>i)shifted[index-1]=variantFiles[index]});variantFiles=shifted;
+  document.getElementById('variantCount').value=c-1;updateVariants();
 }
 function handleVariantUpload(e,i){
   var f=e.target.files[0];if(!f)return;variantFiles[i]=f;
@@ -201,14 +159,11 @@ function handleVariantUpload(e,i){
     item.querySelector('.upload-zone').classList.add('has-image');
   };reader.readAsDataURL(f);
 }
-async function uploadFile(taskId,file,folder){
-  var fd=new FormData();fd.append('file',file);fd.append('folder',folder);fd.append('task_id',taskId);
-  var token=localStorage.getItem('ews_token');
-  var res=await fetch(API_BASE+'/api/upload',{method:'POST',headers:token?{'Authorization':'Bearer '+token}:{},body:fd});
-  return await res.json();
-}
+async function uploadWithLimit(items,limit,worker){var results=new Array(items.length);var cursor=0;async function run(){while(cursor<items.length){var index=cursor++;results[index]=await worker(items[index],index)}}await Promise.all(Array.from({length:Math.min(limit,items.length)},run));return results}
+function setSubmitting(active){submitting=active;var button=document.getElementById('submitBtn');button.disabled=active;button.classList.toggle('is-loading',active)}
+async function stopExpiredOperation(token,taskId,savedTask){if(operationToken===token)return false;if(taskId&&!savedTask){try{await API.deleteTask(taskId)}catch(error){}}return true}
 async function handleCreate(e){
-  e.preventDefault();
+  e.preventDefault();if(submitting)return;
   var name=document.getElementById('taskName').value.trim();
   var mode=document.querySelector('input[name="genMode"]:checked').value;
   var refTitle=document.getElementById('refTitle').value.trim();
@@ -216,55 +171,40 @@ async function handleCreate(e){
   var mainDesc=document.getElementById('mainDescription').value.trim();
   var detailDesc=document.getElementById('detailDescription').value.trim();
   var genCount=parseInt(document.getElementById('generateCount').value);
-  var stock=parseInt(document.getElementById('stock').value)||999;
-  var weight=parseFloat(document.getElementById('weight').value)||1;
+  var stockValue=parseInt(document.getElementById('stock').value);
+  var stock=isNaN(stockValue)?999:stockValue;
+  var weightValue=parseFloat(document.getElementById('weight').value);
+  var weight=Number.isNaN(weightValue)?1:weightValue;
   if(!name){showToast('请输入任务名称','error');return}
   if(!refFiles[0]){showToast('请上传核心参考图','error');return}
   if(!refTitle){showToast('请填写参考标题','error');return}
   var variantItems=document.querySelectorAll('.variant-item');
   for(var item of variantItems){if(!item.querySelector('.v-name').value.trim()){showToast('请填写所有变体','error');return}}
   for(var vi=0;vi<variantItems.length;vi++){if(!readPriceConfig(variantItems[vi],vi,false))return}
-  var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='初始化...';
-  var initRes=await API.initTask('jst');
-  if(!initRes.success){showToast(initRes.error||'初始化失败','error');btn.disabled=false;btn.textContent='创建任务';return}
-  var taskId=initRes.task_id;btn.textContent='上传参考图...';
-  var auxUrls=[];var refImg='';
-  for(var ri=0;ri<5;ri++){
-    var rf=refFiles[ri];if(!rf)continue;
-    var upRes=await uploadFile(taskId,rf,'references');
-    if(!upRes.success){showToast('参考图上传失败','error');btn.disabled=false;btn.textContent='创建任务';return}
-    if(ri===0)refImg=upRes.url||upRes.key;
-    else auxUrls.push(upRes.url||upRes.key);
-  }
-  var variants=[];
-  for(var i=0;i<variantItems.length;i++){
-    btn.textContent='上传变体图 '+(i+1)+'/'+variantItems.length+'...';
-    var vname=variantItems[i].querySelector('.v-name').value.trim();
-    var file=variantFiles[i];if(!file){showToast('变体 #'+(i+1)+' 未选择白底图','error');btn.disabled=false;btn.textContent='创建任务';return}
-    var vRes=await uploadFile(taskId,file,'variants');
-    if(!vRes.success){showToast('变体图上传失败','error');btn.disabled=false;btn.textContent='创建任务';return}
-    var pricing=readPriceConfig(variantItems[i],i,false);
-    if(!pricing){btn.disabled=false;btn.textContent='创建任务';return}
-    variants.push({
-      name:vname,
-      white_bg_image:vRes.url||vRes.key,
-      price:pricing.price,
-      price_float_enabled:pricing.price_float_enabled,
-      price_min:pricing.price_min,
-      price_max:pricing.price_max,
-      price_precision:pricing.price_precision,
-      sku_description:variantItems[i].querySelector('.v-sku-desc')?.value.trim()||'',
+  var token=++operationToken;setSubmitting(true);var taskId='';var savedTask=false;
+  var timeout=setTimeout(function(){if(submitting&&operationToken===token){operationToken++;setSubmitting(false);showToast('服务器超过120秒未响应，请检查任务列表后重试','error')}},120000);
+  try{
+    var initRes=await API.initTask('jst');if(!initRes.success)throw new Error(initRes.error||'初始化失败');taskId=initRes.task_id;if(await stopExpiredOperation(token,taskId,savedTask))return;
+    var referenceItems=refFiles.map(function(file,index){return file?{file:file,index:index}:null}).filter(Boolean);
+    var uploadedReferences=await uploadWithLimit(referenceItems,3,async function(item){var result=await API.uploadFile(taskId,item.file,'references');if(!result.success)throw new Error(result.error||'参考图上传失败');return{index:item.index,url:result.url||result.key}});
+    if(await stopExpiredOperation(token,taskId,savedTask))return;
+    var refImg=uploadedReferences.find(function(item){return item.index===0}).url;
+    var auxUrls=uploadedReferences.filter(function(item){return item.index>0}).map(function(item){return item.url});
+    var variantInputs=Array.from(variantItems).map(function(item,index){return{item:item,index:index,file:variantFiles[index]}});
+    var variants=await uploadWithLimit(variantInputs,3,async function(entry){
+      var skuImage='';
+      if(entry.file){var result=await API.uploadFile(taskId,entry.file,'variants');if(!result.success)throw new Error(result.error||'变体图上传失败');skuImage=result.url||result.key}
+      var pricing=readPriceConfig(entry.item,entry.index,true);if(!pricing)throw new Error('变体 #'+(entry.index+1)+' 价格设置无效');
+      return{name:entry.item.querySelector('.v-name').value.trim(),sku_image:skuImage,price:pricing.price,price_float_enabled:pricing.price_float_enabled,price_min:pricing.price_min,price_max:pricing.price_max,price_precision:pricing.price_precision,sku_description:entry.item.querySelector('.v-sku-desc')?.value.trim()||''};
     });
+    if(await stopExpiredOperation(token,taskId,savedTask))return;
+    var submitRes=await API.updateTask(taskId,{name,mode,topic_items:refTitle,description,main_description:mainDesc,detail_description:detailDesc,auxiliary_images:JSON.stringify(auxUrls),reference_image:refImg,generate_count:genCount,stock,weight,variants,main_image_count:parseInt(document.getElementById('mainImageCount').value),detail_image_count:parseInt(document.getElementById('detailImageCount').value)});
+    if(!submitRes.success)throw new Error(submitRes.error||'提交失败');savedTask=true;if(await stopExpiredOperation(token,taskId,savedTask))return;
+    clearTimeout(timeout);showToast('任务创建成功！','success');setTimeout(function(){window.location.href='/'},800);
+  }catch(error){
+    clearTimeout(timeout);if(taskId&&!savedTask){try{await API.deleteTask(taskId)}catch(cleanupError){}}
+    if(operationToken!==token)return;showToast(error.message||'创建失败','error');setSubmitting(false);
   }
-  btn.textContent='提交...';
-  var submitRes=await API.updateTask(taskId,{
-    name,mode,topic_items:refTitle,description,main_description:mainDesc,detail_description:detailDesc,
-    auxiliary_images:JSON.stringify(auxUrls),reference_image:refImg,generate_count:genCount,stock,weight,variants,
-    main_image_count:parseInt(document.getElementById('mainImageCount').value),
-    detail_image_count:parseInt(document.getElementById('detailImageCount').value),
-  });
-  if(submitRes.success){showToast('任务创建成功！','success');setTimeout(()=>{window.location.href='/'},1500)}
-  else{showToast(submitRes.error||'提交失败','error');btn.disabled=false;btn.textContent='创建任务'}
 }
 function escapeHtml(s){if(s===undefined||s===null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>

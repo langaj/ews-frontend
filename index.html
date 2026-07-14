@@ -3,17 +3,22 @@
 <title>任务列表 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-.platform-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:6px}.tag-jst{background:#dbeafe;color:#1e40af}.tag-shopee{background:#fef3c7;color:#92400e}.task-actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:12px}
+.task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
-.task-detail-modal{max-width:920px}.plan-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.plan-actions{display:flex;gap:6px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
+.task-detail-modal{max-width:980px}.detail-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--gray-200);margin-bottom:18px}.detail-hero h3{margin-top:7px;color:var(--gray-900);font-size:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-200);overflow:hidden;margin-bottom:20px}.detail-grid .detail-section{min-height:76px;margin:0;padding:13px;background:#fff}.plan-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.plan-actions{display:flex;gap:5px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
+@media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container">
-<div class="page-header"><h1 class="page-title">任务列表</h1>
+<div class="page-header"><div class="page-heading"><div class="page-kicker">任务中心</div><h1 class="page-title">商品生产任务</h1><p class="page-subtitle">查看双平台任务状态，处理失败计划并导出已完成的商品资源。</p></div>
 <div class="action-bar" id="taskCreateActions">
 <button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button></div></div>
-<div class="card"><div class="card-body" id="taskContent"><div class="loading"><div class="spinner"></div>加载中...</div></div></div>
+<section class="task-workspace">
+  <div class="task-toolbar"><div class="task-filter" id="taskFilter"><button type="button" class="active" onclick="setTaskFilter('',this)">全部</button><button type="button" onclick="setTaskFilter('jst',this)">聚水潭</button><button type="button" onclick="setTaskFilter('shopee',this)">Shopee</button></div><span class="muted" id="taskRange">正在读取任务</span></div>
+  <div class="task-overview" id="taskOverview"><div class="task-metric"><span>任务总数</span><strong>-</strong></div><div class="task-metric"><span>处理中</span><strong>-</strong></div><div class="task-metric"><span>已完成</span><strong>-</strong></div><div class="task-metric"><span>需要处理</span><strong>-</strong></div></div>
+  <div class="task-content" id="taskContent"></div>
+</section>
 </div>
 
 <div class="modal-overlay" id="opOverlay" style="z-index:400">
@@ -42,6 +47,7 @@ var activeActionLocks={};
 var zipLibPromise=null;
 var taskPage=1;
 var taskPageSize=50;
+var taskPlatformFilter='';
 document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();renderCreateActions();await refreshTasks()});
 
 function userPlatformAccess(){return localStorage.getItem('ews_platform_access')||'allow'}
@@ -57,26 +63,42 @@ function renderCreateActions(){
   if(!el)return;
   el.innerHTML=createTaskButtonsHtml()+'<button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button>';
 }
+function taskSkeleton(){
+  return '<div aria-label="任务加载中">'+Array.from({length:6},function(){return '<div class="skeleton-row">'+Array.from({length:6},function(){return '<span class="skeleton skeleton-line"></span>'}).join('')+'</div>'}).join('')+'</div>';
+}
+function renderTaskOverview(tasks,total){
+  var processing=tasks.filter(function(task){return task.status==='processing'||task.status==='pending'}).length;
+  var completed=tasks.filter(function(task){return task.status==='completed'}).length;
+  var attention=tasks.filter(function(task){return task.status==='failed'||task.status==='partial_failed'}).length;
+  document.getElementById('taskOverview').innerHTML='<div class="task-metric"><span>任务总数</span><strong>'+total+'</strong></div><div class="task-metric"><span>待处理与处理中</span><strong>'+processing+'</strong></div><div class="task-metric"><span>本页已完成</span><strong>'+completed+'</strong></div><div class="task-metric"><span>本页需要处理</span><strong>'+attention+'</strong></div>';
+}
+function setTaskFilter(platform,button){
+  taskPlatformFilter=platform;taskPage=1;
+  document.querySelectorAll('#taskFilter button').forEach(function(item){item.classList.toggle('active',item===button)});
+  refreshTasks();
+}
 
 async function refreshTasks(btn){
   if(btn) setActionButtonLoading(btn,'刷新中...');
   try{
-    const c=document.getElementById('taskContent');c.innerHTML='<div class="loading"><div class="spinner"></div>加载中...</div>';
-    const res=await API.getTasks('',taskPage,taskPageSize);
+    const c=document.getElementById('taskContent');c.innerHTML=taskSkeleton();
+    const res=await API.getTasks(taskPlatformFilter,taskPage,taskPageSize);
     if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
     const tasks=res.tasks||[];
+    renderTaskOverview(tasks,res.total||0);
+    document.getElementById('taskRange').textContent=tasks.length?'本页 '+tasks.length+' 个，共 '+(res.total||tasks.length)+' 个任务':'当前筛选暂无任务';
     if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px">'+(createTaskButtonsHtml()||'<span class="muted">当前账号暂无可创建的平台</span>')+'</div></div>';return}
     var html='<div class="table-container"><table><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
     for(var i=0;i<tasks.length;i++){
       var t=tasks[i];
       var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
-      html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td>'+escapeHtml(t.name||'(未命名)')+'</td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
+      html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td><span class="task-name">'+escapeHtml(t.name||'(未命名)')+'</span></td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
       html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
       html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
       var hasPlans=(parseInt(t.plan_count)||0)>0;
       if(t.status==='pending'&&!hasPlans) html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
-      if(t.status==='pending'&&!hasPlans&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-outline" style="color:var(--warning);border-color:var(--warning)" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
-      if(t.status==='failed'||t.status==='partial_failed') html+='<button class="btn btn-sm btn-primary" style="background:var(--warning);color:#fff" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
+      if(t.status==='pending'&&!hasPlans&&localStorage.getItem('ews_role')==='admin') html+='<button class="btn btn-sm btn-warning-outline" onclick="pushTask(\''+t.id+'\',true,this)">测试</button>';
+      if(t.status==='failed'||t.status==='partial_failed') html+='<button class="btn btn-sm btn-warning" onclick="retryFailedPlans(\''+t.id+'\',this)">继续</button>';
       html+='<button class="btn btn-sm btn-danger" onclick="deleteTask(\''+t.id+'\',this)">删除</button>';
       html+='</div></td></tr>';
     }
@@ -109,11 +131,11 @@ async function showJstDetail(t){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
   var done=(t.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var html='<div class="modal task-detail-modal"><div class="modal-header"><div class="modal-title">任务详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
-  html+='<div class="detail-section"><span class="platform-tag tag-jst">聚水潭</span><strong>'+escapeHtml(t.name||'')+'</strong></div>';
-  html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
-  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(t.mode||'full')+' <span class="muted">'+done+'/'+(t.sub_tasks||[]).length+' 子任务完成</span></div></div>';
-  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">主图/附图: '+(t.main_image_count||5)+' 详情图: '+(t.detail_image_count||5)+'</div></div>';
+  html+='<div class="detail-hero"><div><span class="platform-tag tag-jst">聚水潭</span><h3>'+escapeHtml(t.name||'')+'</h3></div>'+statusBadge(t.status)+'</div><div class="detail-grid">';
+  html+='<div class="detail-section"><div class="detail-label">任务 ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(t.mode||'full')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">子任务进度</div><div class="detail-value">'+done+' / '+(t.sub_tasks||[]).length+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">图片配置</div><div class="detail-value">'+(t.main_image_count||5)+' 主图，'+(t.detail_image_count||5)+' 详情图</div></div></div>';
   html+=await renderPushPlans(t.id);
   if(t.variants) html+='<div class="detail-section"><div class="detail-label">变体 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return escapeHtml(v.tier1_value||v.name||'')}).join(', ')+'</div></div>';
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
@@ -126,14 +148,15 @@ async function showShopeeDetail(t){
   var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var v=(p.variations||[]).map(function(v){return escapeHtml(v.option1+(v.option2?'/'+v.option2:''))}).join(', ');
   var html='<div class="modal task-detail-modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
-  html+='<div class="detail-section"><span class="platform-tag tag-shopee">虾皮</span><strong>'+escapeHtml(p.name||'')+'</strong></div>';
-  html+='<div class="detail-section"><div class="detail-label">任务ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
-  html+='<div class="detail-section"><div class="detail-label">状态</div><div class="detail-value">'+statusBadge(t.status)+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(p.mode||'full')+' <span class="muted">'+done+'/'+(p.sub_tasks||[]).length+' 子任务完成</span></div></div>';
-  html+='<div class="detail-section"><div class="detail-label">分类</div><div class="detail-value">'+escapeHtml(p.category_id||'')+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">规格</div><div class="detail-value">'+escapeHtml((p.variation_name1||'')+(p.variation_name2?'/'+p.variation_name2:''))+' | '+v+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">图片数量</div><div class="detail-value">封面/附图: '+(p.main_image_count||9)+' 详情图: '+(p.detail_image_count||0)+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div>';
+  html+='<div class="detail-hero"><div><span class="platform-tag tag-shopee">Shopee</span><h3>'+escapeHtml(p.name||'')+'</h3></div>'+statusBadge(t.status)+'</div><div class="detail-grid">';
+  html+='<div class="detail-section"><div class="detail-label">任务 ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(p.mode||'full')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">子任务进度</div><div class="detail-value">'+done+' / '+(p.sub_tasks||[]).length+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">商品图片</div><div class="detail-value">'+(p.main_image_count||9)+' 张</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">分类 ID</div><div class="detail-value">'+escapeHtml(p.category_id||'未填写')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">规格结构</div><div class="detail-value">'+escapeHtml((p.variation_name1||'无规格')+(p.variation_name2?'/'+p.variation_name2:''))+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">规格值</div><div class="detail-value">'+(v||'无')+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div></div>';
   html+=await renderPushPlans(t.id);
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);

@@ -98,7 +98,7 @@ function showLoginModal() {
   if (loginModalEl) { loginModalEl.classList.add('show'); return; }
   loginModalEl = document.createElement('div');
   loginModalEl.className = 'modal-overlay show';
-  loginModalEl.style.cssText = 'z-index:9999;background:linear-gradient(135deg,#667eea,#764ba2)';
+  loginModalEl.style.zIndex = '9999';
   loginModalEl.innerHTML = `<div class="login-card" style="margin:auto">
     <div class="login-title">EWS</div>
     <div class="login-subtitle">电商套图批量生成系统</div>

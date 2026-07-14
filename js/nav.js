@@ -13,21 +13,23 @@
 
     var links = '';
     var allPages = [{ p: '/', l: '任务列表' }];
-    if (canUse('jst')) allPages.push({ p: '/create-jst.html', l: '创建(聚水潭)' });
-    if (canUse('shopee')) allPages.push({ p: '/create-shopee.html', l: '创建(虾皮)' });
+    if (canUse('jst')) allPages.push({ p: '/create-jst.html', l: '聚水潭任务' });
+    if (canUse('shopee')) allPages.push({ p: '/create-shopee.html', l: 'Shopee 任务' });
     allPages.push({ p: '/guide.html', l: '使用说明' });
     if (isLoggedIn) allPages.push({ p: '/config.html', l: isAdmin ? '系统配置' : '账号设置' });
 
     for (var i = 0; i < allPages.length; i++) {
       var isActive = cur === allPages[i].p || cur.replace('.html','') === allPages[i].p.replace('.html','');
-      links += '<a href="' + allPages[i].p + '" class="nav-link' + (isActive ? ' active' : '') + '">' + allPages[i].l + '</a>';
+      links += '<a href="' + allPages[i].p + '" class="nav-link' + (isActive ? ' active' : '') + '"' + (isActive ? ' aria-current="page"' : '') + '>' + allPages[i].l + '</a>';
     }
 
     var rightHtml = '';
     if (isLoggedIn) {
-      rightHtml += '<span class="nav-credits">算力: <b id="navCredits">...</b>';
-      rightHtml += '<a href="javascript:void(0)" id="navRefreshCredits" class="nav-refresh">刷新</a>';
-      rightHtml += '<a href="javascript:void(0)" id="navLogout" class="nav-link" style="color:var(--danger);padding:6px 12px">退出</a></span>';
+      rightHtml += '<div class="nav-account">';
+      rightHtml += '<span class="nav-credits"><span>算力</span><b id="navCredits">...</b></span>';
+      rightHtml += '<button type="button" id="navRefreshCredits" class="nav-refresh">刷新</button>';
+      rightHtml += '<button type="button" id="navLogout" class="nav-logout">退出</button>';
+      rightHtml += '</div>';
     }
 
     var existing = document.getElementById('ewsNav');
@@ -36,7 +38,7 @@
     nav.id = 'ewsNav';
     nav.className = 'navbar';
     nav.innerHTML = '<div class="navbar-inner">'
-      + '<a href="/" class="navbar-brand">EWS</a>'
+      + '<a href="/" class="navbar-brand"><span class="brand-mark">E</span><span class="brand-copy"><strong>EWS</strong><small>商品生产工作台</small></span></a>'
       + '<div class="navbar-nav">' + links + '</div>'
       + '<div class="navbar-right">' + rightHtml + '</div>'
       + '</div>';
