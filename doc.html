@@ -91,7 +91,7 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'商品标题 / Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'内部任务名称',source_brief:'Shopee商品事实',reference_title:'参考标题',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform。JST使用name/reference_title/description并回调titles；Shopee使用source_brief和规格结构，回调products与variation_labels。'},
+  {name:'商品标题 / Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',name:'JST任务名称（Shopee不发送）',source_brief:'Shopee商品事实',reference_title:'参考标题',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform。JST使用name/reference_title/description并回调titles；Shopee任务名称仅作内部备注，不进入推送体，工作流使用source_brief和规格结构并回调products与variation_labels。'},
   {name:'SKU标题（仅聚水潭）',key:'n8n_sku_title_webhook',body:{task_id:'母任务ID',name:'任务名称',reference_title:'参考标题',description:'商品描述',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variants:'[{id,name,option2,tier1_name,tier2_name}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅用于聚水潭，按子任务顺序 × 完整SKU组合顺序返回。Shopee规格标签由商品元数据工作流一次返回。'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
@@ -193,7 +193,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <div class="note"><strong>JST：</strong><code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。同一一级规格只能使用一张 <code>sku_image</code>，系统会将生成后的 SKU 图片复用到该一级规格下全部二级规格。</div>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
-  "name": "内部任务名称",
+  "name": "必填内部任务备注（不进入Shopee工作流）",
   "source_brief": "商品事实，10~2000字符",
   "product_type": "single|one|two",
   "reference_title": "可选参考标题",

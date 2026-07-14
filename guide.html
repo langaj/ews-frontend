@@ -142,7 +142,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <thead><tr><th>字段</th><th>填写建议</th><th>官方/系统规则</th></tr></thead>
             <tbody>
               <tr><td>商品事实</td><td>必填。写品类、材质、功能、规格、适用场景、包装内容和限制，避免只写关键词。</td><td>10~2000 字符，只作为 AI 事实边界。每套 Product Description 由元数据工作流生成，官方要求 100~3000 字符。</td></tr>
-              <tr><td>任务名称</td><td>可选内部批次名，例如“手机壳-越南站-透明款”。</td><td>只用于任务列表，不作为最终 Product Name。</td></tr>
+              <tr><td>任务名称</td><td>必填内部批次备注，例如“手机壳-越南站-透明款”。</td><td>只用于任务列表和文件识别，不发送给工作流，也不作为最终 Product Name。</td></tr>
               <tr><td>参考标题</td><td>可选，提供标题方向或已有关键词。</td><td>用于生成 Product Name，不直接导出；事实冲突时以商品事实为准。</td></tr>
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
