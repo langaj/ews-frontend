@@ -64,7 +64,7 @@ const EP = [
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
   {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string',n8n_title_enabled:'boolean',n8n_sku_title_webhook:'string',n8n_sku_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'number(通用)'}},
-  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=50，limit最大100)',a:true},
+  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=10，limit默认10、最大100)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
   {m:'PUT',p:'/api/tasks/:id',d:'更新任务(JST/Shopee，按任务平台自动识别请求体)',a:true},

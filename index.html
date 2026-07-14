@@ -3,12 +3,12 @@
 <title>任务列表 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-.task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
+.task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-toolbar-meta{display:flex;align-items:center;gap:14px}.page-size-control{display:flex;align-items:center;gap:6px;color:var(--gray-500);font-size:11px;white-space:nowrap}.page-size-control select{height:30px;padding:0 26px 0 9px;border:1px solid var(--gray-200);border-radius:6px;background:#fff;color:var(--gray-700);font:inherit;cursor:pointer}.page-size-control select:disabled{cursor:wait;opacity:.6}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
 .task-detail-modal{width:min(100%,980px);max-width:980px}.detail-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--gray-200);margin-bottom:18px}.detail-hero h3{margin-top:7px;color:var(--gray-900);font-size:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-200);overflow:hidden;margin-bottom:20px}.detail-grid .detail-section{min-height:76px;margin:0;padding:13px;background:#fff}.plan-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.plan-actions{display:flex;gap:5px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
 .detail-loading-body{display:grid;min-height:320px;place-items:center}.detail-loading-state{display:flex;align-items:center;flex-direction:column;gap:10px;color:var(--gray-500);font-size:13px;text-align:center}.detail-loading-state .spinner{margin:0 0 4px}.detail-loading-state strong{color:var(--gray-800);font-size:15px}
 .image-preview-overlay{z-index:650;padding:24px;background:rgba(16,24,40,.76)}.image-preview-modal{display:grid;width:min(760px,calc(100vw - 48px));height:min(82dvh,760px);max-height:none;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.image-preview-stage{position:relative;display:grid;min-height:280px;padding:24px;place-items:center;overflow:hidden;background:var(--gray-100);cursor:zoom-out}.image-preview-stage img{position:absolute;inset:24px;display:block;width:auto;height:auto;max-width:min(calc(100% - 48px),640px);max-height:calc(100% - 48px);margin:auto;object-fit:contain;opacity:0;transition:opacity var(--transition);cursor:default}.image-preview-stage img.is-loaded{opacity:1}.image-preview-state{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-600);font-size:13px}.image-preview-error{display:none;max-width:420px;color:var(--danger);text-align:center}.image-preview-stage.has-error .image-preview-loading{display:none}.image-preview-stage.has-error .image-preview-error{display:block}
-@media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-toolbar-meta{width:100%;justify-content:space-between}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.image-preview-overlay{align-items:center;padding:10px}.image-preview-modal{width:100%;height:82dvh;border-radius:8px}.image-preview-stage{padding:12px}.image-preview-stage img{inset:12px;max-width:calc(100% - 24px);max-height:calc(100% - 24px)}}
 </style>
 </head><body>
@@ -18,7 +18,7 @@
 <div class="action-bar" id="taskCreateActions">
 <button class="btn btn-outline" onclick="window.refreshTasks&&window.refreshTasks(this)">刷新</button></div></div>
 <section class="task-workspace">
-  <div class="task-toolbar"><div class="task-filter" id="taskFilter"><button type="button" class="active" onclick="setTaskFilter('',this)">全部</button><button type="button" onclick="setTaskFilter('jst',this)">聚水潭</button><button type="button" onclick="setTaskFilter('shopee',this)">Shopee</button></div><span class="muted" id="taskRange">正在读取任务</span></div>
+  <div class="task-toolbar"><div class="task-filter" id="taskFilter"><button type="button" class="active" onclick="setTaskFilter('',this)">全部</button><button type="button" onclick="setTaskFilter('jst',this)">聚水潭</button><button type="button" onclick="setTaskFilter('shopee',this)">Shopee</button></div><div class="task-toolbar-meta"><span class="muted" id="taskRange">正在读取任务</span><label class="page-size-control" for="taskPageSize">每页<select id="taskPageSize" onchange="setTaskPageSize(this.value,this)"><option value="10">10 条</option><option value="20">20 条</option></select></label></div></div>
   <div class="task-overview" id="taskOverview"><div class="task-metric"><span>任务总数</span><strong>-</strong></div><div class="task-metric"><span>处理中</span><strong>-</strong></div><div class="task-metric"><span>已完成</span><strong>-</strong></div><div class="task-metric"><span>需要处理</span><strong>-</strong></div></div>
   <div class="task-content" id="taskContent"></div>
 </section>
@@ -50,9 +50,10 @@ var activeActionLocks={};
 var detailRequestSequence=0;
 var zipLibPromise=null;
 var taskPage=1;
-var taskPageSize=50;
+var savedTaskPageSize=parseInt(localStorage.getItem('ews_task_page_size'));
+var taskPageSize=savedTaskPageSize===20?20:10;
 var taskPlatformFilter='';
-document.addEventListener('DOMContentLoaded',async()=>{if(!await requireAuth())return;refreshNavCredits();renderCreateActions();await refreshTasks()});
+document.addEventListener('DOMContentLoaded',async()=>{syncTaskPageSizeControl();if(!await requireAuth())return;refreshNavCredits();renderCreateActions();await refreshTasks()});
 
 function userPlatformAccess(){return localStorage.getItem('ews_platform_access')||'allow'}
 function userCanCreate(platform){return localStorage.getItem('ews_role')==='admin'||userPlatformAccess()==='allow'||userPlatformAccess()===platform}
@@ -80,6 +81,14 @@ function setTaskFilter(platform,button){
   taskPlatformFilter=platform;taskPage=1;
   document.querySelectorAll('#taskFilter button').forEach(function(item){item.classList.toggle('active',item===button)});
   refreshTasks();
+}
+function syncTaskPageSizeControl(){var select=document.getElementById('taskPageSize');if(select)select.value=String(taskPageSize)}
+async function setTaskPageSize(value,select){
+  var next=parseInt(value);
+  if(next!==10&&next!==20){syncTaskPageSizeControl();return}
+  taskPageSize=next;taskPage=1;localStorage.setItem('ews_task_page_size',String(next));
+  if(select){select.value=String(next);select.disabled=true}
+  try{await refreshTasks()}finally{if(select)select.disabled=false}
 }
 
 async function refreshTasks(btn){
@@ -625,7 +634,7 @@ function formatDate(s){
 }
 function safeFileName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').slice(0,60)||'export'}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-Object.assign(window,{refreshTasks,changeTaskPage,viewTask,refreshTaskDetail,closeDetail,openImagePreview,closeImagePreview,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
+Object.assign(window,{refreshTasks,changeTaskPage,setTaskPageSize,viewTask,refreshTaskDetail,closeDetail,openImagePreview,closeImagePreview,pushTask,retryPlan,retryFailedPlans,deleteTask,downloadTaskImages,doExport});
 </script>
 <script async src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body></html>
