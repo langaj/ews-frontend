@@ -6,6 +6,7 @@
 .task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
 .task-detail-modal{width:min(100%,980px);max-width:980px}.detail-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--gray-200);margin-bottom:18px}.detail-hero h3{margin-top:7px;color:var(--gray-900);font-size:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-200);overflow:hidden;margin-bottom:20px}.detail-grid .detail-section{min-height:76px;margin:0;padding:13px;background:#fff}.plan-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.plan-actions{display:flex;gap:5px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
+.detail-loading-body{display:grid;min-height:320px;place-items:center}.detail-loading-state{display:flex;align-items:center;flex-direction:column;gap:10px;color:var(--gray-500);font-size:13px;text-align:center}.detail-loading-state .spinner{margin:0 0 4px}.detail-loading-state strong{color:var(--gray-800);font-size:15px}
 .image-preview-overlay{z-index:650;padding:24px;background:rgba(16,24,40,.76)}.image-preview-modal{display:grid;width:min(760px,calc(100vw - 48px));height:min(82dvh,760px);max-height:none;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.image-preview-stage{position:relative;display:grid;min-height:280px;padding:24px;place-items:center;overflow:hidden;background:var(--gray-100);cursor:zoom-out}.image-preview-stage img{position:absolute;inset:24px;display:block;width:auto;height:auto;max-width:min(calc(100% - 48px),640px);max-height:calc(100% - 48px);margin:auto;object-fit:contain;opacity:0;transition:opacity var(--transition);cursor:default}.image-preview-stage img.is-loaded{opacity:1}.image-preview-state{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-600);font-size:13px}.image-preview-error{display:none;max-width:420px;color:var(--danger);text-align:center}.image-preview-stage.has-error .image-preview-loading{display:none}.image-preview-stage.has-error .image-preview-error{display:block}
 @media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.image-preview-overlay{align-items:center;padding:10px}.image-preview-modal{width:100%;height:82dvh;border-radius:8px}.image-preview-stage{padding:12px}.image-preview-stage img{inset:12px;max-width:calc(100% - 24px);max-height:calc(100% - 24px)}}
@@ -46,6 +47,7 @@
 <script>
 var ACTION_TIMEOUT_MS=120000;
 var activeActionLocks={};
+var detailRequestSequence=0;
 var zipLibPromise=null;
 var taskPage=1;
 var taskPageSize=50;
@@ -95,7 +97,7 @@ async function refreshTasks(btn){
       var t=tasks[i];
       var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
       html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td><span class="task-name">'+escapeHtml(t.name||'(未命名)')+'</span></td><td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
-      html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\')">详情</button>';
+      html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\',this)">详情</button>';
       html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
       var hasPlans=(parseInt(t.plan_count)||0)>0;
       if(t.status==='pending'&&!hasPlans) html+='<button class="btn btn-sm btn-success" onclick="pushTask(\''+t.id+'\',false,this)">推送</button>';
@@ -119,17 +121,30 @@ async function changeTaskPage(offset){
   await refreshTasks();
 }
 
-async function viewTask(taskId){
-  var res=await API.getTask(taskId);
-  if(!res.success||!res.task){showToast(res.error||'加载失败','error');return false}
-  closeDetail();
-  var t=res.task;
-  if(t.platform==='jst') await showJstDetail(t);
-  else await showShopeeDetail(t);
-  return true;
+async function viewTask(taskId,btn,label){
+  var lockKey='view-detail:'+taskId;
+  if(activeActionLocks[lockKey]){showToast('任务详情正在加载，请等待服务器响应','info');return false}
+  var requestId=++detailRequestSequence;
+  return await withActionLock(lockKey,btn,label||'加载中...',async function(){
+    showDetailLoading();
+    var responses=await Promise.all([
+      API.getTask(taskId),
+      API.getPushPlans(taskId).catch(function(e){return {success:false,error:(e&&e.message)||'推送计划加载失败'}})
+    ]);
+    if(requestId!==detailRequestSequence)return false;
+    var res=responses[0];
+    if(!res.success||!res.task){removeDetailModal();showToast(res.error||'加载失败','error');return false}
+    removeDetailModal();
+    var t=res.task;
+    if(t.platform==='jst') await showJstDetail(t,responses[1]);
+    else await showShopeeDetail(t,responses[1]);
+    return true;
+  },{onError:function(){
+    if(requestId===detailRequestSequence){detailRequestSequence++;removeDetailModal()}
+  }});
 }
 
-async function showJstDetail(t){
+async function showJstDetail(t,plansResponse){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
   var done=(t.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var typeLabel=t.product_type==='single'?'无规格':t.product_type==='two'?'二维规格':'一维规格';
@@ -140,13 +155,13 @@ async function showJstDetail(t){
   html+='<div class="detail-section"><div class="detail-label">子任务进度</div><div class="detail-value">'+done+' / '+(t.sub_tasks||[]).length+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">图片配置</div><div class="detail-value">'+(t.main_image_count||5)+' 主图，'+(t.detail_image_count||5)+' 详情图</div></div></div>';
   html+='<div class="detail-grid"><div class="detail-section"><div class="detail-label">商品结构</div><div class="detail-value">'+typeLabel+'</div></div><div class="detail-section"><div class="detail-label">模板行数</div><div class="detail-value">'+((t.generate_count||1)*(t.variants||[]).length)+'</div></div><div class="detail-section"><div class="detail-label">供应商</div><div class="detail-value">'+escapeHtml(t.supplier_name||'未填写')+'</div></div><div class="detail-section"><div class="detail-label">SKU 图片模式</div><div class="detail-value">'+(t.variation_image_mode==='none'?'不生成':'按一级规格生成')+'</div></div></div>';
-  html+=await renderPushPlans(t.id);
+  html+=await renderPushPlans(t.id,plansResponse);
   if(t.variants) html+='<div class="detail-section"><div class="detail-label">SKU 组合 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return escapeHtml((v.tier1_value||v.name||'默认商品')+(v.tier2_value?' / '+v.tier2_value:''))}).join(', ')+'</div></div>';
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
 
-async function showShopeeDetail(t){
+async function showShopeeDetail(t,plansResponse){
   var dt=document.createElement('div');dt.className='modal-overlay show';dt.id='detailModal';
   var p=t.product||{};
   var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
@@ -161,12 +176,21 @@ async function showShopeeDetail(t){
   html+='<div class="detail-section"><div class="detail-label">规格结构</div><div class="detail-value">'+escapeHtml((p.variation_name1||'无规格')+(p.variation_name2?'/'+p.variation_name2:''))+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">规格值</div><div class="detail-value">'+(v||'无')+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div></div>';
-  html+=await renderPushPlans(t.id);
+  html+=await renderPushPlans(t.id,plansResponse);
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);
 }
 
-function closeDetail(){var el=document.getElementById('detailModal');if(el){el.remove();}}
+function removeDetailModal(){var el=document.getElementById('detailModal');if(el){el.remove();}}
+function showDetailLoading(){
+  removeDetailModal();
+  var overlay=document.createElement('div');
+  overlay.className='modal-overlay show';
+  overlay.id='detailModal';
+  overlay.innerHTML='<div class="modal task-detail-modal" role="dialog" aria-modal="true" aria-busy="true" aria-labelledby="detailLoadingTitle"><div class="modal-header"><div class="modal-title" id="detailLoadingTitle">任务详情</div><button class="modal-close" type="button" onclick="closeDetail()">&times;</button></div><div class="modal-body detail-loading-body"><div class="detail-loading-state"><div class="spinner"></div><strong>正在加载任务详情</strong><span>正在读取任务数据与推送计划</span></div></div></div>';
+  document.body.appendChild(overlay);
+}
+function closeDetail(){detailRequestSequence++;removeDetailModal()}
 
 var imagePreviewTrigger=null;
 function openImagePreview(button){
@@ -254,12 +278,13 @@ function hideBusyOverlays(){
   });
 }
 
-async function withActionLock(key,btn,label,fn){
+async function withActionLock(key,btn,label,fn,options){
   if(activeActionLocks[key]){showToast('该操作正在处理中，请等待服务器响应','info');return}
   activeActionLocks[key]=true;
   setActionButtonLoading(btn,label||'处理中...');
   try{return await withActionTimeout(Promise.resolve().then(fn),ACTION_TIMEOUT_MS)}
   catch(e){
+    if(options&&typeof options.onError==='function'){try{options.onError(e)}catch(_){}}
     if(e&&e.code==='ACTION_TIMEOUT'){hideBusyOverlays();showToast(e.message,'error');return}
     showToast((e&&e.message)||'操作失败','error');
   }finally{
@@ -361,9 +386,7 @@ async function retryFailedPlans(taskId,btn){
 }
 
 async function refreshTaskDetail(taskId,btn){
-  await withActionLock('refresh-detail:'+taskId,btn,'刷新中...',async function(){
-    await viewTask(taskId);
-  });
+  return viewTask(taskId,btn,'刷新中...');
 }
 
 async function deleteTask(taskId,btn){
@@ -530,9 +553,9 @@ async function exportShopeeTemplate(res,taskId){
   XLSX.writeFile(wb,'Shopee_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-async function renderPushPlans(taskId){
-  var res=null;
-  try{res=await API.getPushPlans(taskId)}catch(e){}
+async function renderPushPlans(taskId,preloadedResponse){
+  var res=preloadedResponse;
+  if(res===undefined){try{res=await API.getPushPlans(taskId)}catch(e){res=null}}
   var plans=(res&&res.success)?(res.plans||[]):[];
   var stats=(res&&res.success&&res.stats)?res.stats:{pending:0,processing:0,done:0,failed:0,total:0};
   var html='<div class="detail-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">';
