@@ -363,7 +363,7 @@ ${WEBHOOKS.slice(0,2).map(function(w){
 }).join('')}
 
 <h2 id="图片类">图片类 Webhook 推送体</h2>
-<div class="note"><strong>架构：</strong>主图/封面图(第1张)进入主图工作流，附图(第2~N张)进入附图工作流，每张图独立推送。JST 的 N/M 可设 1~9，默认 5/5；Shopee 固定 N=9、M=0，不构造详情图。两平台去重模式下第 2 套开始只推主图/封面图。Shopee 图片工作流以 900 秒为单次生成截止时间，超时后主动向 Worker 回调 <code>error</code> 并终止轮询；模型、查询和回调 HTTP 节点最多尝试 3 次。</div>
+<div class="note"><strong>架构：</strong>主图/封面图(第1张)进入主图工作流，附图(第2~N张)进入附图工作流，每张图独立推送。JST 的 N/M 可设 1~9，默认 5/5；Shopee 固定 N=9、M=0，不构造详情图。两平台去重模式下第 2 套开始只推主图/封面图。全部 v3 图片工作流以 900 秒为单次生成截止时间；创建请求失败、轮询失败、服务返回失败或成功但没有 URL 时都会主动回调 <code>error</code>。Worker 的 <code>push_plan_timeout_minutes</code> 默认 20 分钟，只用于 n8n 完全没有回调时的最终兜底。</div>
 ${WEBHOOKS.slice(2).map(function(w){
   return '<h4>'+w.name+' → <code>'+w.key+'</code></h4><div class="note">'+w.note+'</div><pre>'+JSON.stringify(w.body,null,2)+'</pre>';
 }).join('')}
