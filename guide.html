@@ -15,6 +15,7 @@
 .guide-section:last-child{border-bottom:0}
 .guide-section h2{font-size:21px;margin:0 0 12px;color:var(--gray-950)}
 .guide-section h3{font-size:16px;margin:22px 0 10px;color:var(--gray-800)}
+#shopee-category-directory{scroll-margin-top:76px}
 .guide-section p,.guide-section li{font-size:14px;line-height:1.8;color:var(--gray-700)}
 .guide-section ul,.guide-section ol{margin:8px 0 8px 22px;padding:0}
 .field-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
@@ -24,8 +25,38 @@
 .ok-box{border:1px solid #c9d7ff;background:#f4f7ff;color:#293b82;border-radius:7px;padding:12px 14px;font-size:13px;line-height:1.7;margin:10px 0}
 .pill{display:inline-block;font-size:11px;border-radius:999px;padding:2px 8px;background:var(--gray-100);color:var(--gray-600);font-weight:700;margin-left:6px}
 code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px}
-@media(max-width:820px){.guide-layout{grid-template-columns:1fr}.guide-side{position:static;display:flex;gap:8px}.guide-tab{text-align:center}.guide-panel.active{padding:2px 20px}}
-@media(max-width:520px){.guide-panel.active{padding:0 15px}.guide-section{padding:23px 0}.field-table{min-width:680px}.guide-section{overflow-x:auto}}
+.category-directory{margin-top:14px;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:#fff}
+.category-toolbar{display:flex;align-items:end;gap:12px;padding:14px;background:var(--gray-50);border-bottom:1px solid var(--gray-200)}
+.category-search{display:grid;gap:6px;min-width:260px;flex:1;color:var(--gray-700);font-size:12px;font-weight:700}
+.category-search input{width:100%;height:38px;padding:0 11px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;color:var(--gray-900);font:inherit;font-weight:500;outline:none}
+.category-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.category-dts-filter{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:#fff}
+.category-filter-button{height:32px;padding:0 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-600);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.category-filter-button.active{background:var(--gray-900);color:#fff}
+.category-message{padding:24px;text-align:center;color:var(--gray-600);font-size:13px}
+.category-message.error{color:#9f2424}
+.category-retry{margin-left:8px;border:0;background:transparent;color:var(--primary);font:inherit;font-weight:700;cursor:pointer}
+.category-table-wrap{overflow:auto}
+.category-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.category-table th{padding:10px 12px;background:#fff;text-align:left;color:var(--gray-600);font-size:11px;text-transform:uppercase}
+.category-table td{padding:11px 12px;border-top:1px solid var(--gray-200);vertical-align:top;color:var(--gray-700);line-height:1.55;overflow-wrap:anywhere}
+.category-table th:nth-child(1){width:126px}.category-table th:nth-child(4){width:112px}
+.category-path-zh{color:var(--gray-900);font-weight:650}
+.category-path-en{color:var(--gray-600)}
+.category-id-button{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:5px 8px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;color:var(--gray-900);font:inherit;font-weight:750;cursor:pointer}
+.category-id-button:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.category-id-button .copy-label{font-size:10px;color:var(--gray-500);font-weight:650}
+.category-id-button.copied{border-color:#2b8a66;background:#eefaf5;color:#176247}
+.category-dts{display:inline-block;padding:3px 7px;border-radius:5px;background:var(--gray-100);color:var(--gray-700);font-size:11px;font-weight:750;white-space:nowrap}
+.category-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-top:1px solid var(--gray-200);background:var(--gray-50)}
+.category-summary{font-size:12px;color:var(--gray-600)}
+.category-pagination{display:flex;align-items:center;gap:8px}
+.category-page-button{height:32px;padding:0 11px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;color:var(--gray-700);font-size:12px;font-weight:700;cursor:pointer}
+.category-page-button:disabled{opacity:.45;cursor:not-allowed}
+.category-page-label{min-width:74px;text-align:center;color:var(--gray-600);font-size:12px;font-weight:650}
+.category-directory [hidden]{display:none!important}
+@media(max-width:820px){.guide-layout{grid-template-columns:1fr}.guide-side{position:static;display:flex;gap:8px}.guide-tab{text-align:center}.guide-panel.active{padding:2px 20px}.category-toolbar{align-items:stretch;flex-direction:column}.category-search{min-width:0}.category-dts-filter{align-self:flex-start}}
+@media(max-width:620px){.guide-panel.active{padding:0 15px}.guide-section{padding:23px 0}.field-table{min-width:680px}.guide-section{overflow-x:auto}#shopee-category-directory{scroll-margin-top:104px}.category-directory{min-width:0}.category-table-wrap{overflow:visible}.category-table,.category-table tbody{display:block}.category-table thead{display:none}.category-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;padding:12px 13px;border-top:1px solid var(--gray-200)}.category-table td{display:block;padding:0;border:0}.category-table td:nth-child(2),.category-table td:nth-child(3){grid-column:1/-1}.category-table td:nth-child(4){grid-column:2;grid-row:1;text-align:right}.category-table td:nth-child(2)::before,.category-table td:nth-child(3)::before{display:block;margin-bottom:2px;color:var(--gray-500);font-size:10px;font-weight:700;text-transform:uppercase;content:attr(data-label)}.category-footer{align-items:stretch;flex-direction:column}.category-pagination{justify-content:space-between}.category-page-button{flex:1}.category-dts-filter{width:100%}.category-filter-button{flex:1;padding:0 6px}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
@@ -149,7 +180,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
-              <tr><td>分类 ID</td><td>建议从 Shopee Seller Center 的 Category Tree 查。</td><td>模板说明：可从 Category Tree 选择；留空时 Shopee 可能推荐类目。准确类目有利于搜索和属性匹配。</td></tr>
+              <tr><td>分类 ID</td><td>在本页 <a href="#shopee-category-directory">Shopee Category ID 中英对照表</a>按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前模板的 <code>Pre-order DTS Range</code> 工作表；留空时 Shopee 可能推荐类目。</td></tr>
               <tr><td>重量(kg)</td><td>在每个 SKU 组合中填写，默认 0.2kg。</td><td>官方模板 Z Weight 单位是 g，系统逐 SKU 从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
               <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
@@ -169,8 +200,41 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           <h2>分类 ID 和品牌</h2>
           <h3>分类 ID 是什么</h3>
           <p>分类 ID 是 Shopee 平台的类目编码，不是系统自定义字段。官方模板提示应从 Seller Center 的 Category Tree 选择分类 ID；准确分类有利于搜索结果和后续类目属性匹配。</p>
-          <div class="note-box">官方样例中出现过 <code>120039</code>、<code>120055</code> 这类数字，但样例不是通用类目映射表，不要直接复制。实际类目应以当前站点 Seller Center 下载的 Category Tree 或类目模板为准。</div>
+          <div class="note-box">下表完整收录 <code>Shopee_mass_upload_2026-07-14_basic_template.xlsx</code> 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
           <p>如果暂时不知道分类 ID，可以留空。官方模板写明系统会推荐类目；但留空会降低可控性，类目属性、物流、价格限制可能需要上传后再处理。</p>
+
+          <h3 id="shopee-category-directory">Shopee Category ID 中英对照表</h3>
+          <div class="category-directory" aria-labelledby="shopee-category-directory">
+            <div class="category-toolbar">
+              <label class="category-search" for="categorySearch">
+                <span>搜索 Category ID / 中文 / English</span>
+                <input type="search" id="categorySearch" placeholder="例如：100916、宠物、Bowls & Feeders" autocomplete="off">
+              </label>
+              <div class="category-dts-filter" aria-label="Pre-order DTS 筛选">
+                <button type="button" class="category-filter-button active" data-category-dts="" aria-pressed="true">全部 DTS</button>
+                <button type="button" class="category-filter-button" data-category-dts="5 - 15" aria-pressed="false">5–15 天</button>
+                <button type="button" class="category-filter-button" data-category-dts="5 - 30" aria-pressed="false">5–30 天</button>
+              </div>
+            </div>
+            <div class="category-message" id="categoryMessage" role="status" aria-live="polite">
+              <span id="categoryMessageText">切换到 Shopee 说明后加载类目数据</span>
+              <button type="button" class="category-retry" id="categoryRetry" hidden>重新加载</button>
+            </div>
+            <div class="category-table-wrap" id="categoryTableWrap" hidden>
+              <table class="category-table">
+                <thead><tr><th>Category ID</th><th>中文类目</th><th>English Category</th><th>Pre-order DTS</th></tr></thead>
+                <tbody id="categoryTableBody"></tbody>
+              </table>
+            </div>
+            <div class="category-footer" id="categoryFooter" hidden>
+              <div class="category-summary" id="categorySummary" aria-live="polite"></div>
+              <div class="category-pagination">
+                <button type="button" class="category-page-button" id="categoryPrevious">上一页</button>
+                <span class="category-page-label" id="categoryPageLabel"></span>
+                <button type="button" class="category-page-button" id="categoryNext">下一页</button>
+              </div>
+            </div>
+          </div>
 
           <h3>品牌和“无品牌”</h3>
           <p>当前系统导出使用 Shopee 2026-07-14 basic template 的 A~AL 列，这个模板没有 Brand 列，因此创建页不要求品牌 ID，也不会在导出的 Excel 中虚构品牌。</p>
@@ -214,11 +278,171 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
   </div>
 </div>
 <script>
+var shopeeCategoryState={items:[],filtered:[],page:1,pageSize:25,dts:'',loaded:false,loading:false};
+
 function showGuide(tab){
   var tabs=document.querySelectorAll('.guide-tab');
   var panels=document.querySelectorAll('.guide-panel');
   for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i].dataset.tab===tab);
   for(var j=0;j<panels.length;j++)panels[j].classList.toggle('active',panels[j].id==='guide-'+tab);
+  if(tab==='shopee')loadShopeeCategories();
 }
+
+function setCategoryMessage(message,isError){
+  var container=document.getElementById('categoryMessage');
+  document.getElementById('categoryMessageText').textContent=message;
+  container.classList.toggle('error',!!isError);
+  container.hidden=false;
+  document.getElementById('categoryRetry').hidden=!isError;
+}
+
+async function loadShopeeCategories(){
+  if(shopeeCategoryState.loaded||shopeeCategoryState.loading)return;
+  shopeeCategoryState.loading=true;
+  setCategoryMessage('正在读取 1817 个 Shopee 类目…',false);
+  try{
+    var response=await fetch('/data/shopee-categories.json?v=20260714',{cache:'force-cache'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    var payload=await response.json();
+    if(!payload||!Array.isArray(payload.categories)||payload.categories.length!==payload.count)throw new Error('类目数据格式无效');
+    shopeeCategoryState.items=payload.categories;
+    shopeeCategoryState.loaded=true;
+    filterShopeeCategories();
+  }catch(error){
+    setCategoryMessage('类目数据加载失败：'+error.message,true);
+  }finally{
+    shopeeCategoryState.loading=false;
+  }
+}
+
+function filterShopeeCategories(){
+  if(!shopeeCategoryState.loaded)return;
+  var query=document.getElementById('categorySearch').value.trim().toLocaleLowerCase();
+  var dts=shopeeCategoryState.dts;
+  shopeeCategoryState.filtered=shopeeCategoryState.items.filter(function(item){
+    if(dts&&item[3]!==dts)return false;
+    return !query||item[0].includes(query)||item[1].toLocaleLowerCase().includes(query)||item[2].toLocaleLowerCase().includes(query);
+  });
+  shopeeCategoryState.page=1;
+  renderShopeeCategories();
+}
+
+function createCategoryCell(label,text,className){
+  var cell=document.createElement('td');
+  cell.dataset.label=label;
+  cell.textContent=text;
+  if(className)cell.className=className;
+  return cell;
+}
+
+function renderShopeeCategories(){
+  var items=shopeeCategoryState.filtered;
+  var pageCount=Math.max(1,Math.ceil(items.length/shopeeCategoryState.pageSize));
+  shopeeCategoryState.page=Math.min(shopeeCategoryState.page,pageCount);
+  var start=(shopeeCategoryState.page-1)*shopeeCategoryState.pageSize;
+  var visible=items.slice(start,start+shopeeCategoryState.pageSize);
+  var body=document.getElementById('categoryTableBody');
+  var fragment=document.createDocumentFragment();
+  body.textContent='';
+  visible.forEach(function(item){
+    var row=document.createElement('tr');
+    var idCell=document.createElement('td');
+    var button=document.createElement('button');
+    var copyLabel=document.createElement('span');
+    button.type='button';
+    button.className='category-id-button';
+    button.dataset.categoryId=item[0];
+    button.title='复制 Category ID '+item[0];
+    button.setAttribute('aria-label','复制 Category ID '+item[0]);
+    button.appendChild(document.createTextNode(item[0]));
+    copyLabel.className='copy-label';
+    copyLabel.textContent='复制';
+    button.appendChild(copyLabel);
+    idCell.appendChild(button);
+    row.appendChild(idCell);
+    row.appendChild(createCategoryCell('中文类目',item[1],'category-path-zh'));
+    row.appendChild(createCategoryCell('English Category',item[2],'category-path-en'));
+    var dtsCell=createCategoryCell('Pre-order DTS',item[3].replace(' - ','–')+' 天');
+    dtsCell.classList.add('category-dts-cell');
+    var dtsBadge=document.createElement('span');
+    dtsBadge.className='category-dts';
+    dtsBadge.textContent=dtsCell.textContent;
+    dtsCell.textContent='';
+    dtsCell.appendChild(dtsBadge);
+    row.appendChild(dtsCell);
+    fragment.appendChild(row);
+  });
+  body.appendChild(fragment);
+  document.getElementById('categoryMessage').hidden=items.length>0;
+  if(items.length===0)setCategoryMessage('没有匹配的 Category ID，请更换关键词或 DTS 范围。',false);
+  document.getElementById('categoryTableWrap').hidden=items.length===0;
+  document.getElementById('categoryFooter').hidden=items.length===0;
+  document.getElementById('categorySummary').textContent='找到 '+items.length+' 个类目，每页 '+shopeeCategoryState.pageSize+' 条';
+  document.getElementById('categoryPageLabel').textContent=shopeeCategoryState.page+' / '+pageCount;
+  document.getElementById('categoryPrevious').disabled=shopeeCategoryState.page<=1;
+  document.getElementById('categoryNext').disabled=shopeeCategoryState.page>=pageCount;
+}
+
+async function copyShopeeCategoryId(categoryId,button){
+  try{
+    var copied=false;
+    if(navigator.clipboard&&window.isSecureContext){
+      try{
+        await navigator.clipboard.writeText(categoryId);
+        copied=true;
+      }catch(error){}
+    }
+    if(!copied){
+      var input=document.createElement('textarea');
+      input.value=categoryId;
+      input.style.position='fixed';
+      input.style.opacity='0';
+      document.body.appendChild(input);
+      input.select();
+      copied=document.execCommand('copy');
+      input.remove();
+    }
+    if(!copied)throw new Error('浏览器拒绝复制');
+    button.classList.add('copied');
+    button.querySelector('.copy-label').textContent='已复制';
+    showToast('已复制 Category ID：'+categoryId,'success');
+    setTimeout(function(){
+      button.classList.remove('copied');
+      var label=button.querySelector('.copy-label');
+      if(label)label.textContent='复制';
+    },1600);
+  }catch(error){
+    showToast('复制失败，请手动选择 ID','error');
+  }
+}
+
+document.getElementById('categorySearch').addEventListener('input',filterShopeeCategories);
+document.querySelector('.category-dts-filter').addEventListener('click',function(event){
+  var button=event.target.closest('[data-category-dts]');
+  if(!button)return;
+  shopeeCategoryState.dts=button.dataset.categoryDts;
+  var buttons=document.querySelectorAll('[data-category-dts]');
+  for(var i=0;i<buttons.length;i++){
+    var active=buttons[i]===button;
+    buttons[i].classList.toggle('active',active);
+    buttons[i].setAttribute('aria-pressed',active?'true':'false');
+  }
+  filterShopeeCategories();
+});
+document.getElementById('categoryTableBody').addEventListener('click',function(event){
+  var button=event.target.closest('[data-category-id]');
+  if(button)copyShopeeCategoryId(button.dataset.categoryId,button);
+});
+document.getElementById('categoryPrevious').addEventListener('click',function(){
+  if(shopeeCategoryState.page>1){shopeeCategoryState.page--;renderShopeeCategories();}
+});
+document.getElementById('categoryNext').addEventListener('click',function(){
+  var pageCount=Math.ceil(shopeeCategoryState.filtered.length/shopeeCategoryState.pageSize);
+  if(shopeeCategoryState.page<pageCount){shopeeCategoryState.page++;renderShopeeCategories();}
+});
+document.getElementById('categoryRetry').addEventListener('click',function(){
+  shopeeCategoryState.loading=false;
+  loadShopeeCategories();
+});
 </script>
 </body></html>
