@@ -603,7 +603,6 @@ async function renderPushPlans(taskId,preloadedResponse){
 function planTypeLabel(type){
   type=type||'';
   if(type==='title')return '商品标题';
-  if(type==='sku_title')return 'SKU标题';
   if(type==='main_1'||type==='main')return '封面图';
   if(type.indexOf('sub_')===0)return '附图 '+type.split('_')[1];
   if(type.indexOf('detail_')===0)return '详情图 '+type.split('_')[1];

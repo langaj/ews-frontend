@@ -286,9 +286,7 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>workflow_type</code></td><td>推送计划类型；系统推送时自动提供，错误回调必须原样带回</td></tr>
 <tr><td><code>sub_task_id</code></td><td>子任务ID；图片回调必填，直接从推送体原样带回</td></tr>
 <tr><td><code>set_index</code></td><td>子任务索引；建议原样带回，系统会以 <code>sub_task_id</code> 查询出的索引为准并自动校准</td></tr>
-<tr><td><code>titles</code></td><td>[string] 标题数组，按索引匹配子任务</td></tr>
-<tr><td><code>product_title</code></td><td>string 单个标题，应用到全部</td></tr>
-<tr><td><code>sku_titles</code></td><td>JST 新版放在每个 products 元素内：<code>[{variant_id,title}]</code>；顶层字符串数组仅兼容旧计划</td></tr>
+<tr><td><code>sku_titles</code></td><td>仅用于 JST 的每个 <code>products</code> 元素：<code>[{variant_id,title}]</code>；不接受顶层字段</td></tr>
 <tr><td><code>products</code></td><td>JST：<code>[{sub_task_id,product_title,recommended_copy,product_description,sku_titles}]</code>；Shopee：<code>[{sub_task_id,product_name,product_description}]</code></td></tr>
 <tr><td><code>variation_labels</code></td><td>Shopee 规格标签：<code>{name1,name2,values:[{id,option1,option2}]}</code>；无规格商品传空名称和空数组</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
