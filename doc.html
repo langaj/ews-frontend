@@ -189,7 +189,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。同一一级规格只能使用一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
+<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。规格商品的每个一级规格必须且只能上传一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
   "name": "必填内部任务备注（不进入Shopee工作流）",
@@ -229,7 +229,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。<code>variation_image_mode=upload</code> 直接导出 <code>image_per_variation</code>，<code>ai</code> 才构造 SKU 图片工作流。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
+<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。规格商品的每个一级规格必须且只能上传一张 <code>image_per_variation</code>：<code>variation_image_mode=upload</code> 直接导出该 URL，<code>ai</code> 才构造 SKU 图片工作流并将其作为参考图。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>

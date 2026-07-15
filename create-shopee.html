@@ -166,7 +166,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                     <label><input type="radio" name="imageMode" value="upload" checked onchange="setImageMode(this.value)"><span>自上传</span></label>
                     <label><input type="radio" name="imageMode" value="ai" onchange="setImageMode(this.value)"><span>AI 生成</span></label>
                   </div>
-                  <div class="form-hint">自上传图片直接写入模板；AI 模式才创建 SKU 图片工作流。</div>
+                  <div class="form-hint">两种模式均须上传；自上传图直接写入模板，AI 模式将上传图作为参考。</div>
                 </div>
               </div>
               <div class="option-toolbar"><h3>一级规格值</h3><button type="button" class="icon-command" onclick="addPrimaryOption()"><span aria-hidden="true">+</span> 添加规格值</button></div>
@@ -317,7 +317,7 @@ function renderPrimaryOptions(){
   var container=document.getElementById('primaryOptions');if(!container)return;
   container.innerHTML=primaryOptions.map(function(option,index){
     var aiMode=imageMode==='ai';var upload='<label class="mini-upload'+(option.preview?' has-image':'')+'"><input type="file" accept="image/*" hidden onchange="handlePrimaryFile(event,\''+option.id+'\')"><img src="'+option.preview+'" alt="规格图片"><span class="mini-upload-text">'+(option.file?escapeHtml(option.file.name):(aiMode?'上传 AI 参考图':'上传最终 SKU 图片'))+'</span></label>';
-    return '<div class="option-row"><div class="form-group"><label class="form-label">规格值 '+(index+1)+'</label><input class="form-input" maxlength="20" value="'+escapeHtml(option.value)+'" placeholder="如：蓝色" oninput="updatePrimaryValue(\''+option.id+'\',this.value)"></div><div class="form-group"><label class="form-label">'+(aiMode?'SKU 参考图 <span class="required">*</span>':'SKU 成品图 <span class="optional">(可选)</span>')+'</label>'+upload+'</div><button type="button" class="remove-option" aria-label="删除规格值" onclick="removePrimaryOption(\''+option.id+'\')">×</button></div>';
+    return '<div class="option-row"><div class="form-group"><label class="form-label">规格值 '+(index+1)+'</label><input class="form-input" maxlength="20" value="'+escapeHtml(option.value)+'" placeholder="如：蓝色" oninput="updatePrimaryValue(\''+option.id+'\',this.value)"></div><div class="form-group"><label class="form-label">'+(aiMode?'SKU 参考图':'SKU 成品图')+' <span class="required">*</span></label>'+upload+'</div><button type="button" class="remove-option" aria-label="删除规格值" onclick="removePrimaryOption(\''+option.id+'\')">×</button></div>';
   }).join('');
 }
 
@@ -360,7 +360,7 @@ function validateModel(){
   if(productType!=='single'){
     var name1=document.getElementById('variationName1').value.trim();if(!name1||name1.length>14)return'一级规格名必须为1-14字符';
     var primaryValues=primaryOptions.map(function(option){return option.value.trim()}).filter(Boolean);if(!primaryValues.length)return'请填写一级规格值';if(new Set(primaryValues.map(function(value){return value.toLowerCase()})).size!==primaryValues.length)return'一级规格值不能重复';
-    if(imageMode==='ai'&&primaryOptions.some(function(option){return option.value.trim()&&!option.file}))return'AI 生成模式下，每个一级规格值都要上传参考图';
+    if(primaryOptions.some(function(option){return option.value.trim()&&!option.file}))return imageMode==='ai'?'AI 生成模式下，每个一级规格值都要上传参考图':'自上传模式下，每个一级规格值都要上传 SKU 成品图';
     if(productType==='two'){var name2=document.getElementById('variationName2').value.trim();var tier2=parseValues(document.getElementById('tier2Values').value);if(!name2||name2.length>14)return'二级规格名必须为1-14字符';if(!tier2.length)return'请填写二级规格值';if(combinations.length>50)return'二维规格最多50个 SKU 组合'}
   }
   var lows=[];var highs=[];
