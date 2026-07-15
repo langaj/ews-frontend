@@ -55,7 +55,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
 .category-page-button:disabled{opacity:.45;cursor:not-allowed}
 .category-page-label{min-width:74px;text-align:center;color:var(--gray-600);font-size:12px;font-weight:650}
 .category-directory [hidden]{display:none!important}
-@media(max-width:820px){.guide-layout{grid-template-columns:1fr}.guide-side{position:static;display:flex;gap:8px}.guide-tab{text-align:center}.guide-panel.active{padding:2px 20px}.category-toolbar{align-items:stretch;flex-direction:column}.category-search{min-width:0}.category-dts-filter{align-self:flex-start}}
+@media(max-width:820px){.guide-layout{grid-template-columns:1fr}.guide-side{position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.guide-tab{padding:10px 6px;text-align:center;font-size:12px}.guide-panel.active{padding:2px 20px}.category-toolbar{align-items:stretch;flex-direction:column}.category-search{min-width:0}.category-dts-filter{align-self:flex-start}}
 @media(max-width:620px){.guide-panel.active{padding:0 15px}.guide-section{padding:23px 0}.field-table{min-width:680px}.guide-section{overflow-x:auto}#shopee-category-directory{scroll-margin-top:104px}.category-directory{min-width:0}.category-table-wrap{overflow:visible}.category-table,.category-table tbody{display:block}.category-table thead{display:none}.category-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 10px;padding:12px 13px;border-top:1px solid var(--gray-200)}.category-table td{display:block;padding:0;border:0}.category-table td:nth-child(2),.category-table td:nth-child(3){grid-column:1/-1}.category-table td:nth-child(4){grid-column:2;grid-row:1;text-align:right}.category-table td:nth-child(2)::before,.category-table td:nth-child(3)::before{display:block;margin-bottom:2px;color:var(--gray-500);font-size:10px;font-weight:700;text-transform:uppercase;content:attr(data-label)}.category-footer{align-items:stretch;flex-direction:column}.category-pagination{justify-content:space-between}.category-page-button{flex:1}.category-dts-filter{width:100%}.category-filter-button{flex:1;padding:0 6px}}
 </style>
 </head><body>
@@ -71,6 +71,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
     <aside class="guide-side">
       <button class="guide-tab active" data-tab="jst" onclick="showGuide('jst')">国内/聚水潭</button>
       <button class="guide-tab" data-tab="shopee" onclick="showGuide('shopee')">Shopee/虾皮</button>
+      <button class="guide-tab" data-tab="category" onclick="showGuide('category')">Shopee/分类ID</button>
     </aside>
     <main class="guide-content">
       <section class="guide-panel active" id="guide-jst">
@@ -180,7 +181,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
-              <tr><td>分类 ID</td><td>在本页 <a href="#shopee-category-directory">Shopee Category ID 中英对照表</a>按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前模板的 <code>Pre-order DTS Range</code> 工作表；留空时 Shopee 可能推荐类目。</td></tr>
+              <tr><td>分类 ID</td><td>进入左侧 <a href="#shopee-category-directory" onclick="showGuide('category')">Shopee/分类ID</a>，按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前模板的 <code>Pre-order DTS Range</code> 工作表；留空时 Shopee 可能推荐类目。</td></tr>
               <tr><td>重量(kg)</td><td>在每个 SKU 组合中填写，默认 0.2kg。</td><td>官方模板 Z Weight 单位是 g，系统逐 SKU 从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
               <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
@@ -197,46 +198,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
         </div>
 
         <div class="guide-section">
-          <h2>分类 ID 和品牌</h2>
-          <h3>分类 ID 是什么</h3>
-          <p>分类 ID 是 Shopee 平台的类目编码，不是系统自定义字段。官方模板提示应从 Seller Center 的 Category Tree 选择分类 ID；准确分类有利于搜索结果和后续类目属性匹配。</p>
-          <div class="note-box">下表完整收录 <code>Shopee_mass_upload_2026-07-14_basic_template.xlsx</code> 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
-          <p>如果暂时不知道分类 ID，可以留空。官方模板写明系统会推荐类目；但留空会降低可控性，类目属性、物流、价格限制可能需要上传后再处理。</p>
-
-          <h3 id="shopee-category-directory">Shopee Category ID 中英对照表</h3>
-          <div class="category-directory" aria-labelledby="shopee-category-directory">
-            <div class="category-toolbar">
-              <label class="category-search" for="categorySearch">
-                <span>搜索 Category ID / 中文 / English</span>
-                <input type="search" id="categorySearch" placeholder="例如：100916、宠物、Bowls & Feeders" autocomplete="off">
-              </label>
-              <div class="category-dts-filter" aria-label="Pre-order DTS 筛选">
-                <button type="button" class="category-filter-button active" data-category-dts="" aria-pressed="true">全部 DTS</button>
-                <button type="button" class="category-filter-button" data-category-dts="5 - 15" aria-pressed="false">5–15 天</button>
-                <button type="button" class="category-filter-button" data-category-dts="5 - 30" aria-pressed="false">5–30 天</button>
-              </div>
-            </div>
-            <div class="category-message" id="categoryMessage" role="status" aria-live="polite">
-              <span id="categoryMessageText">切换到 Shopee 说明后加载类目数据</span>
-              <button type="button" class="category-retry" id="categoryRetry" hidden>重新加载</button>
-            </div>
-            <div class="category-table-wrap" id="categoryTableWrap" hidden>
-              <table class="category-table">
-                <thead><tr><th>Category ID</th><th>中文类目</th><th>English Category</th><th>Pre-order DTS</th></tr></thead>
-                <tbody id="categoryTableBody"></tbody>
-              </table>
-            </div>
-            <div class="category-footer" id="categoryFooter" hidden>
-              <div class="category-summary" id="categorySummary" aria-live="polite"></div>
-              <div class="category-pagination">
-                <button type="button" class="category-page-button" id="categoryPrevious">上一页</button>
-                <span class="category-page-label" id="categoryPageLabel"></span>
-                <button type="button" class="category-page-button" id="categoryNext">下一页</button>
-              </div>
-            </div>
-          </div>
-
-          <h3>品牌和“无品牌”</h3>
+          <h2>品牌和“无品牌”</h2>
           <p>当前系统导出使用 Shopee 2026-07-14 basic template 的 A~AL 列，这个模板没有 Brand 列，因此创建页不要求品牌 ID，也不会在导出的 Excel 中虚构品牌。</p>
           <p>Shopee 的类目专用模板或样例表里 Brand 通常要求填写 valid brand 或 no brand；样例规则还写明：可查品牌表的 valid brand id，或者留空后在 attributes tool 里补属性值。</p>
           <div class="note-box">本仓库这份官方模板的隐藏品牌表没有可读品牌清单，也没有给出统一的“无品牌 ID”。因此系统不会默认填一个无品牌 ID。后续切换类目专用模板时，应从 Seller Center 或官方模板品牌表选择有效品牌或 no brand。</div>
@@ -274,6 +236,45 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           </ul>
         </div>
       </section>
+
+      <section class="guide-panel" id="guide-category">
+        <div class="guide-section">
+          <h2 id="shopee-category-directory">Shopee Category ID 中英对照表</h2>
+          <p>Category ID 是 Shopee 平台类目编码，不是系统自定义字段。准确类目有利于搜索结果和后续类目属性匹配；如果暂时无法确认，可以留空让 Shopee 推荐，但上传后可能还需要调整类目属性、物流或价格限制。</p>
+          <div class="note-box">本页完整收录 <code>Shopee_mass_upload_2026-07-14_basic_template.xlsx</code> 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
+          <div class="category-directory" aria-labelledby="shopee-category-directory">
+            <div class="category-toolbar">
+              <label class="category-search" for="categorySearch">
+                <span>搜索 Category ID / 中文 / English</span>
+                <input type="search" id="categorySearch" placeholder="例如：100916、宠物、Bowls & Feeders" autocomplete="off">
+              </label>
+              <div class="category-dts-filter" aria-label="Pre-order DTS 筛选">
+                <button type="button" class="category-filter-button active" data-category-dts="" aria-pressed="true">全部 DTS</button>
+                <button type="button" class="category-filter-button" data-category-dts="5 - 15" aria-pressed="false">5–15 天</button>
+                <button type="button" class="category-filter-button" data-category-dts="5 - 30" aria-pressed="false">5–30 天</button>
+              </div>
+            </div>
+            <div class="category-message" id="categoryMessage" role="status" aria-live="polite">
+              <span id="categoryMessageText">打开 Shopee/分类ID 后加载类目数据</span>
+              <button type="button" class="category-retry" id="categoryRetry" hidden>重新加载</button>
+            </div>
+            <div class="category-table-wrap" id="categoryTableWrap" hidden>
+              <table class="category-table">
+                <thead><tr><th>Category ID</th><th>中文类目</th><th>English Category</th><th>Pre-order DTS</th></tr></thead>
+                <tbody id="categoryTableBody"></tbody>
+              </table>
+            </div>
+            <div class="category-footer" id="categoryFooter" hidden>
+              <div class="category-summary" id="categorySummary" aria-live="polite"></div>
+              <div class="category-pagination">
+                <button type="button" class="category-page-button" id="categoryPrevious">上一页</button>
+                <span class="category-page-label" id="categoryPageLabel"></span>
+                <button type="button" class="category-page-button" id="categoryNext">下一页</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </div>
@@ -285,7 +286,7 @@ function showGuide(tab){
   var panels=document.querySelectorAll('.guide-panel');
   for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i].dataset.tab===tab);
   for(var j=0;j<panels.length;j++)panels[j].classList.toggle('active',panels[j].id==='guide-'+tab);
-  if(tab==='shopee')loadShopeeCategories();
+  if(tab==='category')loadShopeeCategories();
 }
 
 function setCategoryMessage(message,isError){
