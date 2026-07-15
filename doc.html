@@ -96,7 +96,7 @@ const WEBHOOKS = [
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
-  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'一级规格值',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'一级规格索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'JST和Shopee都按唯一一级规格推送并复用到二级组合；none模式不推送SKU图，工作流只需使用sku_image'},
+  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'一级规格值',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'一级规格索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅 variation_image_mode=ai 时推送；JST和Shopee都按唯一一级规格生成并复用到二级组合，工作流统一使用sku_image作为参考图'},
 ];
 
 const SIDEBAR_HTML = SIDEBAR.map(function(s){return s.s?'<div class="sec-title">'+s.t+'</div>':'<a href="#'+s.t+'">'+s.t+'</a>'}).join('');
@@ -144,7 +144,7 @@ Cookie: ews_token={token}</pre>
 <h2 id="配置">配置管理</h2>
 ${eps(['GET /api/config','PUT /api/config'])}
 <div class="note"><strong>分平台配置：</strong>通过 <code>?platform=jst|shopee</code> 参数区分平台。更新时传 <code>_platform</code> 字段指定平台。<br>通用配置（如 r2_public_url、callback_secret）使用 <code>platform=''</code>，各平台的 webhook 地址通过 platform 参数隔离。推送体保持通用字段，系统内部根据 <code>task_id</code> 选择平台和对应 webhook 地址。</div>
-<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code> 控制当前平台的商品元数据，JST 的商品标题、推荐文案、商品描述与 SKU 标题由同一工作流生成；<code>n8n_sku_image_enabled</code> 控制 SKU 图片。关闭后系统不构造对应计划，并暂停同类 pending 计划；重新开启后继续释放。开启但 Webhook 地址为空时，推送接口直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会跳过元数据、详情图和SKU图片。</div>
+<div class="note"><strong>n8n 开关：</strong><code>n8n_title_enabled</code> 控制当前平台的商品元数据，JST 的商品标题、推荐文案、商品描述与 SKU 标题由同一工作流生成；<code>n8n_sku_image_enabled</code> 只控制 <code>variation_image_mode=ai</code> 的 SKU 图片。自上传模式不构造 SKU 图片计划。关闭后系统不构造对应计划，并暂停同类 pending 计划；重新开启后继续释放。开启但 Webhook 地址为空时，推送接口直接返回配置错误。<code>push_primary_images_only=true</code> 是最高优先级总开关，会跳过元数据、详情图和SKU图片。</div>
 
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
@@ -169,7 +169,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "stock": 999,
   "weight": 1,
   "product_type": "single|one|two",
-  "variation_image_mode": "option1|none",
+  "variation_image_mode": "upload|ai",
   "variants": [{
     "tier1_name": "颜色",
     "tier1_value": "红色",
@@ -189,7 +189,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。同一一级规格只能使用一张 <code>sku_image</code>，系统会将生成后的 SKU 图片复用到该一级规格下全部二级规格。</div>
+<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。同一一级规格只能使用一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
   "name": "必填内部任务备注（不进入Shopee工作流）",
@@ -205,13 +205,12 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "detail_image_count": 0,
   "category_id": "",
   "gtin": "",
-  "weight_kg": 1,
   "length_cm": null,
   "width_cm": null,
   "height_cm": null,
   "variation_name1": "Color",
   "variation_name2": "",
-  "variation_image_mode": "option1|none",
+  "variation_image_mode": "upload|ai",
   "size_chart_template_id": "",
   "size_chart_image": "",
   "pre_order_dts": null,
@@ -222,6 +221,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "image_per_variation": "R2 URL",
     "price": 1000,
     "stock": 999,
+    "weight_kg": 0.2,
     "sku": "RED",
     "price_float_enabled": 0,
     "price_min": null,
@@ -229,7 +229,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>product_type=single</code> 仍传一条仅用于价格、库存和 SKU 的记录，但规格名和值必须为空。</div>
+<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。<code>variation_image_mode=upload</code> 直接导出 <code>image_per_variation</code>，<code>ai</code> 才构造 SKU 图片工作流。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>
@@ -263,13 +263,13 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
-<div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划。商品元数据按动态批次一次生成每套商品标题、推荐文案、商品描述和全部 SKU 标题；每个批次以 <code>plan_id</code> 精确回调，并通过 JSON1 批量写入 D1。SKU 图片只按唯一一级规格生成，二维规格复用一级规格图。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余附图/详情图/SKU图在导出时复用第 1 套。</div>
+<div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划。商品元数据按动态批次一次生成每套商品标题、推荐文案、商品描述和全部 SKU 标题；每个批次以 <code>plan_id</code> 精确回调，并通过 JSON1 批量写入 D1。AI 模式的 SKU 图片只按唯一一级规格生成，二维规格复用一级规格图；自上传模式不创建 SKU 图片计划。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余 AI 附图/详情图/SKU图在导出时复用第 1 套。</div>
 <div class="note"><strong>失败重试：</strong>网络异常、HTTP 408/425/429/5xx、900秒无回调及工作流临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>processing</code> 计划拒绝重复提交。</div>
 <div class="note"><strong>阶段性图片优先：</strong>当 <code>push_primary_images_only=true</code> 时，系统只构造 <code>main/main_1</code> 和 <code>sub_*</code> 主图/附图计划；商品元数据、详情图、SKU图不会创建计划。关闭总开关只影响之后重新推送或重新生成的任务，不会自动补建已有任务计划。</div>
 
 <h2 id="Shopee商品">Shopee 商品</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
-<div class="note"><strong>Shopee 推送：</strong>任务支持商品元数据、封面图、附图和可选 SKU 图工作流，不构造 SKU 标题与详情图计划。商品图固定为 9 张（1封面+8附图），<code>detail_image_count</code> 固定为 0。去重模式下每套仍生成独立封面，第 2 套开始复用第 1 套的 8 张附图与 SKU 图。</div>
+<div class="note"><strong>Shopee 推送：</strong>任务支持商品元数据、封面图、附图和 AI 模式的 SKU 图工作流，不构造 SKU 标题与详情图计划。自上传模式直接保存并导出 R2 SKU 图片 URL，不创建 SKU 图片计划。商品图固定为 9 张（1封面+8附图），<code>detail_image_count</code> 固定为 0。去重模式下每套仍生成独立封面，第 2 套开始复用第 1 套的 8 张附图与 AI SKU 图。</div>
 <div class="note"><strong>商品元数据：</strong>工作流按“主关键词 + 副关键词 + 长尾词 + 属性词”生成每套自然越南语 Product Name，同时生成 100~3000 字符 Product Description，并将用户规格规范为模板的 Variation Name / Option。规格标签是商品属性，不是营销式 SKU 标题；同一一级规格在二维组合中必须保持相同标签。</div>
 
 <h2 id="回调">回调接口</h2>
@@ -384,12 +384,12 @@ ${WEBHOOKS.slice(2).map(function(w){
 <h2 id="聚水潭导出">聚水潭导出格式（22列）</h2>
 <p>导出接口 <code>GET /api/tasks/:id/export</code> 为 JST 任务时返回 <code>export_format:'jst'</code> 和二维 <code>rows</code>。前端载入 <code>/templates/聚水潭_商品模板.xlsx</code>，保留第 1 行说明和第 2 行表头，从第 3 行写入：</p>
 <pre>款式编码 | 商品编码 | 颜色 | 规格 | 商品主图(JSON数组) | 商品详情图(JSON数组) | 图片地址 | 商品名称 | 推荐文案 | 商品描述 | 宝贝链接 | 库存 | 重量(kg) | 基本售价 | 市场/吊牌价 | 最低分销控价 | 最高分销控价 | 供应商名 | 3:4主图 | 长图 | 透明素材图 | 白底图</pre>
-<div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量、基本售价、市场价保持数值类型。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的元数据或图片会阻断；管理员关闭商品元数据或 SKU 图片工作流时，相关可选列使用用户规格值或留空。去重模式第 2 套开始复用第 1 套的附图、详情图和 SKU 图。</div>
+<div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量、基本售价、市场价保持数值类型。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的元数据或图片会阻断。SKU 图片自上传模式直接使用 <code>sku_image</code>，AI 模式使用生成图。去重模式第 2 套开始复用第 1 套的 AI 附图、详情图和 SKU 图。</div>
 
 <h2 id="Shopee导出">Shopee 导出格式（A~AL 38列）</h2>
 <p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入 2026-07-14 官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
 <pre>Category | Product Name | Product Description | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5000) | Shipping(5001) | Shipping(5004) | Shipping(5012) | Shipping(50039) | Shipping(50052) | Shipping(50053) | Pre-order DTS | Fail Reason</pre>
-<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，启用规格图时每个一级规格必须有 SKU 变体图。无规格商品的 E~J 规格列留空。2026-07-14 basic template 已移除 4 个限购字段和物流渠道 5115，并新增渠道 50053；模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
+<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。无规格商品的 E~J 规格列留空。2026-07-14 basic template 已移除 4 个限购字段和物流渠道 5115，并新增渠道 50053；模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>

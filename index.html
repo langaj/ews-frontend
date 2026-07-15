@@ -163,7 +163,8 @@ async function showJstDetail(t,plansResponse){
   html+='<div class="detail-section"><div class="detail-label">生成模式</div><div class="detail-value">'+escapeHtml(t.mode||'full')+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">子任务进度</div><div class="detail-value">'+done+' / '+(t.sub_tasks||[]).length+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">图片配置</div><div class="detail-value">'+(t.main_image_count||5)+' 主图，'+(t.detail_image_count||5)+' 详情图</div></div></div>';
-  html+='<div class="detail-grid"><div class="detail-section"><div class="detail-label">商品结构</div><div class="detail-value">'+typeLabel+'</div></div><div class="detail-section"><div class="detail-label">模板行数</div><div class="detail-value">'+((t.generate_count||1)*(t.variants||[]).length)+'</div></div><div class="detail-section"><div class="detail-label">供应商</div><div class="detail-value">'+escapeHtml(t.supplier_name||'未填写')+'</div></div><div class="detail-section"><div class="detail-label">SKU 图片模式</div><div class="detail-value">'+(t.variation_image_mode==='none'?'不生成':'按一级规格生成')+'</div></div></div>';
+  var skuImageMode=t.variation_image_mode==='ai'||t.variation_image_mode==='option1'?'AI 生成':t.variation_image_mode==='upload'?'自上传':'无规格';
+  html+='<div class="detail-grid"><div class="detail-section"><div class="detail-label">商品结构</div><div class="detail-value">'+typeLabel+'</div></div><div class="detail-section"><div class="detail-label">模板行数</div><div class="detail-value">'+((t.generate_count||1)*(t.variants||[]).length)+'</div></div><div class="detail-section"><div class="detail-label">供应商</div><div class="detail-value">'+escapeHtml(t.supplier_name||'未填写')+'</div></div><div class="detail-section"><div class="detail-label">SKU 图片模式</div><div class="detail-value">'+skuImageMode+'</div></div></div>';
   html+=await renderPushPlans(t.id,plansResponse);
   if(t.variants) html+='<div class="detail-section"><div class="detail-label">SKU 组合 ('+t.variants.length+'个)</div><div class="detail-value">'+t.variants.map(function(v){return escapeHtml((v.tier1_value||v.name||'默认商品')+(v.tier2_value?' / '+v.tier2_value:''))}).join(', ')+'</div></div>';
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出聚水潭</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
@@ -175,6 +176,8 @@ async function showShopeeDetail(t,plansResponse){
   var p=t.product||{};
   var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var v=(p.variations||[]).map(function(v){return escapeHtml(v.option1+(v.option2?'/'+v.option2:''))}).join(', ');
+  var weights=[...new Set((p.variations||[]).map(function(v){return Number(v.weight_kg||0.2)}))].join(' / ');
+  var skuImageMode=p.variation_image_mode==='ai'||p.variation_image_mode==='option1'?'AI 生成':p.variation_image_mode==='upload'?'自上传':'无规格';
   var html='<div class="modal task-detail-modal"><div class="modal-header"><div class="modal-title">商品详情</div><button class="modal-close" onclick="closeDetail()">&times;</button></div><div class="modal-body">';
   html+='<div class="detail-hero"><div><span class="platform-tag tag-shopee">Shopee</span><h3>'+escapeHtml(p.name||'')+'</h3></div>'+statusBadge(t.status)+'</div><div class="detail-grid">';
   html+='<div class="detail-section"><div class="detail-label">任务 ID</div><div class="detail-value"><code>'+escapeHtml(t.id||'')+'</code></div></div>';
@@ -184,7 +187,8 @@ async function showShopeeDetail(t,plansResponse){
   html+='<div class="detail-section"><div class="detail-label">分类 ID</div><div class="detail-value">'+escapeHtml(p.category_id||'未填写')+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">规格结构</div><div class="detail-value">'+escapeHtml((p.variation_name1||'无规格')+(p.variation_name2?'/'+p.variation_name2:''))+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">规格值</div><div class="detail-value">'+(v||'无')+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">重量</div><div class="detail-value">'+(p.weight_kg||'')+' kg</div></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">SKU 图片模式</div><div class="detail-value">'+skuImageMode+'</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">SKU 重量</div><div class="detail-value">'+weights+' kg</div></div></div>';
   html+=await renderPushPlans(t.id,plansResponse);
   html+='</div><div class="modal-footer"><button class="btn btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button><button class="btn btn-primary" onclick="doExport(\''+t.id+'\')">导出Shopee</button><button class="btn btn-outline" onclick="closeDetail()">关闭</button></div></div>';
   dt.innerHTML=html;document.body.appendChild(dt);

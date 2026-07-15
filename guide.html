@@ -51,7 +51,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>上传核心参考图和辅助参考图；核心参考图决定商品主体，辅助参考图用于补充角度、材质、细节。</li>
             <li>选择无规格、一维规格或二维规格。颜色、款式等需要图片的维度放一级规格，尺码、容量等放二级规格。</li>
             <li>逐个 SKU 组合填写库存、基本售价、市场价、商家 SKU 和可选分销控价；价格浮动也按组合独立设置。</li>
-            <li>点击 <strong>创建并生成</strong>，等待商品元数据、主图、详情图和启用的 SKU 图片完成。</li>
+            <li>选择 SKU 图片自上传或 AI 生成模式，再点击 <strong>创建并生成</strong>。自上传模式不会创建 SKU 图片工作流。</li>
             <li>任务完成后导出，系统会保留模板说明和表头，从第 3 行写入数据。</li>
           </ol>
           <div class="ok-box">模板依据：系统内置 <code>/templates/聚水潭_商品模板.xlsx</code> 的“商品导入模板”工作表。第 1 行是导入说明，第 2 行是 22 列表头，第 3 行开始写商品数据。</div>
@@ -73,7 +73,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>价格浮动</td><td>默认关闭；开启后给单个变体填写最低价、最高价和取价精度。</td><td>每套商品导出时会在区间内稳定取价；精度可选 2/1/0 位小数，或十位/百位归零。</td></tr>
               <tr><td>全量生成</td><td>每套都生成完整主图、详情图、SKU 图。</td><td>成本更高，但差异最大。</td></tr>
               <tr><td>去重生成</td><td>多套商品共享部分通用图，只保留必要差异。</td><td>适合只换封面或轻微差异的批量生成。</td></tr>
-              <tr><td>SKU 参考图</td><td>可选。每个一级规格最多上传一张，不需要按尺码重复。</td><td>同一颜色下的 S/M/L 共用一张生成后的 SKU 图片。</td></tr>
+              <tr><td>SKU 图片模式</td><td>默认自上传；需要模型出图时切换 AI 生成。每个一级规格最多上传一张。</td><td>自上传图直接导出；AI 模式将上传图作为参考并导出生成图。同一颜色下的 S/M/L 共用 URL。</td></tr>
               <tr><td>商品链接/供应商</td><td>均为模板可选字段，按业务需要填写。</td><td>原样写入每个 SKU 行，不进入 AI 生成。</td></tr>
             </tbody>
           </table>
@@ -87,7 +87,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>款式编码 / 商品编码</td><td>每套子任务 ID / 子任务 ID + 商家 SKU</td><td>模板必填，同一套所有 SKU 共用款式编码，商品编码保持唯一。</td></tr>
               <tr><td>颜色 / 规格</td><td>AI SKU 标题或一级规格值 / 二级规格值</td><td>无规格商品留空；商品元数据工作流关闭时使用用户填写的一级规格值。</td></tr>
               <tr><td>商品主图 / 商品详情图</td><td>R2 中的 <code>main_1 + sub_2~N</code> / <code>detail_1~M</code></td><td>写入 JSON URL 数组。</td></tr>
-              <tr><td>图片地址</td><td>按一级规格生成的 SKU 图片</td><td>二维规格下同一一级规格的组合复用 URL；关闭 SKU 图片时留空。</td></tr>
+              <tr><td>图片地址</td><td>一级规格 SKU 图片</td><td>自上传模式使用用户 R2 URL；AI 模式使用生成图。二维规格下同一一级规格的组合复用 URL。</td></tr>
               <tr><td>商品名称 / 推荐文案 / 商品描述</td><td>AI 商品元数据</td><td>每套商品独立生成；工作流关闭时商品名称回退到参考标题，内部任务名称始终不会导出。</td></tr>
               <tr><td>库存 / 重量 / 四类价格</td><td>SKU 设置 / 任务重量 / SKU 价格设置</td><td>保持数值类型，空的可选价格不写入字符串。</td></tr>
               <tr><td>3:4主图 / 长图 / 透明素材图 / 白底图</td><td>当前没有独立工作流</td><td>保持空值，不用参考图或 SKU 图冒充。</td></tr>
@@ -100,7 +100,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
           <ul>
             <li>模板“商品主图”包含系统生成的主图和附图，并以 JSON 数组写入。</li>
             <li>“商品详情图”是 3:4 的详情页图片序列，不写入独立的“3:4主图”列。</li>
-            <li>参考图不是最终资源；最终导出的图片必须是 AI 生成并保存到 R2 后的 URL。</li>
+            <li>商品参考图不是最终资源；SKU 自上传模式是例外，上传后的 R2 URL 会直接写入图片地址列。</li>
             <li>导出只检查实际已构造的工作流资源；管理员关闭商品元数据或 SKU 图片工作流时，不会等待未构造的计划。</li>
           </ul>
         </div>
@@ -114,8 +114,8 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>上传 1 张核心参考图；需要补充角度、结构或包装时再添加辅助图。</li>
             <li>填写商品事实，包括品类、材质、功能、适用场景、包装内容和不能虚构的信息。系统据此生成每套越南语标题与描述。</li>
             <li>选择无规格、一维规格或二维规格。需要图片区分的颜色、图案、款式放在一级规格，尺码等无图维度放在二级规格。</li>
-            <li>填写每个 SKU 组合的价格、库存和可选商家 SKU。启用规格图时，为每个一级规格上传一张参考图。</li>
-            <li>填写生成套数和重量，选择至少一个物流渠道。SPX 默认开启，库存默认 999。</li>
+            <li>填写每个 SKU 组合的价格、库存、重量和可选商家 SKU。重量默认 0.2kg，可按 SKU 修改。</li>
+            <li>选择 SKU 图片自上传或 AI 生成模式；选择至少一个物流渠道。SPX 默认开启，库存默认 999。</li>
             <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
             <li>任务完成后导出官方模板，数据从第 7 行开始写入。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
@@ -131,11 +131,11 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>AI 规范化规格值</td><td>F/G/I/J Variation Name / Option</td><td>系统把用户规格统一为越南语标签。规格名 1~14 字符，规格值 1~20 字符，不生成营销式 SKU 标题。</td></tr>
               <tr><td>封面图 <code>main_1</code></td><td>Q Cover image</td><td>Shopee 的首图/封面图。</td></tr>
               <tr><td>附图 <code>sub_2~sub_9</code></td><td>R~Y Item Image 1~8</td><td>从第 2 张开始，不重复写封面图。</td></tr>
-              <tr><td>SKU 变体图 <code>sku_N</code></td><td>H Image per Variation</td><td>每个一级规格值生成一次，例如同一颜色的 S/M/L 共用一张图；可选择不生成规格图。</td></tr>
+              <tr><td>SKU 图片</td><td>H Image per Variation</td><td>自上传模式直接使用用户 R2 URL；AI 模式按一级规格生成 <code>sku_N</code>。同一颜色的 S/M/L 共用图片。</td></tr>
               <tr><td>详情图</td><td>当前 basic template 无字段</td><td>Shopee 固定为 0 张，不构造详情图工作流；全部任务图片仍可打包下载。</td></tr>
             </tbody>
           </table>
-          <div class="note-box">导出时缺少任何必需 AI 资源会被系统阻断。参考图、辅助图、SKU 参考图不会作为最终图片 URL 写入 Excel。</div>
+          <div class="note-box">导出时缺少任何必需 AI 资源会被系统阻断。商品参考图和辅助图不会直接写入 Excel；SKU 自上传模式会直接写入用户上传后的 R2 URL。</div>
         </div>
 
         <div class="guide-section">
@@ -150,16 +150,16 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
               <tr><td>分类 ID</td><td>建议从 Shopee Seller Center 的 Category Tree 查。</td><td>模板说明：可从 Category Tree 选择；留空时 Shopee 可能推荐类目。准确类目有利于搜索和属性匹配。</td></tr>
-              <tr><td>重量(kg)</td><td>必填，按实际商品包裹重量填写 kg。</td><td>官方模板 Z Weight 单位是 g，系统导出时自动从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
+              <tr><td>重量(kg)</td><td>在每个 SKU 组合中填写，默认 0.2kg。</td><td>官方模板 Z Weight 单位是 g，系统逐 SKU 从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
               <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
               <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
               <tr><td>二级规格名/值</td><td>放不需要独立图片的维度，例如 Size / S、M、L。</td><td>启用后系统自动生成笛卡尔组合，可逐个关闭不售卖组合；二级规格不会新增图片工作流。</td></tr>
-              <tr><td>规格图模式</td><td>通常选择“按一级规格生成”；无需规格图时选择“不生成规格图”。</td><td><code>option1</code> 每套按唯一一级规格出图；<code>none</code> 不创建 SKU 图计划，Excel 的 Image per Variation 留空。</td></tr>
+              <tr><td>规格图模式</td><td>默认“自上传”；需要模型生成新图时选择“AI 生成”。</td><td><code>upload</code> 直接导出用户 R2 URL且不创建工作流；<code>ai</code> 每套按唯一一级规格创建 SKU 图计划。</td></tr>
               <tr><td>价格</td><td>按越南站 VND 填数字；也可在单个变体启用价格浮动。</td><td>当前模板规则为 1000~120000000；浮动价格会按每套商品在区间内取值。</td></tr>
               <tr><td>库存</td><td>默认 999，可按每个 SKU 组合修改。</td><td>官方范围 0~10000000；用户填写 0 时系统会保留 0。</td></tr>
               <tr><td>SKU</td><td>店铺内唯一，建议简短。</td><td>官方要求小于 100 字符；系统会加上套图父 SKU 前缀防止重复。</td></tr>
-              <tr><td>SKU 参考图</td><td>每个一级规格上传一张清晰参考图，不要按尺码重复上传。</td><td>只作为 AI 输入，最终导出使用生成后的 <code>sku_N</code>，同一一级规格的组合行复用该 URL。</td></tr>
+              <tr><td>SKU 图片</td><td>每个一级规格上传一张，不要按尺码重复上传。AI 模式下必须上传参考图，自上传模式可选。</td><td>自上传模式直接导出；AI 模式最终导出生成后的 <code>sku_N</code>。同一一级规格的组合行复用 URL。</td></tr>
               <tr><td>物流渠道</td><td>默认勾选 SPX，可按店铺实际渠道调整。</td><td>新版模板要求每个商品至少一个渠道为 On；已移除 5115，并新增 50053（最高价 3000000 VND）。</td></tr>
             </tbody>
           </table>
