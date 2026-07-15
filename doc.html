@@ -91,12 +91,12 @@ const EP = [
 ];
 
 const WEBHOOKS = [
-  {name:'聚水潭商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',plan_id:'精确计划ID',workflow_type:'metadata',batch_index:0,batch_total:10,source_brief:'商品事实',reference_title:'可选参考标题',product_type:'single|one|two',products:'[{sub_task_id,set_index}]，最多10项',variants:'[{id,option1,option2,tier1_name,tier2_name,sku_description}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform和内部任务名称。系统按“最多10套商品且最多100个SKU标题”动态分批；回调必须原样携带plan_id，并返回每套标题、推荐文案、商品描述和按variant_id映射的SKU标题。'},
+  {name:'聚水潭商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',plan_id:'精确计划ID',workflow_type:'metadata',batch_index:0,batch_total:10,source_brief:'商品事实',reference_title:'可选参考标题',product_type:'single|one|two',products:'[{sub_task_id,set_index}]，最多10项',variants:'[{id,option1,option2,tier1_name,tier2_name}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送体不含platform、内部任务名称和SKU图片提示词。系统按“最多10套商品且最多100个SKU标题”动态分批；回调必须原样携带plan_id，并返回每套标题、推荐文案、商品描述和按variant_id映射的SKU标题。'},
   {name:'Shopee商品元数据',key:'n8n_title_webhook',body:{task_id:'母任务ID',plan_id:'计划ID',source_brief:'商品事实',reference_title:'参考标题',reference_image:'核心参考图URL',auxiliary_images:'辅助参考图URL数组',sub_task_count:'子任务数量',sub_tasks:'[{sub_task_id,set_index}]',product_type:'single|one|two',variation_name1:'用户一级规格名',variation_name2:'用户二级规格名',variants:'[{id,option1,option2}]',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'回调products与variation_labels；Product Name和Description逐套生成，规格标签按变体ID映射。'},
   {name:'主图(第1张)',key:'n8n_main_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'main'",image_position:1,callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'推送第1张主图'},
   {name:'附图(第2~N张)',key:'n8n_sub_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',main_description:'主图描述',auxiliary_images:'辅助参考图',image_type:"'sub'",image_position:'2~N',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'N=任务设定的main_image_count'},
   {name:'详情图(第1~M张)',key:'n8n_detail_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',detail_description:'详情图描述',auxiliary_images:'辅助参考图',image_type:"'detail'",image_position:'1~M',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'M=任务设定的detail_image_count'},
-  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,reference_image:'核心参考图',variant_name:'一级规格值',sku_image:'变体参考图URL',image_type:"'sku'",image_position:'一级规格索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅 variation_image_mode=ai 时推送；JST和Shopee都按唯一一级规格生成并复用到二级组合，工作流统一使用sku_image作为参考图'},
+  {name:'SKU图',key:'n8n_sku_image_webhook',body:{task_id:'母任务ID',sub_task_id:'子任务ID',set_index:0,sku_image:'该一级规格的参考图URL',sku_description:'可选用户提示词，最多300字符',image_type:"'sku'",image_position:'一级规格索引(1~N)',callback_secret:'密钥',callback_url:API_ROOT+'/api/callback'},note:'仅 variation_image_mode=ai 时推送；双平台都只发送该规格参考图和可选提示词，不发送规格名、商品事实或核心参考图。提示词为空时由工作流使用保持产品一致性的内置提示词'},
 ];
 
 const SIDEBAR_HTML = SIDEBAR.map(function(s){return s.s?'<div class="sec-title">'+s.t+'</div>':'<a href="#'+s.t+'">'+s.t+'</a>'}).join('');
@@ -182,14 +182,14 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "market_price": 129,
     "min_distribution_price": 89,
     "max_distribution_price": 109,
-    "sku_description": "",
+    "sku_description": "展示买二送三，一共到手5个",
     "price_float_enabled": 0,
     "price_min": null,
     "price_max": null,
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。非空 <code>sku_code</code> 在任务内必须唯一。规格商品的每个一级规格必须且只能上传一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
+<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，<code>topic_items</code> 为可选参考标题。<code>source_brief</code> 是商品元数据 AI 的事实边界，不进入 SKU 图片工作流。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 可省略不售卖组合。非空 <code>sku_code</code> 在任务内必须唯一且最多 71 字符，系统导出时添加 8 位随机 ID 和连字符，总长度不超过 80。每个一级规格必须且只能上传一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL；<code>ai</code> 将其作为唯一图片输入，并可填写最多 300 字符的 <code>sku_description</code>，同一一级规格的二维组合共用提示词和结果图。</div>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
   "name": "必填内部任务备注（不进入Shopee工作流）",
@@ -219,6 +219,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "option1": "Red",
     "option2": "",
     "image_per_variation": "R2 URL",
+    "sku_description": "展示买二送三，一共到手5个",
     "price": 1000,
     "stock": 999,
     "weight_kg": 0.2,
@@ -229,7 +230,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。非空 <code>sku</code> 在任务内必须唯一且小于100字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。规格商品的每个一级规格必须且只能上传一张 <code>image_per_variation</code>：<code>variation_image_mode=upload</code> 直接导出该 URL，<code>ai</code> 才构造 SKU 图片工作流并将其作为参考图。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
+<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填；商品元数据工作流为每套商品生成 Product Name 与 100~3000 字符的 Product Description，但商品事实不进入 SKU 图片工作流。非空 <code>sku</code> 在任务内必须唯一且最多 90 字符；导出时系统固定拼接“8位随机ID-用户SKU”，最终满足小于 100 字符。<code>weight_kg</code> 省略时默认 0.2kg。每个一级规格必须且只能上传一张 <code>image_per_variation</code>；AI 模式可填写最多 300 字符的 <code>sku_description</code>。SKU 图片工作流只接收这两个字段，不接收规格名、商品事实或核心参考图；提示词为空时使用工作流内置一致性提示词。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>
