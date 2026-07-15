@@ -63,7 +63,7 @@ const EP = [
   {m:'GET',p:'/api/auth/verify',d:'验证Token',a:false},
   {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
-  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string(平台商品元数据)',n8n_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'number(默认15分钟/900秒)'}},
+  {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string(平台商品元数据)',n8n_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'integer(20~1440，默认20分钟)'}},
   {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=10，limit默认10、最大100)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(自动识别平台)',a:true},
@@ -189,7 +189,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。规格商品的每个一级规格必须且只能上传一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
+<div class="note"><strong>JST：</strong><code>name</code> 只作内部任务备注，不发送给工作流。<code>source_brief</code> 是 AI 事实边界，<code>topic_items</code> 为可选参考标题。<code>product_type=single</code> 只能传一条空规格 SKU；<code>one</code> 使用一级规格；<code>two</code> 传入启用的二维规格组合，可省略不售卖组合。非空 <code>sku_code</code> 在任务内必须唯一。规格商品的每个一级规格必须且只能上传一张 <code>sku_image</code>：<code>upload</code> 直接导出该 R2 URL，<code>ai</code> 将其作为参考图并导出工作流生成图。</div>
 <h4>Shopee 请求体核心字段</h4>
 <pre>{
   "name": "必填内部任务备注（不进入Shopee工作流）",
@@ -229,7 +229,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。规格商品的每个一级规格必须且只能上传一张 <code>image_per_variation</code>：<code>variation_image_mode=upload</code> 直接导出该 URL，<code>ai</code> 才构造 SKU 图片工作流并将其作为参考图。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
+<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填。商品元数据工作流为每个子任务回调独立的 Product Name 与 Product Description，导出时严格要求描述 100~3000 字符。非空 <code>sku</code> 在任务内必须唯一且小于100字符。<code>weight_kg</code> 位于每条 <code>variations</code> 中，省略时默认 0.2kg。规格商品的每个一级规格必须且只能上传一张 <code>image_per_variation</code>：<code>variation_image_mode=upload</code> 直接导出该 URL，<code>ai</code> 才构造 SKU 图片工作流并将其作为参考图。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录，但规格名和值必须为空。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>
@@ -264,7 +264,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
 <div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划。商品元数据按动态批次一次生成每套商品标题、推荐文案、商品描述和全部 SKU 标题；每个批次以 <code>plan_id</code> 精确回调，并通过 JSON1 批量写入 D1。AI 模式的 SKU 图片只按唯一一级规格生成，二维规格复用一级规格图；自上传模式不创建 SKU 图片计划。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余 AI 附图/详情图/SKU图在导出时复用第 1 套。</div>
-<div class="note"><strong>失败重试：</strong>网络异常、HTTP 408/425/429/5xx、900秒无回调及工作流临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>processing</code> 计划拒绝重复提交。</div>
+<div class="note"><strong>失败重试：</strong>网络异常、HTTP 408/425/429/5xx、工作流900秒超时错误回调、Worker 20分钟无回调兜底及其他临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>processing</code> 计划拒绝重复提交。正式推送会先按实际计划数量预检用户算力，余额不足时不会创建子任务或推送计划。</div>
 <div class="note"><strong>阶段性图片优先：</strong>当 <code>push_primary_images_only=true</code> 时，系统只构造 <code>main/main_1</code> 和 <code>sub_*</code> 主图/附图计划；商品元数据、详情图、SKU图不会创建计划。关闭总开关只影响之后重新推送或重新生成的任务，不会自动补建已有任务计划。</div>
 
 <h2 id="Shopee商品">Shopee 商品</h2>
@@ -376,7 +376,7 @@ ${WEBHOOKS.slice(0,2).map(function(w){
 }).join('')}
 
 <h2 id="图片类">图片类 Webhook 推送体</h2>
-<div class="note"><strong>架构：</strong>主图/封面图(第1张)进入主图工作流，附图(第2~N张)进入附图工作流，每张图独立推送。JST 的 N/M 可设 1~9，默认 5/5；Shopee 固定 N=9、M=0，不构造详情图。两平台去重模式下第 2 套开始只推主图/封面图。全部 v3 图片工作流以 900 秒为单次生成截止时间；创建请求失败、轮询失败、服务返回失败或成功但没有 URL 时都会主动回调 <code>error</code>。Worker 的 <code>push_plan_timeout_minutes</code> 默认 15 分钟，只用于 n8n 完全没有回调时的最终兜底。</div>
+<div class="note"><strong>架构：</strong>主图/封面图(第1张)进入主图工作流，附图(第2~N张)进入附图工作流，每张图独立推送。JST 的 N/M 可设 1~9，默认 5/5；Shopee 固定 N=9、M=0，不构造详情图。两平台去重模式下第 2 套开始只推主图/封面图。全部 v3 图片工作流以 900 秒为单次生成截止时间；创建请求失败、轮询失败、服务返回失败或成功但没有 URL 时都会主动回调 <code>error</code>。Worker 的 <code>push_plan_timeout_minutes</code> 默认且最小为 20 分钟，为工作流错误回调和内部队列预留缓冲。</div>
 ${WEBHOOKS.slice(2).map(function(w){
   return '<h4>'+w.name+' → <code>'+w.key+'</code></h4><div class="note">'+w.note+'</div><pre>'+JSON.stringify(w.body,null,2)+'</pre>';
 }).join('')}
