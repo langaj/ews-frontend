@@ -74,7 +74,8 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id/plans',d:'推送计划列表',a:true},
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
-  {m:'POST',p:'/api/callback',d:'n8n回调入队(secret验证)',a:false},
+  {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
+  {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片sidecar获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2',a:true,b:{file:'File',task_id:'string',folder:'string(可选)'}},
   {m:'GET',p:'/r2/*',d:'R2公开文件访问',a:false},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
@@ -255,7 +256,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><th>状态</th><th>触发条件</th><th>系统动作</th></tr>
 <tr><td><code>pending</code></td><td>新计划，或可重试错误进入30/120/300秒退避等待。</td><td>达到 <code>next_retry_at</code> 后重新参加用户公平调度。</td></tr>
 <tr><td><code>processing</code></td><td>队列释放计划前检查并扣减 1 点算力。</td><td>按 <code>webhook_type</code> 推送到对应平台配置的 webhook 地址。</td></tr>
-<tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片会先下载到 R2，再写入对应平台资源表。</td></tr>
+<tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片由 sidecar 直传 R2；Queue consumer 校验对象后写入对应平台资源表。</td></tr>
 <tr><td><code>failed</code></td><td>永久错误、算力不足，或自动重试3次后仍失败。</td><td>记录最终错误；已扣算力会退还，用户仍可人工重试。</td></tr>
 </table>
 <div class="note"><strong>并发与补位：</strong>系统不设置跨用户的全局 processing 上限。<code>main/main_1</code>、<code>sub_*</code>、<code>detail_*</code>、<code>sku_数字</code> 统一计入任务所有者的图片并发额度；JST 与 Shopee 跨平台合并统计，默认且最高为 20。JST <code>metadata</code> 不占图片额度，但为避免大模型请求挤压，每用户同时最多处理 2 个批次；每批最多 10 套商品且最多 100 个 SKU 标题。</div>
@@ -273,8 +274,11 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 <div class="note"><strong>商品元数据：</strong>工作流按“主关键词 + 副关键词 + 长尾词 + 属性词”生成每套自然越南语 Product Name，同时生成 100~3000 字符 Product Description，并将用户规格规范为模板的 Variation Name / Option。规格标签是商品属性，不是营销式 SKU 标题；同一一级规格在二维组合中必须保持相同标签。</div>
 
 <h2 id="回调">回调接口</h2>
-${eps(['POST /api/callback'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调先写入共享队列 <code>ews_callback_queue</code>，接口返回 <code>queued:true</code> 后由 Worker 后台消费。若 D1 队列写入失败，接口返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。元数据回调直接落库；图片回调再写入 <code>ews_image_queue</code>，由 Worker 下载并写入 R2。处理完成删除队列记录，失败保留并重试，超过次数后标记 failed。<br><strong>内部消费：</strong>回调队列保持轻量消费并在成功后主动续跑；图片下载/R2 队列根据当前积压自动在 4~12 个活跃消费者间伸缩，不提供人工并发配置。<br><strong>Shopee 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
+${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调直接写入原生 Cloudflare Queue <code>ews-callback-events</code>。只有 <code>send()</code> 成功后才返回 <code>queued:true</code>；写入失败返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。Queue 采用单跳消费、最多重试 5 次和 DLQ，成功处理具备幂等性。超过 48KB 的聚合元数据正文暂存 R2 inbox，Queue 只传 key，消费成功或最终失败后删除。旧 D1 表 <code>ews_callback_queue</code>、<code>ews_image_queue</code> 仅用于排空历史记录。<br><strong>图片直传：</strong>n8n 内网 sidecar 下载模型临时 URL，转为 quality 88 JPEG，超过 1.9MB 时再 Bilinear 等比缩小。sidecar 复用同一个 <code>callback_secret</code> 请求 5 分钟单对象 PUT 票据并直传 R2，最终回调只传 <code>r2_key</code> 和校验元数据。R2 长期凭据只保存在 Worker secret，不进入推送体、工作流或 D1。<br><strong>Shopee 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
+
+<h3>R2 上传票据</h3>
+<div class="note"><code>POST /api/internal/r2-upload-ticket</code> 仅供可信 sidecar 调用。请求携带现有 <code>callback_secret</code>、任务/计划/图片定位字段、<code>image/jpeg</code>、字节数和 SHA-256。系统验证计划处于 <code>processing</code> 后返回只允许写入当前计划对象的 presigned PUT URL、必需 headers、<code>r2_key</code>、过期时间和最大体积。它不会返回 R2 Access Key 或 Secret Access Key。</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
@@ -291,13 +295,17 @@ ${eps(['POST /api/callback'])}
 <tr><td><code>variation_labels</code></td><td>Shopee 规格标签：<code>{name1,name2,values:[{id,option1,option2}]}</code>；无规格商品传空名称和空数组</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
-<tr><td><code>image_url</code></td><td>AI模型临时URL</td></tr>
+<tr><td><code>r2_key</code></td><td>图片成功回调必填；sidecar 直传后返回的 R2 对象键</td></tr>
+<tr><td><code>sha256</code></td><td>图片成功回调必填；64位小写十六进制摘要，用于核对 R2 metadata</td></tr>
+<tr><td><code>size_bytes</code></td><td>图片字节数；当前上限 1,900,000 bytes</td></tr>
+<tr><td><code>content_type</code></td><td>图片直传固定为 <code>image/jpeg</code></td></tr>
+<tr><td><code>image_url</code></td><td>旧版图片回调兼容字段；新版工作流不再使用</td></tr>
 <tr><td><code>error</code></td><td>工作流失败原因；默认进入自动重试</td></tr>
 <tr><td><code>retryable</code></td><td>boolean；错误确定无法恢复时传 <code>false</code>，系统直接标记失败</td></tr>
 </table>
 
 <h3>n8n 回调示例</h3>
-<div class="note"><strong>返回判断：</strong>n8n 调用 <code>callback_url</code> 后，HTTP 200 且 <code>success:true</code>、<code>queued:true</code> 表示 EWS 已接收；若返回 <code>503</code> 且 <code>retryable:true</code>，n8n 应等待后重试同一回调。图片 URL 可以是工作流生成的临时公网 URL，EWS 会下载、转存到 R2 并落库。</div>
+<div class="note"><strong>返回判断：</strong>n8n 调用 <code>callback_url</code> 后，HTTP 200 且 <code>success:true</code>、<code>queued:true</code> 表示 Cloudflare Queue 已持久接收；若返回 <code>503</code> 且 <code>retryable:true</code>，n8n 应等待后重试同一回调。新版图片工作流必须先由 sidecar 直传 R2，再使用 <code>r2_key</code> 回调。</div>
 <h4>JST 商品元数据成功回调</h4>
 <pre>{
   "callback_secret": "{{$json.callback_secret}}",
@@ -338,14 +346,18 @@ ${eps(['POST /api/callback'])}
 }</pre>
 <h4>图片成功回调</h4>
 <pre>{
-  "secret": "{{$json.callback_secret}}",
+  "callback_secret": "{{$json.callback_secret}}",
   "task_id": "{{$json.task_id}}",
+  "plan_id": "{{$json.plan_id}}",
   "workflow_type": "{{$json.workflow_type}}",
   "sub_task_id": "{{$json.sub_task_id}}",
   "set_index": {{$json.set_index}},
   "image_type": "{{$json.image_type}}",
   "image_position": {{$json.image_position}},
-  "image_url": "https://example.com/generated.jpg"
+  "r2_key": "ews/任务ID/子任务ID/main_1_计划ID.jpg",
+  "size_bytes": 1234567,
+  "sha256": "64位小写十六进制摘要",
+  "content_type": "image/jpeg"
 }</pre>
 <h4>图片失败回调</h4>
 <pre>{
@@ -394,8 +406,8 @@ ${WEBHOOKS.slice(2).map(function(w){
 <pre>ews_config      (key, value, platform)  - 分平台配置
 ews_users       (id, username, password_hash, role, credits, webhook_config)
 ews_tasks       (id, platform, name, status, user_id)  - 统一任务索引
-ews_callback_queue - 共享回调队列（成功处理后删除，失败保留重试）
-ews_image_queue    - 共享图片处理队列（限制下载/R2写入并发）</pre>
+ews_callback_queue - 旧版D1回调队列（仅排空历史记录）
+ews_image_queue    - 旧版D1图片队列（仅排空历史记录）</pre>
 
 <h4>聚水潭 (ews_jst_)</h4>
 <pre>ews_jst_tasks       - 任务扩展信息（内部备注、商品事实、模板字段、图片数量等）
