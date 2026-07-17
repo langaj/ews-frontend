@@ -211,11 +211,6 @@ function directR2Url(value){
   if(!raw)return '';
   if(raw.indexOf('ews/')===0)return R2_PUBLIC_BASE+'/'+raw;
   if(raw.indexOf('/ews/')===0)return R2_PUBLIC_BASE+raw;
-  if(raw.indexOf('/r2/')===0)return R2_PUBLIC_BASE+'/'+raw.replace(/^\/r2\/+/, '');
-  try{
-    var parsed=new URL(raw,window.location.origin);
-    if(parsed.pathname.indexOf('/r2/')===0)return R2_PUBLIC_BASE+'/'+parsed.pathname.replace(/^\/r2\/+/, '');
-  }catch(e){}
   return raw;
 }
 

@@ -77,7 +77,6 @@ const EP = [
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片sidecar获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2',a:true,b:{file:'File',task_id:'string',folder:'string(可选)'}},
-  {m:'GET',p:'/r2/*',d:'旧版R2代理兼容接口；新版前端不使用',a:false},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
   {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee',image_concurrency_limit:'integer(1~20，默认20)'}},
   {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用用户(admin)',a:true},
@@ -374,7 +373,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 
 <h2 id="上传">上传</h2>
 ${eps(['POST /api/upload'])}
-<div class="note">支持 JPG/PNG/WebP/GIF，单文件 ≤10MB。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.jpg</code>。Worker 只返回对象 <code>key</code> 和公开 URL；预览、打包下载和表格图片字段直接访问 <code>https://oss.langaj.cc/{key}</code>，不经过 Worker 图片代理。<code>GET /r2/*</code> 仅保留旧数据兼容。</div>
+<div class="note">支持 JPG/PNG/WebP/GIF，单文件 ≤10MB。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.jpg</code>。Worker 只返回对象 <code>key</code> 和公开 URL；预览、打包下载和表格图片字段必须直接访问 <code>https://oss.langaj.cc/{key}</code>。Worker 不提供图片读取代理。</div>
 
 <h2 id="用户管理">用户管理</h2>
 ${eps(['GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','PUT /api/users/:id/concurrency','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
