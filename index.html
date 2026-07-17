@@ -205,9 +205,43 @@ function showDetailLoading(){
 }
 function closeDetail(){detailRequestSequence++;removeDetailModal()}
 
+var R2_PUBLIC_BASE='https://oss.langaj.cc';
+function directR2Url(value){
+  var raw=String(value||'').trim();
+  if(!raw)return '';
+  if(raw.indexOf('ews/')===0)return R2_PUBLIC_BASE+'/'+raw;
+  if(raw.indexOf('/ews/')===0)return R2_PUBLIC_BASE+raw;
+  if(raw.indexOf('/r2/')===0)return R2_PUBLIC_BASE+'/'+raw.replace(/^\/r2\/+/, '');
+  try{
+    var parsed=new URL(raw,window.location.origin);
+    if(parsed.pathname.indexOf('/r2/')===0)return R2_PUBLIC_BASE+'/'+parsed.pathname.replace(/^\/r2\/+/, '');
+  }catch(e){}
+  return raw;
+}
+
+async function fetchR2Blob(value,maxAttempts){
+  var url=directR2Url(value);
+  if(!url)throw new Error('图片地址无效');
+  var attempts=Math.max(1,Number(maxAttempts)||3);
+  var lastError=null;
+  for(var attempt=1;attempt<=attempts;attempt++){
+    var controller=new AbortController();
+    var timeout=setTimeout(function(){controller.abort()},30000);
+    try{
+      var response=await fetch(url,{method:'GET',mode:'cors',cache:'no-store',signal:controller.signal});
+      if(response.ok)return await response.blob();
+      lastError=new Error('R2下载失败: HTTP '+response.status);
+      if(![408,425,429].includes(response.status)&&response.status<500)break;
+    }catch(error){lastError=error}
+    finally{clearTimeout(timeout)}
+    if(attempt<attempts)await new Promise(function(resolve){setTimeout(resolve,attempt*600)});
+  }
+  throw lastError||new Error('R2下载失败');
+}
+
 var imagePreviewTrigger=null;
 function openImagePreview(button){
-  var url=button&&button.dataset?button.dataset.previewUrl:'';
+  var url=directR2Url(button&&button.dataset?button.dataset.previewUrl:'');
   if(!url){showToast('图片地址无效','error');return}
   closeImagePreview(false);
   imagePreviewTrigger=button;
@@ -238,7 +272,12 @@ function openImagePreview(button){
   });
   image.addEventListener('error',function(){image.remove();stage.classList.add('has-error')});
   stage.appendChild(image);
-  image.src=url;
+  fetchR2Blob(url,2).then(function(blob){
+    var objectUrl=URL.createObjectURL(blob);
+    if(!document.contains(overlay)){URL.revokeObjectURL(objectUrl);return}
+    overlay._previewObjectUrl=objectUrl;
+    image.src=objectUrl;
+  }).catch(function(){if(document.contains(overlay)){image.remove();stage.classList.add('has-error')}});
 }
 
 function closeImagePreview(restoreFocus){
@@ -247,6 +286,7 @@ function closeImagePreview(restoreFocus){
     if(overlay._previewKeyHandler)document.removeEventListener('keydown',overlay._previewKeyHandler);
     var image=overlay.querySelector('img');
     if(image)image.removeAttribute('src');
+    if(overlay._previewObjectUrl)URL.revokeObjectURL(overlay._previewObjectUrl);
     overlay.remove();
   }
   if(restoreFocus!==false&&imagePreviewTrigger&&document.contains(imagePreviewTrigger))imagePreviewTrigger.focus();
@@ -450,19 +490,26 @@ async function downloadTaskImagesInner(taskId){
   var zip=new JSZip();
   var total=images.length;
   var fetched=0;
-  for(var i=0;i<total;i++){
-    var img=images[i];
-    try{
-      var resp=await fetch(img.image_url);
-      if(resp.ok){
-        var blob=await resp.blob();
+  var failed=0;
+  var completed=0;
+  var cursor=0;
+  async function downloadNext(){
+    while(cursor<total){
+      var index=cursor++;
+      var img=images[index];
+      try{
+        var blob=await fetchR2Blob(img.image_url,3);
         zip.folder(img.sub_task_id||'unassigned').file(imageFileName(img),blob);
         fetched++;
-      }
-    }catch(e){console.warn('下载失败:',img.image_url,e)}
-    progEl.textContent=fetched+' / '+total;
-    titleEl.textContent='正在下载图片... ('+(i+1)+'/'+total+')';
+      }catch(e){failed++;console.warn('R2下载失败:',directR2Url(img.image_url),e)}
+      completed++;
+      progEl.textContent=fetched+' / '+total;
+      titleEl.textContent='正在下载图片... ('+completed+'/'+total+')';
+    }
   }
+  var workers=[];
+  for(var workerIndex=0;workerIndex<Math.min(4,total);workerIndex++)workers.push(downloadNext());
+  await Promise.all(workers);
   if(!fetched){overlay.classList.remove('show');showToast('所有图片下载失败','error');return}
   titleEl.textContent='正在生成压缩包...';
   progEl.textContent='请稍候';
@@ -477,7 +524,7 @@ async function downloadTaskImagesInner(taskId){
     link.remove();
     setTimeout(function(){URL.revokeObjectURL(href)},1000);
     overlay.classList.remove('show');
-    showToast('打包完成: '+fetched+'/'+total+' 张图片','success');
+    showToast(failed?'打包完成: '+fetched+'/'+total+' 张，'+failed+' 张下载失败':'打包完成: '+fetched+'/'+total+' 张图片',failed?'error':'success');
   }catch(e){
     overlay.classList.remove('show');
     showToast('生成ZIP失败: '+e.message,'error');
@@ -486,7 +533,7 @@ async function downloadTaskImagesInner(taskId){
 
 function getGeneratedImages(task){
   var images=task.platform==='shopee' ? ((task.product||{}).images_rec||[]) : (task.images||[]);
-  return images.filter(function(img){return img.image_url&&img.sub_task_id});
+  return images.filter(function(img){return img.image_url&&img.sub_task_id}).map(function(img){return Object.assign({},img,{image_url:directR2Url(img.image_url)})});
 }
 
 function imageFileName(img){
