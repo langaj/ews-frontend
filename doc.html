@@ -51,7 +51,7 @@ const PLATFORM_INFO = {
 const SIDEBAR = [
   {t:'概览',s:true},{t:'系统架构',s:false},
   {t:'认证',s:true},{t:'登录与验证',s:false},{t:'权限矩阵',s:false},
-  {t:'API 接口',s:true},{t:'配置',s:false},{t:'任务(通用)',s:false},{t:'状态机与算力',s:false},{t:'JST 任务',s:false},{t:'Shopee 商品',s:false},{t:'回调',s:false},{t:'上传',s:false},{t:'用户管理',s:false},
+  {t:'API 接口',s:true},{t:'配置',s:false},{t:'任务(通用)',s:false},{t:'状态机与算力',s:false},{t:'JST 任务',s:false},{t:'Shopee 商品',s:false},{t:'回调',s:false},{t:'图片处理服务',s:false},{t:'上传',s:false},{t:'用户管理',s:false},
   {t:'工作流推送体',s:true},{t:'标题类',s:false},{t:'图片类',s:false},
   {t:'导出格式',s:true},{t:'聚水潭导出',s:false},{t:'Shopee导出',s:false},
   {t:'数据库',s:true},{t:'表结构',s:false},{t:'初始化',s:false},
@@ -75,7 +75,7 @@ const EP = [
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
-  {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片sidecar获取单对象R2 PUT票据(callback_secret验证)',a:false},
+  {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2',a:true,b:{file:'File',task_id:'string',folder:'string(可选)'}},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
   {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee',image_concurrency_limit:'integer(1~20，默认20)'}},
@@ -255,7 +255,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><th>状态</th><th>触发条件</th><th>系统动作</th></tr>
 <tr><td><code>pending</code></td><td>新计划，或可重试错误进入30/120/300秒退避等待。</td><td>达到 <code>next_retry_at</code> 后重新参加用户公平调度。</td></tr>
 <tr><td><code>processing</code></td><td>队列释放计划前检查并扣减 1 点算力。</td><td>按 <code>webhook_type</code> 推送到对应平台配置的 webhook 地址。</td></tr>
-<tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片由 sidecar 直传 R2；Queue consumer 校验对象后写入对应平台资源表。</td></tr>
+<tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片服务直传 R2；Queue consumer 校验对象后写入对应平台资源表。</td></tr>
 <tr><td><code>failed</code></td><td>永久错误、算力不足，或自动重试3次后仍失败。</td><td>记录最终错误；已扣算力会退还，用户仍可人工重试。</td></tr>
 </table>
 <div class="note"><strong>并发与补位：</strong>系统不设置跨用户的全局 processing 上限。<code>main/main_1</code>、<code>sub_*</code>、<code>detail_*</code>、<code>sku_数字</code> 统一计入任务所有者的图片并发额度；JST 与 Shopee 跨平台合并统计，默认且最高为 20。JST <code>metadata</code> 不占图片额度，但为避免大模型请求挤压，每用户同时最多处理 2 个批次；每批最多 10 套商品且最多 100 个 SKU 标题。</div>
@@ -274,10 +274,10 @@ ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:i
 
 <h2 id="回调">回调接口</h2>
 ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
-<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调直接写入原生 Cloudflare Queue <code>ews-callback-events</code>。只有 <code>send()</code> 成功后才返回 <code>queued:true</code>；写入失败返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，工作流应等待后重试。Queue 采用单跳消费、最多重试 5 次和 DLQ，成功处理具备幂等性。超过 48KB 的聚合元数据正文暂存 R2 inbox，Queue 只传 key，消费成功或最终失败后删除。旧 D1 表 <code>ews_callback_queue</code>、<code>ews_image_queue</code> 仅用于排空历史记录。<br><strong>图片直传：</strong>n8n 内网 sidecar 下载模型临时 URL，转为 quality 88 JPEG，超过 1.9MB 时再 Bilinear 等比缩小。sidecar 复用同一个 <code>callback_secret</code> 请求 5 分钟单对象 PUT 票据并直传 R2，最终回调只传 <code>r2_key</code> 和校验元数据。R2 长期凭据只保存在 Worker secret，不进入推送体、工作流或 D1。<br><strong>Shopee 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
+<div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调直接写入原生 Cloudflare Queue <code>ews-callback-events</code>。只有 <code>send()</code> 成功后才返回 <code>queued:true</code>；写入失败返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，调用方应等待后重试。Queue 采用单跳消费、最多重试 5 次和 DLQ，成功处理具备幂等性。超过 48KB 的聚合元数据正文暂存 R2 inbox，Queue 只传 key，消费成功或最终失败后删除。旧 D1 表 <code>ews_callback_queue</code>、<code>ews_image_queue</code> 仅用于排空历史记录。<br><strong>图片直传：</strong>n8n 将模型临时 URL 提交到 Fastify 图片服务，服务写入 BullMQ/Valkey 后立即返回 <code>202</code>。独立 Sharp Worker 转为 quality 88 JPEG，超过 1.9MB 时再 Bilinear 等比缩小，并使用同一个 <code>callback_secret</code> 请求单对象 PUT 票据直传 R2。最终成功或失败 callback 均由图片服务负责，n8n 不等待处理结果。R2 长期凭据只保存在 Worker secret，不进入推送体、图片服务或 D1。<br><strong>Shopee 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
 
 <h3>R2 上传票据</h3>
-<div class="note"><code>POST /api/internal/r2-upload-ticket</code> 仅供可信 sidecar 调用。请求携带现有 <code>callback_secret</code>、任务/计划/图片定位字段、<code>image/jpeg</code>、字节数和 SHA-256。系统验证计划处于 <code>processing</code> 后返回只允许写入当前计划对象的 presigned PUT URL、必需 headers、<code>r2_key</code>、过期时间和最大体积。它不会返回 R2 Access Key 或 Secret Access Key。</div>
+<div class="note"><code>POST /api/internal/r2-upload-ticket</code> 仅供可信图片服务调用。请求携带现有 <code>callback_secret</code>、任务/计划/图片定位字段、<code>image/jpeg</code>、字节数和 SHA-256。系统验证计划处于 <code>processing</code> 后返回只允许写入当前计划对象的 presigned PUT URL、必需 headers、<code>r2_key</code>、过期时间和最大体积。它不会返回 R2 Access Key 或 Secret Access Key。</div>
 
 <h3>回调字段</h3>
 <table class="ftable">
@@ -294,7 +294,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 <tr><td><code>variation_labels</code></td><td>Shopee 规格标签：<code>{name1,name2,values:[{id,option1,option2}]}</code>；无规格商品传空名称和空数组</td></tr>
 <tr><td><code>image_type</code></td><td>'main'|'sub'|'detail'|'sku'</td></tr>
 <tr><td><code>image_position</code></td><td>number (1~N)</td></tr>
-<tr><td><code>r2_key</code></td><td>图片成功回调必填；sidecar 直传后返回的 R2 对象键</td></tr>
+<tr><td><code>r2_key</code></td><td>图片成功回调必填；图片服务直传后返回的 R2 对象键</td></tr>
 <tr><td><code>sha256</code></td><td>图片成功回调必填；64位小写十六进制摘要，用于核对 R2 metadata</td></tr>
 <tr><td><code>size_bytes</code></td><td>图片字节数；当前上限 1,900,000 bytes</td></tr>
 <tr><td><code>content_type</code></td><td>图片直传固定为 <code>image/jpeg</code></td></tr>
@@ -304,7 +304,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 </table>
 
 <h3>n8n 回调示例</h3>
-<div class="note"><strong>返回判断：</strong>n8n 调用 <code>callback_url</code> 后，HTTP 200 且 <code>success:true</code>、<code>queued:true</code> 表示 Cloudflare Queue 已持久接收；若返回 <code>503</code> 且 <code>retryable:true</code>，n8n 应等待后重试同一回调。新版图片工作流必须先由 sidecar 直传 R2，再使用 <code>r2_key</code> 回调。</div>
+<div class="note"><strong>返回判断：</strong>调用 <code>callback_url</code> 后，HTTP 200 且 <code>success:true</code>、<code>queued:true</code> 表示 Cloudflare Queue 已持久接收；若返回 <code>503</code> 且 <code>retryable:true</code>，调用方应等待后重试同一回调。商品元数据由 n8n 回调；图片结果由独立图片服务直传 R2 后使用 <code>r2_key</code> 回调。</div>
 <h4>JST 商品元数据成功回调</h4>
 <pre>{
   "callback_secret": "{{$json.callback_secret}}",
@@ -362,6 +362,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 <pre>{
   "secret": "{{$json.callback_secret}}",
   "task_id": "{{$json.task_id}}",
+  "plan_id": "{{$json.plan_id}}",
   "workflow_type": "{{$json.workflow_type}}",
   "sub_task_id": "{{$json.sub_task_id}}",
   "set_index": {{$json.set_index}},
@@ -370,6 +371,31 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
   "error": "AI生成失败或URL不可用",
   "retryable": true
 }</pre>
+
+<h2 id="图片处理服务">图片处理服务</h2>
+<div class="note"><strong>基础地址：</strong>由部署环境决定；同主机 Docker 默认使用 <code>http://ews-image-sidecar:3000</code>，跨主机必须使用受 TLS 保护的外部地址。该服务不是 Worker 路由，不使用 <code>${API_ROOT}</code>。<br><strong>职责：</strong>Fastify 只负责鉴权和持久入队，BullMQ/Valkey 削峰，Sharp Worker 执行下载、JPEG 转码、必要时等比缩小、R2 直传和最终 callback。</div>
+<table class="ftable">
+<tr><th>方法</th><th>路径</th><th>鉴权</th><th>说明</th></tr>
+<tr><td><code>POST</code></td><td><code>/v1/image-jobs</code></td><td>body.callback_secret</td><td>持久化图片任务，成功返回 HTTP 202</td></tr>
+<tr><td><code>GET</code></td><td><code>/healthz</code></td><td>无</td><td>API 进程存活检查</td></tr>
+<tr><td><code>GET</code></td><td><code>/readyz</code></td><td>无</td><td>Valkey 就绪检查</td></tr>
+<tr><td><code>GET</code></td><td><code>/v1/image-jobs/:jobId</code></td><td>Bearer callback_secret</td><td>查询 BullMQ 任务状态</td></tr>
+<tr><td><code>POST</code></td><td><code>/v1/image-jobs/:jobId/retry</code></td><td>Bearer callback_secret</td><td>重试 BullMQ failed 任务</td></tr>
+<tr><td><code>GET</code></td><td><code>/v1/stats</code></td><td>Bearer callback_secret</td><td>查询等待、活动、完成和失败数量</td></tr>
+</table>
+<h3>异步入队请求</h3>
+<pre>{
+  "source_url": "模型生成的临时图片URL",
+  "ticket_url": "${API_ROOT}/api/internal/r2-upload-ticket",
+  "callback_secret": "v3",
+  "task_id": "母任务ID",
+  "plan_id": "图片计划ID",
+  "sub_task_id": "子任务ID",
+  "set_index": 0,
+  "image_type": "main|sub|detail|sku",
+  "image_position": 1
+}</pre>
+<div class="note"><strong>响应语义：</strong><code>202</code> 表示 Valkey 已持久接收；同一 <code>plan_id + source_url</code> 活动任务只入队一次，已完成任务重复提交时仅重放 callback。<code>401</code> 为密钥失败且不可重试，<code>429</code> 表示队列满并携带 <code>Retry-After: 30</code>，<code>503</code> 表示 Valkey 或服务暂时不可用。n8n 收到 <code>202</code> 后必须结束当前执行，不再发送图片成功回调。</div>
 
 <h2 id="上传">上传</h2>
 ${eps(['POST /api/upload'])}
