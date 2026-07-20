@@ -422,9 +422,9 @@ ${WEBHOOKS.slice(2).map(function(w){
 <div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量和价格保持数值类型。市场|吊牌价由系统自动复制最终基本售价；启用价格浮动时，同一导出行的两列使用同一个取值。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的元数据或图片会阻断。SKU 图片自上传模式直接使用 <code>sku_image</code>，AI 模式使用生成图。去重模式第 2 套开始复用第 1 套的 AI 附图、详情图和 SKU 图。</div>
 
 <h2 id="Shopee导出">Shopee 导出格式（A~AL 38列）</h2>
-<p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入 2026-07-14 官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
+<p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入 2026-07-20 官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
 <pre>Category | Product Name | Product Description | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5000) | Shipping(5001) | Shipping(5004) | Shipping(5012) | Shipping(50039) | Shipping(50052) | Shipping(50053) | Pre-order DTS | Fail Reason</pre>
-<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。无规格商品的 E~J 规格列留空。2026-07-14 basic template 已移除 4 个限购字段和物流渠道 5115，并新增渠道 50053；模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
+<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。无规格商品的 E~J 规格列留空。2026-07-20 basic template 与 2026-07-14 版本保持相同的 A~AL 字段、必填规则和物流渠道；本次仅重新排列 <code>Pre-order DTS Range</code> 行顺序，1817 个 Category ID 与 DTS 范围未变化。模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>

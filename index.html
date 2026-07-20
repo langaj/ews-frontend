@@ -596,7 +596,7 @@ async function exportJstTemplate(res,taskId){
 }
 
 async function exportShopeeTemplate(res,taskId){
-  var templateFile=res.template_file||'Shopee_mass_upload_2026-07-14_basic_template.xlsx';
+  var templateFile=res.template_file||'Shopee_mass_upload_2026-07-20_basic_template.xlsx';
   var tpl=await fetch('/templates/'+templateFile);
   if(!tpl.ok)throw new Error('找不到Shopee官方模板文件');
   var wb=XLSX.read(await tpl.arrayBuffer(),{type:'array'});

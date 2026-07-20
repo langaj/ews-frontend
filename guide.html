@@ -151,7 +151,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
             <li>任务完成后导出官方模板，数据从第 7 行开始写入。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
-          <div class="ok-box">官方模板依据：系统内置 <code>/templates/Shopee_mass_upload_2026-07-14_basic_template.xlsx</code> 的 <code>Template</code> 工作表。第 3 行是字段名，第 4 行是必填性，第 6 行是填写规则，第 7 行开始写商品数据。</div>
+          <div class="ok-box">官方模板依据：系统内置 <code>/templates/Shopee_mass_upload_2026-07-20_basic_template.xlsx</code> 的 <code>Template</code> 工作表。第 3 行是字段名，第 4 行是必填性，第 6 行是填写规则，第 7 行开始写商品数据。</div>
         </div>
 
         <div class="guide-section">
@@ -199,7 +199,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
 
         <div class="guide-section">
           <h2>品牌和“无品牌”</h2>
-          <p>当前系统导出使用 Shopee 2026-07-14 basic template 的 A~AL 列，这个模板没有 Brand 列，因此创建页不要求品牌 ID，也不会在导出的 Excel 中虚构品牌。</p>
+          <p>当前系统导出使用 Shopee 2026-07-20 basic template 的 A~AL 列。该版本与 2026-07-14 版本的字段、必填规则和物流渠道一致，只重新排列了分类对照表；模板没有 Brand 列，因此创建页不要求品牌 ID，也不会在导出的 Excel 中虚构品牌。</p>
           <p>Shopee 的类目专用模板或样例表里 Brand 通常要求填写 valid brand 或 no brand；样例规则还写明：可查品牌表的 valid brand id，或者留空后在 attributes tool 里补属性值。</p>
           <div class="note-box">本仓库这份官方模板的隐藏品牌表没有可读品牌清单，也没有给出统一的“无品牌 ID”。因此系统不会默认填一个无品牌 ID。后续切换类目专用模板时，应从 Seller Center 或官方模板品牌表选择有效品牌或 no brand。</div>
         </div>
@@ -241,7 +241,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
         <div class="guide-section">
           <h2 id="shopee-category-directory">Shopee Category ID 中英对照表</h2>
           <p>Category ID 是 Shopee 平台类目编码，不是系统自定义字段。准确类目有利于搜索结果和后续类目属性匹配；如果暂时无法确认，可以留空让 Shopee 推荐，但上传后可能还需要调整类目属性、物流或价格限制。</p>
-          <div class="note-box">本页完整收录 <code>Shopee_mass_upload_2026-07-14_basic_template.xlsx</code> 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
+          <div class="note-box">本页完整收录 <code>Shopee_mass_upload_2026-07-20_basic_template.xlsx</code> 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。与 2026-07-14 版本相比没有新增、删除类目或调整 DTS 范围。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
           <div class="category-directory" aria-labelledby="shopee-category-directory">
             <div class="category-toolbar">
               <label class="category-search" for="categorySearch">
