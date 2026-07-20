@@ -46,6 +46,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 .reference-zone img{display:none;width:100%;height:100%;object-fit:cover}
 .reference-zone.has-image{border-style:solid;border-color:#aab2c0;background:#fff}
 .reference-zone.has-image img{display:block}
+.reference-zone.has-image .upload-copy{display:none}
 .upload-copy{font-size:12px;color:var(--shopee-muted);text-align:center;padding:10px;line-height:1.55}
 .upload-copy strong{display:block;color:#344054;font-size:13px;margin-bottom:2px}
 .reference-remove{display:none;position:absolute;right:6px;top:6px;width:26px;height:26px;border:0;border-radius:6px;background:rgba(17,24,39,.78);color:#fff;font-size:18px;line-height:1;cursor:pointer;z-index:2}
@@ -57,10 +58,13 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 .icon-command:hover{border-color:#98a2b3;background:#f9fafb}
 .option-list{border-top:1px solid var(--shopee-line)}
 .option-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(170px,220px) minmax(180px,1fr) 34px;gap:12px;align-items:end;padding:14px 0;border-bottom:1px solid var(--shopee-line)}
-.mini-upload{display:flex;align-items:center;gap:10px;min-height:42px;border:1px dashed #b8c0cc;border-radius:7px;padding:7px 10px;background:var(--shopee-soft);cursor:pointer;overflow:hidden}
+.mini-upload{position:relative;display:flex;align-items:center;gap:10px;min-height:42px;border:1px dashed #b8c0cc;border-radius:7px;padding:7px 10px;background:var(--shopee-soft);cursor:pointer;overflow:hidden;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
 .mini-upload img{display:none;width:38px;height:32px;object-fit:cover;border-radius:5px}
 .mini-upload.has-image img{display:block}.mini-upload.has-image .mini-upload-text{color:#344054}
 .mini-upload-text{font-size:12px;color:var(--shopee-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reference-zone.is-dragging,.mini-upload.is-dragging,.file-drop.is-dragging{border-color:var(--shopee-accent);background:#f5f5ff;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.reference-zone.is-dragging::after,.mini-upload.is-dragging::after,.file-drop.is-dragging::after{content:'松开以上传';position:absolute;inset:5px;z-index:3;display:grid;place-items:center;border-radius:6px;background:rgba(255,255,255,.94);color:var(--shopee-accent);font-size:12px;font-weight:700}
+.file-drop{position:relative;display:flex;align-items:center;min-height:42px;padding:8px 11px;overflow:hidden;border:1px dashed #b8c0cc;border-radius:7px;background:var(--shopee-soft);color:var(--shopee-muted);font-size:12px;cursor:pointer;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}.file-drop input{display:none}.file-drop.has-file{border-style:solid;color:#344054}.file-drop span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .remove-option{width:34px;height:34px;border:0;background:transparent;color:#98a2b3;font-size:20px;cursor:pointer;border-radius:6px}
 .remove-option:hover{background:#fef3f2;color:#b42318}
 .tier2-panel{margin-top:18px;padding:16px;background:var(--shopee-soft);border-radius:8px}
@@ -221,7 +225,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                 <div class="field-grid">
                   <div class="form-group"><label class="form-label" for="gtin">GTIN</label><input class="form-input" id="gtin" inputmode="numeric" maxlength="14" placeholder="8-14 位条码"></div>
                   <div class="form-group"><label class="form-label" for="sizeChartTemplate">尺码表模板 ID</label><input class="form-input" id="sizeChartTemplate" inputmode="numeric" placeholder="与尺码表图片二选一"></div>
-                  <div class="form-group"><label class="form-label" for="sizeChartFile">尺码表图片或 PDF</label><input class="form-input" id="sizeChartFile" type="file" accept="image/jpeg,image/png,application/pdf"></div>
+                  <div class="form-group"><label class="form-label" for="sizeChartFile">尺码表图片或 PDF</label><label class="file-drop" id="sizeChartDrop" ondragenter="setDropState(event,true)" ondragover="setDropState(event,true)" ondragleave="setDropState(event,false)" ondrop="dropSizeChart(event)"><input id="sizeChartFile" type="file" accept="image/jpeg,image/png,application/pdf" onchange="selectSizeChart(event)"><span id="sizeChartFileName">拖入文件或点击选择</span></label></div>
                 </div>
               </div>
 
@@ -266,6 +270,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 <script src="/js/api.js"></script>
 <script>
 var referenceFiles=[null,null,null,null,null];
+var droppedSizeChartFile=null;
 var primaryCounter=1;
 var primaryOptions=[{id:'primary-1',value:'',description:'',file:null,preview:''}];
 var combinationState={};
@@ -303,14 +308,19 @@ function renderReferenceGrid(){
   var labels=['核心参考图','辅助图 1','辅助图 2','辅助图 3','辅助图 4'];
   document.getElementById('referenceGrid').innerHTML=labels.map(function(label,index){
     var file=referenceFiles[index];
-    return '<div class="reference-slot"><input type="file" id="referenceInput'+index+'" accept="image/*" onchange="handleReferenceFile(event,'+index+')">'+
-      '<div class="reference-zone'+(file?' has-image':'')+'" onclick="document.getElementById(\'referenceInput'+index+'\').click()">'+
+    return '<div class="reference-slot"><input type="file" id="referenceInput'+index+'" accept="image/*" multiple onchange="handleReferenceFile(event,'+index+')">'+
+      '<div class="reference-zone'+(file?' has-image':'')+'" onclick="document.getElementById(\'referenceInput'+index+'\').click()" ondragenter="setDropState(event,true)" ondragover="setDropState(event,true)" ondragleave="setDropState(event,false)" ondrop="dropReference(event,'+index+')">'+
       '<button type="button" class="reference-remove" aria-label="移除图片" onclick="removeReference(event,'+index+')">×</button>'+
       '<img src="'+(file?file.preview:'')+'" alt="'+label+'预览">'+
-      '<div class="upload-copy"><strong>'+(index===0?'上传核心图片':'添加辅助图片')+'</strong>'+(index===0?'必填，建议正面清晰图':'可选')+'</div></div><div class="reference-caption">'+label+'</div></div>';
+      '<div class="upload-copy"><strong>'+(index===0?'拖入或点击上传':'拖入或点击添加')+'</strong>'+(index===0?'必填；可一次拖入多张':'可选')+'</div></div><div class="reference-caption">'+label+'</div></div>';
   }).join('');
 }
-function handleReferenceFile(event,index){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(result){referenceFiles[index]={file:file,preview:result.target.result};renderReferenceGrid();document.getElementById('referenceError').classList.remove('show')};reader.readAsDataURL(file)}
+function isImageFile(file){return file&&/^image\//i.test(file.type)}
+function setDropState(event,active){event.preventDefault();event.stopPropagation();if(!active&&event.relatedTarget&&event.currentTarget.contains(event.relatedTarget))return;event.currentTarget.classList.toggle('is-dragging',active)}
+function setReferenceFile(index,file){var entry={file:file,preview:''};referenceFiles[index]=entry;var reader=new FileReader();reader.onload=function(result){if(referenceFiles[index]!==entry)return;entry.preview=result.target.result;renderReferenceGrid()};reader.readAsDataURL(file)}
+function assignReferenceFiles(index,files){var images=Array.from(files||[]).filter(isImageFile);if(!images.length){showToast('请拖入图片文件','error');return}var accepted=images.slice(0,referenceFiles.length-index);accepted.forEach(function(file,offset){setReferenceFile(index+offset,file)});renderReferenceGrid();if(images.length>accepted.length)showToast('参考图区最多保留5张图片','info');document.getElementById('referenceError').classList.remove('show')}
+function handleReferenceFile(event,index){assignReferenceFiles(index,event.target.files)}
+function dropReference(event,index){event.preventDefault();event.stopPropagation();event.currentTarget.classList.remove('is-dragging');assignReferenceFiles(index,event.dataTransfer.files)}
 function removeReference(event,index){event.stopPropagation();referenceFiles[index]=null;renderReferenceGrid()}
 
 function setProductType(value){productType=value;document.getElementById('variationEditor').hidden=value==='single';document.getElementById('tier2Panel').hidden=value!=='two';renderMatrix();updateSummary()}
@@ -319,14 +329,21 @@ function addPrimaryOption(){if(primaryOptions.length>=20){showToast('一级规�
 function removePrimaryOption(id){if(primaryOptions.length<=1){showToast('至少保留一个一级规格值','warning');return}primaryOptions=primaryOptions.filter(function(option){return option.id!==id});renderPrimaryOptions();renderMatrix()}
 function updatePrimaryValue(id,value){var option=primaryOptions.find(function(item){return item.id===id});if(option)option.value=value;renderMatrix();updateSummary()}
 function updatePrimaryDescription(id,value){var option=primaryOptions.find(function(item){return item.id===id});if(option)option.description=value}
-function handlePrimaryFile(event,id){var file=event.target.files[0];if(!file)return;var option=primaryOptions.find(function(item){return item.id===id});if(!option)return;var reader=new FileReader();reader.onload=function(result){option.file=file;option.preview=result.target.result;renderPrimaryOptions()};reader.readAsDataURL(file)}
+function setPrimaryFile(id,file){if(!isImageFile(file)){showToast('请拖入图片文件','error');return}var option=primaryOptions.find(function(item){return item.id===id});if(!option)return;option.file=file;var reader=new FileReader();reader.onload=function(result){if(option.file!==file)return;option.preview=result.target.result;renderPrimaryOptions()};reader.readAsDataURL(file)}
+function handlePrimaryFile(event,id){setPrimaryFile(id,event.target.files[0])}
+function dropPrimaryFile(event,id){event.preventDefault();event.stopPropagation();event.currentTarget.classList.remove('is-dragging');setPrimaryFile(id,Array.from(event.dataTransfer.files||[]).find(isImageFile))}
 function renderPrimaryOptions(){
   var container=document.getElementById('primaryOptions');if(!container)return;
   container.innerHTML=primaryOptions.map(function(option,index){
-    var aiMode=imageMode==='ai';var upload='<label class="mini-upload'+(option.preview?' has-image':'')+'"><input type="file" accept="image/*" hidden onchange="handlePrimaryFile(event,\''+option.id+'\')"><img src="'+option.preview+'" alt="规格图片"><span class="mini-upload-text">'+(option.file?escapeHtml(option.file.name):(aiMode?'上传 AI 参考图':'上传最终 SKU 图片'))+'</span></label>';
+    var aiMode=imageMode==='ai';var upload='<label class="mini-upload'+(option.preview?' has-image':'')+'" ondragenter="setDropState(event,true)" ondragover="setDropState(event,true)" ondragleave="setDropState(event,false)" ondrop="dropPrimaryFile(event,\''+option.id+'\')"><input type="file" accept="image/*" hidden onchange="handlePrimaryFile(event,\''+option.id+'\')"><img src="'+option.preview+'" alt="规格图片"><span class="mini-upload-text">'+(option.file?escapeHtml(option.file.name):(aiMode?'拖入或点击上传 AI 参考图':'拖入或点击上传 SKU 成品图'))+'</span></label>';
     return '<div class="option-row"><div class="form-group"><label class="form-label">规格值 '+(index+1)+'</label><input class="form-input" maxlength="20" value="'+escapeHtml(option.value)+'" placeholder="如：5个装" oninput="updatePrimaryValue(\''+option.id+'\',this.value)"></div><div class="form-group"><label class="form-label">'+(aiMode?'SKU 参考图':'SKU 成品图')+' <span class="required">*</span></label>'+upload+'</div><div class="form-group"><label class="form-label">'+(aiMode?'SKU 图片提示词 <span class="optional">(可选)</span>':'导出方式')+'</label>'+(aiMode?'<input class="form-input" maxlength="300" value="'+escapeHtml(option.description)+'" placeholder="如：展示买二送三，一共到手5个" oninput="updatePrimaryDescription(\''+option.id+'\',this.value)">':'<div class="form-hint">该一级规格下的全部 SKU 共用此图片 URL</div>')+'</div><button type="button" class="remove-option" aria-label="删除规格值" onclick="removePrimaryOption(\''+option.id+'\')">×</button></div>';
   }).join('');
 }
+
+function getSizeChartFile(){return droppedSizeChartFile||document.getElementById('sizeChartFile').files[0]}
+function updateSizeChartLabel(file){var drop=document.getElementById('sizeChartDrop');drop.classList.toggle('has-file',!!file);document.getElementById('sizeChartFileName').textContent=file?file.name:'拖入文件或点击选择'}
+function selectSizeChart(event){droppedSizeChartFile=null;updateSizeChartLabel(event.target.files[0])}
+function dropSizeChart(event){event.preventDefault();event.stopPropagation();event.currentTarget.classList.remove('is-dragging');var file=Array.from(event.dataTransfer.files||[]).find(function(item){return /^(image\/jpeg|image\/png|application\/pdf)$/i.test(item.type)});if(!file){showToast('尺码表仅支持 JPG、PNG 或 PDF','error');return}droppedSizeChartFile=file;document.getElementById('sizeChartFile').value='';updateSizeChartLabel(file)}
 
 function getCombinations(){
   if(productType==='single')return[{key:'single',label:'无规格商品',option1:'',option2:'',primaryId:''}];
@@ -378,7 +395,7 @@ function validateModel(){
   if(dimensions.some(function(value){return value&&Number(value)<=0}))return'长、宽、高必须大于0';
   var categoryId=document.getElementById('categoryId').value.trim();if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';
   var gtin=document.getElementById('gtin').value.trim();if(gtin&&!/^\d{8,14}$/.test(gtin))return'GTIN 必须为8-14位数字';
-  var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=document.getElementById('sizeChartFile').files[0];if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
+  var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=getSizeChartFile();if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
   var preOrder=document.getElementById('preOrderDts').value;if(preOrder&&(Number(preOrder)<5||Number(preOrder)>30))return'预售出货天数必须为5-30天';
   return'';
 }
@@ -398,7 +415,7 @@ async function handleCreate(event){
     var coreUrl=referenceUrls.find(function(item){return item.index===0}).url;var auxiliaryUrls=referenceUrls.filter(function(item){return item.index>0}).map(function(item){return item.url});
     var primaryWithFiles=productType==='single'?[]:primaryOptions.filter(function(option){return option.file});var uploadedPrimary=await uploadWithLimit(primaryWithFiles,3,async function(option){var result=await API.uploadFile(taskId,option.file,imageMode==='ai'?'sku-reference':'sku-upload');if(!result.success)throw new Error(result.error||(imageMode==='ai'?'规格参考图上传失败':'SKU图片上传失败'));return{id:option.id,url:result.url}});var primaryUrls={};uploadedPrimary.forEach(function(item){primaryUrls[item.id]=item.url});
     if(await stopExpiredOperation(token,taskId,savedTask))return;
-    var sizeChartUrl='';var sizeChartFile=document.getElementById('sizeChartFile').files[0];if(sizeChartFile){var chartResult=await API.uploadFile(taskId,sizeChartFile,'size-chart');if(!chartResult.success)throw new Error(chartResult.error||'尺码表上传失败');sizeChartUrl=chartResult.url;if(await stopExpiredOperation(token,taskId,savedTask))return}
+    var sizeChartUrl='';var sizeChartFile=getSizeChartFile();if(sizeChartFile){var chartResult=await API.uploadFile(taskId,sizeChartFile,'size-chart');if(!chartResult.success)throw new Error(chartResult.error||'尺码表上传失败');sizeChartUrl=chartResult.url;if(await stopExpiredOperation(token,taskId,savedTask))return}
     var brief=document.getElementById('sourceBrief').value.trim();var taskName=document.getElementById('taskName').value.trim();
     var variations=getEnabledCombinations().map(function(combo){var state=ensureCombinationState(combo);var primary=primaryOptions.find(function(option){return option.id===combo.primaryId});return{option1:combo.option1,option2:combo.option2,image_per_variation:primaryUrls[combo.primaryId]||'',sku_description:imageMode==='ai'&&primary?primary.description.trim():'',price:state.float?Number(state.min):Number(state.price),price_float_enabled:state.float?1:0,price_min:state.float?Number(state.min):null,price_max:state.float?Number(state.max):null,price_precision:Number(state.precision)||0,stock:Number(state.stock),weight_kg:Number(state.weight),sku:state.sku.trim()}});
     var payload={name:taskName,source_brief:brief,product_type:productType,reference_title:document.getElementById('referenceTitle').value.trim(),main_description:document.getElementById('mainDescription').value.trim(),reference_image:coreUrl,auxiliary_images:JSON.stringify(auxiliaryUrls),cover_image:coreUrl,images:JSON.stringify(auxiliaryUrls),generate_count:Number(document.getElementById('generateCount').value),mode:selectedValue('generationMode'),main_image_count:9,detail_image_count:0,category_id:document.getElementById('categoryId').value.trim(),gtin:document.getElementById('gtin').value.trim(),length_cm:document.getElementById('lengthCm').value||null,width_cm:document.getElementById('widthCm').value||null,height_cm:document.getElementById('heightCm').value||null,variation_name1:productType==='single'?'':document.getElementById('variationName1').value.trim(),variation_name2:productType==='two'?document.getElementById('variationName2').value.trim():'',variation_image_mode:productType==='single'?'none':imageMode,size_chart_template_id:document.getElementById('sizeChartTemplate').value.trim(),size_chart_image:sizeChartUrl,pre_order_dts:document.getElementById('preOrderDts').value||null,shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value})),variations:variations};
