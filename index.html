@@ -596,16 +596,21 @@ async function exportJstTemplate(res,taskId){
 }
 
 async function exportShopeeTemplate(res,taskId){
-  var templateFile=res.template_file||'Shopee_mass_upload_2026-07-20_basic_template.xlsx';
+  var templateFile=res.template_file||'Shopee_mass_upload_current.xlsx';
   var tpl=await fetch('/templates/'+templateFile);
   if(!tpl.ok)throw new Error('找不到Shopee官方模板文件');
   var wb=XLSX.read(await tpl.arrayBuffer(),{type:'array'});
   var ws=wb.Sheets[res.template_sheet||'Template']||wb.Sheets[wb.SheetNames[0]];
+  var expectedColumns=Array.isArray(res.columns)?res.columns:[];
+  var templateRows=XLSX.utils.sheet_to_json(ws,{header:1,range:2,blankrows:false});
+  var templateColumns=templateRows[0]||[];
+  var contractMismatch=expectedColumns.length!==templateColumns.length||expectedColumns.some(function(column,index){return String(templateColumns[index]||'')!==column});
+  if(contractMismatch)throw new Error('Shopee官方模板字段与系统导出契约不一致，请联系管理员更新模板');
   var startRow=Math.max(Number(res.template_start_row)||7,1);
   XLSX.utils.sheet_add_aoa(ws,res.rows,{origin:'A'+startRow});
-  var range=XLSX.utils.decode_range(ws['!ref']||'A1:AL6');
+  var range=XLSX.utils.decode_range(ws['!ref']||'A1:AI6');
   range.e.r=Math.max(range.e.r,startRow-1+res.rows.length-1);
-  range.e.c=Math.max(range.e.c,(Number(res.template_column_count)||res.rows[0]?.length||38)-1);
+  range.e.c=Math.max(range.e.c,(Number(res.template_column_count)||res.rows[0]?.length||35)-1);
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.writeFile(wb,'Shopee_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
