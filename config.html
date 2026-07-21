@@ -3,19 +3,20 @@
 <title>系统配置 - EWS</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-.config-page{max-width:1220px}.account-chip{display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid var(--gray-200);border-radius:7px;background:#fff;color:var(--gray-600);font-size:12px}.user-credits-cell,.user-concurrency-cell{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.workflow-toggle{display:flex;align-items:center;gap:8px;font-weight:650;cursor:pointer;margin-bottom:8px}.workflow-override{max-width:180px}.config-page .card{box-shadow:none}.general-settings-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.general-settings-form>.form-group,.general-settings-form>.btn{grid-column:1/-1}.workflow-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.workflow-form h4,.workflow-form>.form-hint,.workflow-form>.btn{grid-column:1/-1}.workflow-form h4{margin:4px 0 14px;padding-top:4px;color:var(--gray-500);font-size:11px;text-transform:uppercase}.workflow-form h4:not(:first-child){margin-top:10px;padding-top:18px;border-top:1px solid var(--gray-200)}.workflow-form>.btn,.general-settings-form>.btn{justify-self:start}.user-add-row{display:grid;grid-template-columns:1.1fr 1.3fr .8fr .9fr .8fr auto auto;gap:8px}.user-add-row .form-input{max-width:none!important}.user-table table{min-width:1080px}#userWebhookFields{padding-top:4px}#userWebhookFields>h4{margin:18px 0 12px!important;padding-top:16px;border-top:1px solid var(--gray-200);color:var(--gray-900)!important;font-size:14px}.confirm-panel{text-align:left;padding:28px}.confirm-panel .confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+.config-page{max-width:1220px}.account-chip{display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid var(--gray-200);border-radius:7px;background:#fff;color:var(--gray-600);font-size:12px}.user-credits-cell,.user-concurrency-cell{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.workflow-toggle{display:flex;align-items:center;gap:8px;font-weight:650;cursor:pointer;margin-bottom:8px}.workflow-override{max-width:180px}.config-page .card{box-shadow:none}.general-settings-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.general-settings-form>.form-group,.general-settings-form>.btn{grid-column:1/-1}.workflow-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.workflow-form h4,.workflow-form>.form-hint,.workflow-form>.btn{grid-column:1/-1}.workflow-form h4{margin:4px 0 14px;padding-top:4px;color:var(--gray-500);font-size:11px;text-transform:uppercase}.workflow-form h4:not(:first-child){margin-top:10px;padding-top:18px;border-top:1px solid var(--gray-200)}.workflow-form>.btn,.general-settings-form>.btn{justify-self:start}.user-add-row{display:grid;grid-template-columns:1.1fr 1.3fr .8fr .9fr 1fr .8fr auto auto;gap:8px}.user-add-row .form-input{max-width:none!important}.user-table table{min-width:1220px}#userWebhookFields{padding-top:4px}#userWebhookFields>h4{margin:18px 0 12px!important;padding-top:16px;border-top:1px solid var(--gray-200);color:var(--gray-900)!important;font-size:14px}.confirm-panel{text-align:left;padding:28px}.confirm-panel .confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}.group-create-row{display:grid;grid-template-columns:minmax(220px,420px) 112px;gap:8px;align-items:center}.group-table table{min-width:820px}.group-name-control{display:flex;align-items:center;gap:6px}.group-name-control .form-input{min-height:34px;padding:6px 9px}.group-status{display:inline-flex;min-height:24px;align-items:center;padding:3px 8px;border-radius:6px;background:#ecfdf3;color:#027a48;font-size:11px;font-weight:700}.group-status.disabled{background:#f2f4f7;color:#475467}.group-template-toolbar{display:grid;grid-template-columns:minmax(180px,280px) minmax(220px,1fr);gap:10px;margin-bottom:12px}.group-template-list{max-height:430px;overflow:auto;border:1px solid var(--gray-200);border-radius:7px;background:#fff}.group-template-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--gray-100);cursor:pointer}.group-template-row:last-child{border-bottom:0}.group-template-row:hover{background:var(--gray-50)}.group-template-row strong{display:block;overflow:hidden;text-overflow:ellipsis;font-size:12px;white-space:nowrap}.group-template-row span{display:block;margin-top:3px;color:var(--gray-500);font-size:10px}.group-template-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.group-template-count{color:var(--gray-500);font-size:12px}
 @media(max-width:900px){.user-add-row{grid-template-columns:repeat(2,minmax(0,1fr))}.user-add-row .btn{width:100%}}
-@media(max-width:680px){.general-settings-form,.workflow-form{grid-template-columns:1fr}.general-settings-form>*{grid-column:1!important}.user-add-row{grid-template-columns:1fr}}
+@media(max-width:680px){#adminTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}#adminTabs .tab-btn{width:100%;padding-right:5px;padding-left:5px}.general-settings-form,.workflow-form{grid-template-columns:1fr}.general-settings-form>*{grid-column:1!important}.user-add-row,.group-create-row,.group-template-toolbar{grid-template-columns:1fr}.group-create-row .btn,.group-template-actions .btn{width:100%}.group-template-actions{align-items:stretch;flex-direction:column}.group-table{overflow:visible}.group-table table,.group-table tbody{display:block;min-width:0;width:100%}.group-table thead{display:none}.group-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:13px 0;border-bottom:1px solid var(--gray-200)}.group-table tr:last-child{border-bottom:0}.group-table td{display:block;padding:0;border:0}.group-table td:first-child{grid-column:1/-1}.group-table td::before{display:block;margin-bottom:4px;color:var(--gray-500);content:attr(data-label);font-size:10px}.group-table td:last-child .btn{width:100%}.group-name-control .form-input{min-width:0}.group-template-row{grid-template-columns:auto minmax(0,1fr)}.group-template-row>.group-status{grid-column:2}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
 <div class="app-container config-page">
-  <div class="page-header"><div class="page-heading"><div class="page-kicker">管理中心</div><h1 class="page-title">系统配置</h1><p class="page-subtitle">管理工作流地址、用户权限、图片并发额度与算力。</p></div><div class="account-chip" id="userInfo"></div></div>
+  <div class="page-header"><div class="page-heading"><div class="page-kicker">管理中心</div><h1 class="page-title">系统配置</h1><p class="page-subtitle">管理工作流、账号权限、资源分组、图片并发额度与算力。</p></div><div class="account-chip" id="userInfo"></div></div>
 <div class="tab-bar" id="adminTabs">
   <button class="tab-btn active" onclick="switchTab('general')">通用</button>
   <button class="tab-btn" onclick="switchTab('jst')">JST 工作流</button>
   <button class="tab-btn" onclick="switchTab('shopee')">Shopee 工作流</button>
   <button class="tab-btn" onclick="switchTab('users')">用户管理</button>
+  <button class="tab-btn" onclick="switchTab('groups')">分组管理</button>
 </div>
 
 <!-- 通用配置 -->
@@ -63,6 +64,21 @@
   </div></div>
 </div>
 
+<!-- 分组管理 -->
+<div class="tab-panel" id="tab-groups">
+  <div class="card"><div class="card-header">创建分组</div><div class="card-body">
+    <div class="group-create-row"><input class="form-input" id="newGroupName" maxlength="40" placeholder="分组名称"><button class="btn btn-primary" type="button" onclick="runConfigAction('create-group',this,'创建中...',handleCreateGroup)">创建分组</button></div>
+  </div></div>
+  <div class="card" style="margin-top:20px"><div class="card-header">分组设置</div><div class="card-body">
+    <div class="table-container group-table"><table><thead><tr><th>分组名称</th><th>状态</th><th>用户</th><th>Shopee 模板</th><th>操作</th></tr></thead><tbody id="groupListBody"></tbody></table></div>
+  </div></div>
+  <div class="card" style="margin-top:20px"><div class="card-header">模板范围</div><div class="card-body">
+    <div class="group-template-toolbar"><select class="form-select" id="groupTemplateSelect" onchange="selectTemplateGroup(this.value)"><option value="">请选择分组</option></select><input class="form-input" id="groupTemplateSearch" type="search" placeholder="搜索模板名称、档案代码或更新用户" oninput="renderGroupTemplateList()"></div>
+    <div class="group-template-list" id="groupTemplateList"><div class="empty-state"><div class="empty-text">请选择分组</div></div></div>
+    <div class="group-template-actions"><span class="group-template-count" id="groupTemplateCount">0 个模板</span><button class="btn btn-primary" id="saveGroupTemplatesButton" type="button" disabled onclick="runConfigAction('save-group-templates',this,'保存中...',saveGroupTemplates)">保存模板范围</button></div>
+  </div></div>
+</div>
+
 <!-- 用户管理 -->
 <div class="tab-panel" id="tab-users">
   <div class="card"><div class="card-header">添加用户</div><div class="card-body">
@@ -75,6 +91,7 @@
       <select class="form-input" id="newPlatformAccess" style="max-width:120px">
         <option value="allow">全部平台</option><option value="jst">仅聚水潭</option><option value="shopee">仅虾皮</option>
       </select>
+      <select class="form-input" id="newGroupId" title="所属分组"><option value="default">默认分组</option></select>
       <input type="number" class="form-input" id="newImageConcurrency" value="20" min="1" max="20" title="图片并发上限" placeholder="图片并发">
       <button class="btn btn-primary" onclick="runConfigAction('add-user',this,'添加中...',handleAddUser)">添加用户</button>
       <button class="btn btn-outline" onclick="runConfigAction('load-users',this,'刷新中...',loadUserList)">刷新列表</button>
@@ -82,7 +99,7 @@
   </div></div>
   <div class="card" style="margin-top:20px"><div class="card-header">用户列表</div><div class="card-body">
     <div class="table-container user-table">
-      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>平台能力</th><th>图片并发</th><th>算力</th><th>操作</th></tr></thead>
+      <table><thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>分组</th><th>平台能力</th><th>图片并发</th><th>算力</th><th>操作</th></tr></thead>
       <tbody id="userListBody"></tbody></table>
     </div>
   </div></div>
@@ -126,6 +143,12 @@
 var currentRole='';
 var _confirmResolve=null;
 var configActionLocks={};
+var groupCache=[];
+var groupTemplates=[];
+var activeTemplateGroupId='';
+var selectedGroupTemplateIds=new Set();
+
+function escapeHtml(value){return String(value===undefined||value===null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 async function runConfigAction(key,control,label,action){
   if(configActionLocks[key]){showToast('该操作正在处理中，请等待服务器响应','info');return}
@@ -170,9 +193,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
   document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});
-  document.querySelector('.tab-btn[onclick*="'+name+'"]').classList.add('active');
+  var activeButton=document.querySelector('.tab-btn[onclick*="'+name+'"]');activeButton.classList.add('active');
+  if(window.innerWidth<=680)requestAnimationFrame(function(){activeButton.scrollIntoView({block:'nearest',inline:'center'})});
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='users'){loadUserList();populateWebhookUserSelect()}
+  if(name==='users')loadUserList();
+  if(name==='groups')loadGroupManagement();
   if(name==='jst')loadJstConfig();
   if(name==='shopee')loadShopeeConfig();
   if(name==='general')loadGeneralConfig();
@@ -250,10 +275,67 @@ async function saveShopeeConfig(){
   showToast(res.success?'Shopee配置保存成功':(res.error||'失败'),res.success?'success':'error');
 }
 
+// 分组
+function groupOptions(selectedId){
+  return groupCache.map(function(group){return'<option value="'+escapeHtml(group.id)+'" '+(group.id===selectedId?'selected':'')+'>'+escapeHtml(group.name)+(group.status==='disabled'?'（已停用）':'')+'</option>'}).join('');
+}
+function syncNewUserGroupOptions(selectedId){
+  var select=document.getElementById('newGroupId');if(!select)return;
+  var next=selectedId||select.value||groupCache[0]?.id||'';
+  select.innerHTML=groupOptions(next);if(next)select.value=next;
+}
+async function loadGroupManagement(preferredId){
+  var results=await Promise.all([API.getGroups(),API.getShopeeTemplateProfiles()]);
+  if(!results[0].success)throw new Error(results[0].error||'分组加载失败');
+  if(!results[1].success)throw new Error(results[1].error||'模板库加载失败');
+  groupCache=results[0].groups||[];groupTemplates=results[1].profiles||[];
+  syncNewUserGroupOptions();renderGroupList();
+  var select=document.getElementById('groupTemplateSelect');var next=preferredId||activeTemplateGroupId||groupCache[0]?.id||'';
+  select.innerHTML=groupCache.length?groupOptions(next):'<option value="">暂无分组</option>';
+  select.value=groupCache.some(function(group){return group.id===next})?next:(groupCache[0]?.id||'');
+  selectTemplateGroup(select.value);
+}
+function renderGroupList(){
+  var body=document.getElementById('groupListBody');
+  if(!groupCache.length){body.innerHTML='<tr><td colspan="5" class="muted">暂无分组</td></tr>';return}
+  body.innerHTML=groupCache.map(function(group){var key=encodeURIComponent(group.id);var disabled=group.status==='disabled';return'<tr><td data-label="分组名称"><div class="group-name-control"><input class="form-input" id="gn_'+key+'" maxlength="40" value="'+escapeHtml(group.name)+'"><button class="btn btn-sm btn-outline" type="button" onclick="saveGroupName(decodeURIComponent(\''+key+'\'),this)">保存</button></div></td><td data-label="状态"><span class="group-status '+(disabled?'disabled':'')+'">'+(disabled?'已停用':'已启用')+'</span></td><td data-label="用户">'+Number(group.user_count||0)+'</td><td data-label="Shopee 模板">'+Number(group.template_count||0)+'</td><td data-label="操作"><button class="btn btn-sm '+(disabled?'btn-outline':'btn-danger')+'" type="button" onclick="changeGroupStatus(decodeURIComponent(\''+key+'\'),\''+(disabled?'active':'disabled')+'\',this)">'+(disabled?'启用':'停用')+'</button></td></tr>'}).join('');
+}
+async function handleCreateGroup(){
+  var input=document.getElementById('newGroupName');var name=input.value.trim();if(!name){showToast('请输入分组名称','error');return}
+  var result=await API.createGroup(name);if(!result.success)throw new Error(result.error||'分组创建失败');
+  input.value='';showToast(result.message||'分组已创建','success');await loadGroupManagement(result.group?.id);
+}
+async function saveGroupName(groupId,button){
+  var input=document.getElementById('gn_'+encodeURIComponent(groupId));var group=groupCache.find(function(item){return item.id===groupId});if(!input||!group)return;
+  await runConfigAction('rename-group:'+groupId,button,'保存中...',async function(){var result=await API.updateGroup(groupId,{name:input.value.trim(),status:group.status});if(!result.success)throw new Error(result.error||'分组名称保存失败');showToast(result.message||'分组设置已更新','success');await loadGroupManagement(groupId)});
+}
+async function changeGroupStatus(groupId,status,button){
+  var group=groupCache.find(function(item){return item.id===groupId});if(!group)return;
+  if(status==='disabled'){var confirmed=await showConfirm('停用“'+group.name+'”后，组内所有普通用户将立即无法登录。确定继续吗？');if(!confirmed)return}
+  await runConfigAction('status-group:'+groupId,button,status==='disabled'?'停用中...':'启用中...',async function(){var result=await API.updateGroup(groupId,{name:group.name,status:status});if(!result.success)throw new Error(result.error||'分组状态更新失败');showToast(result.message,'success');await loadGroupManagement(groupId);if(document.getElementById('tab-users').classList.contains('active'))await loadUserList()});
+}
+function selectTemplateGroup(groupId){
+  activeTemplateGroupId=groupId||'';selectedGroupTemplateIds=new Set(groupTemplates.filter(function(profile){return Array.isArray(profile.group_ids)&&profile.group_ids.includes(activeTemplateGroupId)}).map(function(profile){return profile.id}));
+  document.getElementById('saveGroupTemplatesButton').disabled=!activeTemplateGroupId;renderGroupTemplateList();
+}
+function toggleGroupTemplate(profileId,checked){if(checked)selectedGroupTemplateIds.add(profileId);else selectedGroupTemplateIds.delete(profileId);renderGroupTemplateCount()}
+function renderGroupTemplateCount(){document.getElementById('groupTemplateCount').textContent=selectedGroupTemplateIds.size+' / '+groupTemplates.length+' 个模板'}
+function renderGroupTemplateList(){
+  var list=document.getElementById('groupTemplateList');if(!activeTemplateGroupId){list.innerHTML='<div class="empty-state"><div class="empty-text">请选择分组</div></div>';renderGroupTemplateCount();return}
+  var query=document.getElementById('groupTemplateSearch').value.trim().toLowerCase();var rows=groupTemplates.filter(function(profile){return!query||[profile.display_name,profile.global_alias,profile.profile_code,profile.store_context_id,profile.latest_updated_by].join(' ').toLowerCase().includes(query)});
+  if(!rows.length){list.innerHTML='<div class="empty-state"><div class="empty-text">没有匹配的模板</div></div>';renderGroupTemplateCount();return}
+  list.innerHTML=rows.map(function(profile){var key=encodeURIComponent(profile.id);var checked=selectedGroupTemplateIds.has(profile.id);return'<label class="group-template-row"><input type="checkbox" '+(checked?'checked ':'')+'onchange="toggleGroupTemplate(decodeURIComponent(\''+key+'\'),this.checked)"><span><strong>'+escapeHtml(profile.display_name||profile.profile_code)+'</strong><span>'+escapeHtml(profile.profile_code)+' · 最近更新者 '+escapeHtml(profile.latest_updated_by||'未知')+'</span></span><span class="group-status '+(profile.status==='active'?'':'disabled')+'">'+escapeHtml(profile.status==='active'?'可用':profile.status)+'</span></label>'}).join('');renderGroupTemplateCount();
+}
+async function saveGroupTemplates(){
+  if(!activeTemplateGroupId)throw new Error('请选择分组');
+  var result=await API.updateGroupTemplates(activeTemplateGroupId,Array.from(selectedGroupTemplateIds));if(!result.success)throw new Error(result.error||'模板范围保存失败');showToast(result.message||'模板范围已保存','success');await loadGroupManagement(activeTemplateGroupId);
+}
+
 // 用户
 async function loadUserList(){
-  var res=await API.getUsers();
-  if(!res.success)return;
+  var results=await Promise.all([API.getUsers(),API.getGroups()]);var res=results[0];var groupResult=results[1];
+  if(!res.success||!groupResult.success){showToast(res.error||groupResult.error||'用户列表加载失败','error');return}
+  groupCache=groupResult.groups||[];syncNewUserGroupOptions();
   var sel=document.getElementById('webhookUserSelect');
   var existing=sel.value;
   sel.innerHTML='<option value="">请选择用户</option>';
@@ -261,7 +343,8 @@ async function loadUserList(){
   if(existing)sel.value=existing;
   var tbody=document.getElementById('userListBody');
   tbody.innerHTML=res.users.map(function(u){
-    var status=u.is_active?'<span style="color:var(--success)">活跃</span>':'<span style="color:var(--danger)">已禁用</span>';
+    var status=!u.is_active?'<span style="color:var(--danger)">已禁用</span>':(!u.login_enabled&&u.role!=='admin'?'<span style="color:var(--danger)">分组停用</span>':'<span style="color:var(--success)">活跃</span>');
+    var userKey=encodeURIComponent(u.id);var groupHtml='<select class="form-input" id="ug_'+userKey+'" onchange="updateUserGroup(decodeURIComponent(\''+userKey+'\'),this)" style="width:130px;font-size:12px;padding:2px 6px">'+groupOptions(u.group_id)+'</select>';
     var access=u.role==='admin'
       ? '<span class="muted">管理员不受限制</span>'
       : '<select class="form-input" id="pa_'+u.id+'" onchange="updatePlatformAccess(\''+u.id+'\')" style="width:110px;font-size:12px;padding:2px 6px">'+
@@ -283,7 +366,7 @@ async function loadUserList(){
       '<button class="btn btn-sm btn-outline" onclick="resetUserPwd(\''+u.id+'\')" style="font-size:11px">重置密码</button>'+
       '<button class="btn btn-sm btn-danger" onclick="deleteUserConfirm(\''+u.id+'\',\''+u.username+'\')" style="font-size:11px">删除</button>'+
       '</div>';
-    return '<tr><td>'+u.username+'</td><td>'+u.role+'</td><td>'+status+'</td><td>'+access+'</td><td>'+concurrencyHtml+'</td><td>'+creditsHtml+'</td><td>'+actions+'</td></tr>';
+    return '<tr><td>'+escapeHtml(u.username)+'</td><td>'+escapeHtml(u.role)+'</td><td>'+status+'</td><td>'+groupHtml+'</td><td>'+access+'</td><td>'+concurrencyHtml+'</td><td>'+creditsHtml+'</td><td>'+actions+'</td></tr>';
   }).join('');
 }
 function populateWebhookUserSelect(){loadUserList()}
@@ -335,10 +418,12 @@ async function handleAddUser(){
   var p=document.getElementById('addUserPassword').value;
   var r=document.getElementById('newRole').value;
   var platformAccess=document.getElementById('newPlatformAccess').value;
+  var groupId=document.getElementById('newGroupId').value;
   var imageConcurrency=parseInt(document.getElementById('newImageConcurrency').value);
   if(!u||p.length<6){showToast('用户名不能为空，密码至少6位','error');return}
   if(!Number.isInteger(imageConcurrency)||imageConcurrency<1||imageConcurrency>20){showToast('图片并发必须为1~20','error');return}
-  var res=await API.createUser(u,p,r,platformAccess,imageConcurrency);
+  if(!groupId){showToast('请选择用户分组','error');return}
+  var res=await API.createUser(u,p,r,platformAccess,imageConcurrency,groupId);
   if(res.success){showToast('用户创建成功','success');document.getElementById('newUsername').value='';document.getElementById('addUserPassword').value='';loadUserList();}
   else showToast(res.error||'创建失败','error');
 }
@@ -347,6 +432,12 @@ async function updatePlatformAccess(userId){
   var res=await API.updateUserPlatform(userId,access);
   if(res.success)showToast('平台权限已更新','success');
   else {showToast(res.error||'更新失败','error');loadUserList()}
+}
+async function updateUserGroup(userId,select){
+  if(!select||select.dataset.loading==='1')return;select.dataset.loading='1';select.disabled=true;
+  var timeout;try{var res=await Promise.race([API.updateUserGroup(userId,select.value),new Promise(function(_,reject){timeout=setTimeout(function(){reject(new Error('服务器超过120秒未响应，请稍后重试'))},120000)})]);if(res.success)showToast('用户分组已更新','success');else showToast(res.error||'分组更新失败','error')}
+  catch(error){showToast(error.message||'分组更新失败','error')}
+  finally{clearTimeout(timeout);select.disabled=false;delete select.dataset.loading;loadUserList()}
 }
 async function updateImageConcurrency(userId,button){
   var limit=parseInt(document.getElementById('ic_'+userId).value);
