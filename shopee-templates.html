@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Shopee 模板管理 - EWS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .template-admin-page{max-width:1380px}.template-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px}.template-toolbar .form-input{max-width:340px}.template-toolbar .form-select{width:150px}.template-workspace{display:grid;grid-template-columns:minmax(420px,.9fr) minmax(440px,1.1fr);border:1px solid var(--gray-200);border-radius:8px;background:#fff;min-height:610px;overflow:hidden}.profile-pane{border-right:1px solid var(--gray-200);min-width:0}.profile-head,.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--gray-200)}.profile-head strong,.detail-head strong{font-size:14px}.profile-count{color:var(--gray-500);font-size:12px}.profile-list{max-height:660px;overflow:auto}.profile-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;width:100%;padding:15px 18px;border:0;border-bottom:1px solid var(--gray-100);background:#fff;text-align:left;cursor:pointer}.profile-row:hover{background:var(--gray-50)}.profile-row.active{background:var(--primary-light);box-shadow:inset 3px 0 var(--primary)}.profile-main{min-width:0}.profile-main strong{display:block;overflow:hidden;text-overflow:ellipsis;color:var(--gray-900);font-size:13px;white-space:nowrap}.profile-main span{display:block;margin-top:5px;color:var(--gray-500);font-size:11px;line-height:1.55}.profile-side{text-align:right;color:var(--gray-500);font-size:11px}.status-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:6px;background:#ecfdf3;color:#027a48;font-size:11px;font-weight:700}.status-badge.disabled,.status-badge.deleted{background:#f2f4f7;color:#475467}.status-badge.pending_mapping,.status-badge.pending_upload{background:#fffaeb;color:#b54708}.detail-pane{min-width:0}.detail-body{padding:20px;max-height:660px;overflow:auto}.detail-empty{display:grid;place-items:center;min-height:520px;padding:40px;color:var(--gray-500);font-size:13px;text-align:center}.identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin-bottom:20px;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:var(--gray-200)}.identity-item{padding:12px;background:#fff;min-width:0}.identity-item span{display:block;color:var(--gray-500);font-size:10px;text-transform:uppercase}.identity-item strong{display:block;margin-top:4px;overflow-wrap:anywhere;color:var(--gray-800);font-size:12px}.edit-grid{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:12px}.detail-actions{display:flex;justify-content:space-between;gap:10px;margin:18px 0 24px}.detail-actions div{display:flex;gap:8px}.section-label{margin:22px 0 10px;color:var(--gray-900);font-size:12px;font-weight:750}.version-list{border-top:1px solid var(--gray-200)}.version-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)}.version-row strong{display:block;font-size:12px}.version-row span{display:block;margin-top:4px;color:var(--gray-500);font-size:11px;line-height:1.5}.version-side{text-align:right}.risk-note{margin-top:6px;color:#b54708!important}.legacy-review{padding:14px;border:1px solid #fedf89;border-radius:8px;background:#fffaeb}.legacy-review p{margin:0 0 12px;color:#7a2e0e;font-size:12px;line-height:1.55}.mapping-list{display:grid;gap:8px}.mapping-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(170px,1.2fr);gap:8px;align-items:center}.mapping-row code{overflow-wrap:anywhere;font-size:11px}.page-error{margin-bottom:12px}.modal-copy{margin:0;color:var(--gray-600);font-size:13px;line-height:1.65}
+    @media(max-width:980px){.template-workspace{grid-template-columns:1fr}.profile-pane{border-right:0;border-bottom:1px solid var(--gray-200)}.profile-list{max-height:350px}.detail-body{max-height:none}.template-toolbar{align-items:stretch;flex-wrap:wrap}.template-toolbar .form-input{max-width:none;flex:1 1 240px}}
+    @media(max-width:640px){.template-toolbar .form-select,.template-toolbar .btn{width:100%}.identity-grid,.edit-grid{grid-template-columns:1fr}.template-workspace{margin-inline:-16px;border-left:0;border-right:0;border-radius:0}.profile-row{padding-inline:16px}.detail-body{padding:16px}.detail-actions{align-items:stretch;flex-direction:column}.detail-actions div{display:grid;grid-template-columns:1fr 1fr}.mapping-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <script src="/js/nav.js"></script>
+  <main class="app-container template-admin-page">
+    <header class="page-header">
+      <div class="page-heading"><div class="page-kicker">Shopee 管理</div><h1 class="page-title">全局模板管理</h1><p class="page-subtitle">管理模板档案、上传归属、历史版本和全局可用状态。</p></div>
+      <a class="btn btn-outline" href="/create-shopee.html">返回创建任务</a>
+    </header>
+    <div class="template-toolbar">
+      <input class="form-input" id="templateSearch" type="search" placeholder="搜索名称、上下文 ID 或上传用户" oninput="renderProfileList()">
+      <select class="form-select" id="statusFilter" onchange="renderProfileList()"><option value="">全部状态</option><option value="active">已启用</option><option value="disabled">已停用</option><option value="pending_mapping">待映射</option><option value="pending_review">历史待审核</option><option value="pending_upload">上传未完成</option><option value="deleted">已删除</option></select>
+      <button class="btn btn-outline" id="refreshProfiles" type="button" onclick="runAction('refresh',this,loadProfiles)">刷新</button>
+    </div>
+    <div class="inline-error page-error" id="pageError"></div>
+    <section class="template-workspace">
+      <div class="profile-pane">
+        <div class="profile-head"><strong>模板档案</strong><span class="profile-count" id="profileCount">0 个</span></div>
+        <div class="profile-list" id="profileList"><div class="detail-empty">正在读取模板库...</div></div>
+      </div>
+      <div class="detail-pane">
+        <div class="detail-head"><strong>档案详情</strong><span class="profile-count" id="detailCode">未选择</span></div>
+        <div id="detailBody" class="detail-empty">从左侧选择一个模板档案进行管理。</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+      <div class="modal-header"><div class="modal-title" id="deleteTitle">软删除模板档案</div><button class="modal-close" type="button" onclick="closeDeleteModal()" aria-label="关闭">&times;</button></div>
+      <div class="modal-body"><p class="modal-copy" id="deleteCopy"></p></div>
+      <div class="modal-footer"><button class="btn btn-outline" type="button" onclick="closeDeleteModal()">取消</button><button class="btn btn-danger" id="confirmDeleteButton" type="button" onclick="runAction('delete',this,deleteProfile)">确认软删除</button></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    var profiles=[];
+    var activeProfile=null;
+    var activeDetail=null;
+    var actionLocks={};
+
+    document.addEventListener('DOMContentLoaded',async function(){
+      if(!await requireAuth())return;
+      if(localStorage.getItem('ews_role')!=='admin'){showToast('仅管理员可以访问模板管理','error');setTimeout(function(){location.href='/'},800);return}
+      refreshNavCredits();
+      await loadProfiles();
+    });
+
+    function escapeHtml(value){return String(value===undefined||value===null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+    function requestWithTimeout(promise){var timeoutId;var timeout=new Promise(function(_,reject){timeoutId=setTimeout(function(){reject(new Error('服务器超过120秒未响应，请稍后重试'))},120000)});return Promise.race([promise,timeout]).finally(function(){clearTimeout(timeoutId)})}
+    function statusText(status){return({active:'已启用',ready:'可用',disabled:'已停用',pending_mapping:'待映射',pending_review:'历史待审核',pending_upload:'上传未完成',deleted:'已删除'})[status]||status||'未知'}
+    function showPageError(message){var box=document.getElementById('pageError');box.textContent=message||'';box.classList.toggle('show',!!message)}
+    async function runAction(key,button,action){if(actionLocks[key]){showToast('该操作正在处理中','info');return}actionLocks[key]=true;var text=button?button.textContent:'';if(button){button.disabled=true;button.classList.add('is-loading')}try{await requestWithTimeout(Promise.resolve().then(action))}catch(error){showPageError(error.message||'操作失败');showToast(error.message||'操作失败','error')}finally{delete actionLocks[key];if(button){button.disabled=false;button.classList.remove('is-loading');button.textContent=text}}}
+
+    async function loadProfiles(preferredId){
+      showPageError('');
+      var result=await API.getShopeeTemplateProfiles();
+      if(!result.success)throw new Error(result.error||'模板库加载失败');
+      profiles=result.profiles||[];
+      renderProfileList();
+      var nextId=preferredId||(activeProfile&&activeProfile.id)||profiles[0]?.id;
+      if(nextId&&profiles.some(function(profile){return profile.id===nextId}))await selectProfile(nextId);else clearDetail();
+    }
+    function filteredProfiles(){var query=document.getElementById('templateSearch').value.trim().toLowerCase();var status=document.getElementById('statusFilter').value;return profiles.filter(function(profile){var text=[profile.system_name,profile.profile_code,profile.store_context_id,profile.created_by,profile.template&&profile.template.uploaded_by].join(' ').toLowerCase();return(!query||text.includes(query))&&(!status||profile.status===status)})}
+    function renderProfileList(){
+      var rows=filteredProfiles();document.getElementById('profileCount').textContent=rows.length+' 个';var list=document.getElementById('profileList');
+      if(!rows.length){list.innerHTML='<div class="detail-empty">没有匹配的模板档案。</div>';return}
+      list.innerHTML=rows.map(function(profile){var currentUploader=profile.template?.uploaded_by||profile.created_by||'未知';return'<button type="button" class="profile-row'+(activeProfile&&activeProfile.id===profile.id?' active':'')+'" onclick="selectProfile(\''+escapeHtml(profile.id)+'\')"><span class="profile-main"><strong>'+escapeHtml(profile.system_name||profile.profile_code)+'</strong><span>'+escapeHtml(profile.profile_code)+'<br>创建者 '+escapeHtml(profile.created_by||'未知')+' · 当前上传者 '+escapeHtml(currentUploader)+'</span></span><span class="profile-side"><span class="status-badge '+escapeHtml(profile.status)+'">'+escapeHtml(statusText(profile.status))+'</span><br><br>'+Number(profile.template?.field_count||0)+'F</span></button>'}).join('');
+    }
+    function clearDetail(){activeProfile=null;activeDetail=null;document.getElementById('detailCode').textContent='未选择';document.getElementById('detailBody').className='detail-empty';document.getElementById('detailBody').innerHTML='从左侧选择一个模板档案进行管理。';renderProfileList()}
+    async function selectProfile(profileId){
+      activeProfile=profiles.find(function(profile){return profile.id===profileId})||null;renderProfileList();if(!activeProfile)return clearDetail();
+      document.getElementById('detailCode').textContent=activeProfile.profile_code;var body=document.getElementById('detailBody');body.className='detail-empty';body.textContent='正在读取版本和字段信息...';showPageError('');
+      var result=await API.getShopeeTemplateProfile(profileId);if(!result.success){body.textContent=result.error||'档案加载失败';return}
+      activeDetail=result;activeProfile=result.profile;renderDetail();
+    }
+    function renderDetail(){
+      var profile=activeProfile;var versions=activeDetail.versions||[];var review=activeDetail.review_version;var unknown=(activeDetail.fields||[]).filter(function(field){return field.mapping_status==='unmapped_required'});var registry=activeDetail.semantic_registry||[];var deleted=profile.status==='deleted';
+      var reviewHtml=review?'<div class="section-label">历史遗留待处理版本</div><div class="legacy-review"><p>新上传模板已免审核。此版本来自旧流程，仍有 '+unknown.length+' 个必填 token 需要映射后才能启用。</p><div class="mapping-list">'+unknown.map(function(field){return'<label class="mapping-row"><code>'+escapeHtml(field.token)+'</code><select class="form-select field-map" data-token="'+escapeHtml(field.token)+'"><option value="">选择系统语义字段</option>'+registry.map(function(key){return'<option value="'+escapeHtml(key)+'">'+escapeHtml(key)+'</option>'}).join('')+'</select></label>'}).join('')+'</div>'+(review.has_sensitive_data?'<label class="check-row" style="margin-top:12px"><input type="checkbox" id="confirmSensitive"><span>确认该历史版本中的隐藏表风险标记</span></label>':'')+'</div>':'';
+      var versionsHtml=versions.length?versions.map(function(version){var risks=version.has_sensitive_data?'风险标记：'+(version.sensitive_sheets||[]).join('、'):'';return'<div class="version-row"><div><strong>'+escapeHtml(version.label||version.filename)+'</strong><span>'+escapeHtml(version.filename)+'<br>上传者 '+escapeHtml(version.uploaded_by||'未知')+' · '+Number(version.field_count||0)+' 字段 · '+Number(version.category_count||0)+' 分类</span>'+(risks?'<span class="risk-note">'+escapeHtml(risks)+'</span>':'')+'</div><div class="version-side"><span class="status-badge '+escapeHtml(version.status)+'">'+escapeHtml(statusText(version.status))+'</span><span>'+escapeHtml(String(version.sha256||'').slice(0,8))+'</span></div></div>'}).join(''):'<div class="form-hint">暂无版本记录。</div>';
+      var body=document.getElementById('detailBody');body.className='detail-body';body.innerHTML='<div class="identity-grid"><div class="identity-item"><span>档案代码</span><strong>'+escapeHtml(profile.profile_code)+'</strong></div><div class="identity-item"><span>store_context_id</span><strong>'+escapeHtml(profile.store_context_id)+'</strong></div><div class="identity-item"><span>档案创建者</span><strong>'+escapeHtml(profile.created_by||'未知')+'</strong></div><div class="identity-item"><span>当前版本上传者</span><strong>'+escapeHtml(profile.template?.uploaded_by||profile.created_by||'未知')+'</strong></div></div><div class="edit-grid"><div class="form-group"><label class="form-label" for="systemName">系统名称</label><input class="form-input" id="systemName" maxlength="80" value="'+escapeHtml(profile.system_name||profile.profile_code)+'"></div><div class="form-group"><label class="form-label" for="profileStatus">全局状态</label><select class="form-select" id="profileStatus"><option value="active">启用</option><option value="disabled">停用</option></select></div></div>'+(deleted?'<div class="template-note">该档案已软删除。保存为“启用”或“停用”会恢复档案。</div>':'')+reviewHtml+'<div class="detail-actions"><button class="btn btn-danger" type="button" onclick="openDeleteModal()" '+(deleted?'disabled':'')+'>软删除</button><div><a class="btn btn-outline" href="/create-shopee.html">上传新模板</a><button class="btn btn-primary" id="saveProfileButton" type="button" onclick="runAction(\'save\',this,saveProfile)">保存档案</button></div></div><div class="section-label">版本历史 · '+versions.length+'</div><div class="version-list">'+versionsHtml+'</div>';
+      document.getElementById('profileStatus').value=profile.status==='active'?'active':'disabled';
+    }
+    async function saveProfile(){
+      if(!activeProfile)return;showPageError('');var review=activeDetail.review_version;var maps=Array.from(document.querySelectorAll('.field-map'));
+      for(var i=0;i<maps.length;i++){if(!maps[i].value)throw new Error('请完成所有未知必填 token 的语义映射');var mapped=await API.mapShopeeTemplateField(activeProfile.id,review.id,maps[i].dataset.token,maps[i].value);if(!mapped.success)throw new Error(mapped.error||'token 映射失败')}
+      var payload={system_name:document.getElementById('systemName').value.trim(),status:document.getElementById('profileStatus').value};if(review){payload.approve_version_id=review.id;payload.confirm_sensitive=!!document.getElementById('confirmSensitive')?.checked}
+      var result=await API.updateShopeeTemplateProfile(activeProfile.id,payload);if(!result.success)throw new Error(result.error||'档案保存失败');showToast(result.message||'模板档案已更新','success');await loadProfiles(activeProfile.id);
+    }
+    function openDeleteModal(){if(!activeProfile||activeProfile.status==='deleted')return;document.getElementById('deleteCopy').textContent='软删除“'+(activeProfile.system_name||activeProfile.profile_code)+'”后，新任务不再显示该模板；已有任务仍可使用保留版本导出。';document.getElementById('deleteModal').classList.add('show')}
+    function closeDeleteModal(){if(actionLocks.delete)return;document.getElementById('deleteModal').classList.remove('show')}
+    async function deleteProfile(){if(!activeProfile)return;var id=activeProfile.id;var result=await API.deleteShopeeTemplateProfile(id);if(!result.success)throw new Error(result.error||'软删除失败');document.getElementById('deleteModal').classList.remove('show');showToast(result.message||'模板档案已软删除','success');await loadProfiles(id)}
+  </script>
+</body>
+</html>

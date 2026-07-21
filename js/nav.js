@@ -16,7 +16,9 @@
     if (canUse('jst')) allPages.push({ p: '/create-jst.html', l: '聚水潭任务' });
     if (canUse('shopee')) allPages.push({ p: '/create-shopee.html', l: 'Shopee 任务' });
     allPages.push({ p: '/guide.html', l: '使用说明' });
-    if (isLoggedIn) allPages.push({ p: '/config.html', l: isAdmin ? '系统配置' : '账号设置' });
+    if (isAdmin) allPages.push({ p: '/shopee-templates.html', l: '模板管理' });
+    if (isAdmin) allPages.push({ p: '/config.html', l: '系统配置' });
+    if (isLoggedIn) allPages.push({ p: '/password.html', l: '账号安全' });
 
     for (var i = 0; i < allPages.length; i++) {
       var isActive = cur === allPages[i].p || cur.replace('.html','') === allPages[i].p.replace('.html','');
@@ -43,6 +45,8 @@
       + '<div class="navbar-right">' + rightHtml + '</div>'
       + '</div>';
     document.body.insertBefore(nav, document.body.firstChild);
+    var activeLink = nav.querySelector('.nav-link.active');
+    if (activeLink && window.innerWidth <= 900) requestAnimationFrame(function() { activeLink.scrollIntoView({ block: 'nearest', inline: 'center' }); });
 
     var refresh = document.getElementById('navRefreshCredits');
     if (refresh) {

@@ -28,14 +28,6 @@
       <button class="btn btn-primary" onclick="runConfigAction('save-general',this,'保存中...',saveGeneralConfig)">保存通用配置</button>
     </form>
   </div></div>
-  <div class="card" id="passwordCard" style="margin-top:20px"><div class="card-header">修改密码</div><div class="card-body">
-    <form onsubmit="handleChangePassword(event)">
-      <div class="form-group"><label class="form-label">当前密码</label><input type="password" class="form-input" id="oldPassword" required></div>
-      <div class="form-group"><label class="form-label">新密码</label><input type="password" class="form-input" id="newPassword" required minlength="6"></div>
-      <div class="form-group"><label class="form-label">确认新密码</label><input type="password" class="form-input" id="confirmPassword" required minlength="6"></div>
-      <button type="submit" class="btn btn-outline">修改密码</button>
-    </form>
-  </div></div>
 </div>
 
 <!-- JST 工作流 -->
@@ -168,11 +160,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('userInfo').textContent=(localStorage.getItem('ews_username')||'admin')+' ('+(currentRole==='admin'?'管理员':'普通用户')+')';
   refreshNavCredits();
   if(currentRole!=='admin'){
-    document.getElementById('adminTabs').style.display='none';
-    document.getElementById('generalConfigCard').style.display='none';
-    document.getElementById('tab-jst').style.display='none';
-    document.getElementById('tab-shopee').style.display='none';
-    document.getElementById('tab-users').style.display='none';
+    showToast('仅管理员可以访问系统配置','error');
+    setTimeout(function(){location.href='/password.html'},800);
     return
   }
   await loadGeneralConfig();
@@ -394,16 +383,6 @@ async function deleteUserConfirm(userId,username){
   var res=await API.deleteUser(userId);
   if(res.success){showToast(res.message,'success');loadUserList();populateWebhookUserSelect()}
   else showToast(res.error||'删除失败','error');
-}
-async function handleChangePassword(e){
-  e.preventDefault();
-  var oldPwd=document.getElementById('oldPassword').value;
-  var newPwd=document.getElementById('newPassword').value;
-  var confirmPwd=document.getElementById('confirmPassword').value;
-  if(newPwd!==confirmPwd){showToast('两次输入的新密码不一致','error');return}
-  var res=await API.changePassword(oldPwd,newPwd);
-  if(res.success){showToast('密码修改成功！','success');['oldPassword','newPassword','confirmPassword'].forEach(function(id){document.getElementById(id).value=''})}
-  else showToast(res.error||'修改失败','error');
 }
 </script>
 </body></html>
