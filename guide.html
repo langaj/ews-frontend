@@ -148,11 +148,12 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>选择无规格、一维规格或二维规格。需要图片区分的颜色、图案、款式放在一级规格，尺码等无图维度放在二级规格。</li>
             <li>填写每个 SKU 组合的价格、库存、重量和可选商家 SKU。重量默认 0.2kg，可按 SKU 修改。</li>
             <li>选择 SKU 图片自上传或 AI 生成模式；选择至少一个物流渠道。SPX 默认开启，库存默认 999。</li>
-            <li>先选择店铺模板。首次使用或官方更新模板时，上传该店铺从 Seller Centre 下载的最新 <strong>Basic Template</strong>；不要上传 Advanced Template。</li>
+            <li>先从全局模板库选择档案。系统名称采用 <code>SHP-VN-{store_context_id}</code>；你可以设置仅自己可见的别名、备注和收藏。官方更新时可上传同一店铺上下文的新版本。</li>
             <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
-            <li>任务完成后直接导出该店铺原始模板的派生文件，系统按隐藏字段写入，不会重建模板。需要归档全部图片时可在任务列表打包下载。</li>
+            <li>任务完成后默认使用档案当前最新版导出，同时保留任务创建时版本 ID 供审计。系统按隐藏字段写入，不会重建模板。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
-          <div class="ok-box">系统不再依赖内置固定模板。用户上传后，Worker 提取 <code>Template</code> 第 1 行隐藏 token、第 3/4/6 行字段契约、物流渠道和 <code>Pre-order DTS Range</code> 分类目录；第 7 行开始写商品数据。</div>
+          <div class="ok-box">系统采用“结构推理 + token 注册表”，会扫描所有工作表定位隐藏 token、元数据、字段规则、数据起始行和分类目录，不依赖固定工作表名称或行号。缺少官方 token、结构损坏、未知必填 token 的文件不会直接用于导出。</div>
+          <div class="note-box">普通用户可以上传新模板版本并维护个人备注；已批准档案由所有用户共享。检测到非空 <code>HiddenShopBrand</code> 或 <code>HiddenTax</code> 时，版本必须由管理员确认后才能全局启用，避免品牌或税务配置串店。</div>
         </div>
 
         <div class="guide-section">

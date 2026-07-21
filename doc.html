@@ -421,18 +421,22 @@ ${WEBHOOKS.slice(2).map(function(w){
 <pre>款式编码 | 商品编码 | 颜色 | 规格 | 商品主图(JSON数组) | 商品详情图(JSON数组) | 图片地址 | 商品名称 | 推荐文案 | 商品描述 | 宝贝链接 | 库存 | 重量(kg) | 基本售价 | 市场/吊牌价 | 最低分销控价 | 最高分销控价 | 供应商名 | 3:4主图 | 长图 | 透明素材图 | 白底图</pre>
 <div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量和价格保持数值类型。市场|吊牌价由系统自动复制最终基本售价；启用价格浮动时，同一导出行的两列使用同一个取值。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的元数据或图片会阻断。SKU 图片自上传模式直接使用 <code>sku_image</code>，AI 模式使用生成图。去重模式第 2 套开始复用第 1 套的 AI 附图、详情图和 SKU 图。</div>
 
-<h2 id="Shopee导出">Shopee 店铺模板导出</h2>
-<p>用户先通过 <code>GET /api/shopee/stores</code> 查看自己的店铺模板，通过 <code>POST /api/shopee/stores</code> 上传从 Seller Centre 下载的最新 Basic Template。任务更新接口必须携带 <code>store_id</code>。</p>
-<p><code>GET /api/tasks/:id/export</code> 对 Shopee 任务直接返回 <code>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</code> 文件。Worker 读取店铺模板的隐藏 token，保留官方工作簿结构，只在 <code>Template</code> 第 7 行开始写入数据。</p>
+<h2 id="Shopee导出">Shopee 全局模板库导出</h2>
+<p>用户通过 <code>GET /api/shopee/template-profiles</code> 查看所有已启用的全局模板档案，通过 <code>POST /api/shopee/template-profiles</code> 上传 Seller Centre 下载的最新 Basic Template。任务更新接口携带 <code>template_profile_id</code>；任务记录创建时 <code>template_version_id</code>，导出默认读取档案当前最新版。</p>
+<p><code>GET /api/tasks/:id/export</code> 对 Shopee 任务直接返回 <code>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</code> 文件。Worker 扫描全部工作表，按隐藏 token 锚点推导商品工作表、元数据行、规则行和数据起始行，再把系统语义字段写入原始工作簿。</p>
 <div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。物流渠道、列数和列顺序全部从用户模板解析，新增物流列无需改代码。模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
 
-<h3>Shopee 店铺模板接口</h3>
-<pre>GET    /api/shopee/stores
-POST   /api/shopee/stores       multipart/form-data: name, file, store_id(更新时可选)
-GET    /api/shopee/stores/:id   返回分类目录和物流渠道
-PUT    /api/shopee/stores/:id   JSON: {"name":"新店铺名"}
-DELETE /api/shopee/stores/:id   停用店铺，历史模板保留</pre>
-<div class="note">模板解析会拒绝 Advanced Template、宏文件、外部链接和嵌入对象。新增必填隐藏 token 尚未适配时，导出接口返回 409 并列出字段，不会生成可能无法上传的文件。</div>
+<h3>Shopee 全局模板库接口</h3>
+<pre>GET    /api/shopee/template-profiles
+POST   /api/shopee/template-profiles       multipart/form-data: alias, note, is_favorite, file, profile_id(上传新版本时可选)
+GET    /api/shopee/template-profiles/:id   返回当前版本、分类目录、物流渠道；管理员额外获得版本和字段映射
+PUT    /api/shopee/template-profiles/:id/meta
+       JSON: {"alias":"个人别名","note":"仅自己可见","is_favorite":true}
+PUT    /api/shopee/template-profiles/:id   管理员更新系统名称、状态或批准版本
+PUT    /api/shopee/template-profiles/:id/versions/:versionId/fields/:token
+       管理员 JSON: {"semantic_key":"ps_product_name"}
+DELETE /api/shopee/template-profiles/:id   管理员软删除；历史任务仍可导出</pre>
+<div class="note">档案按 <code>UNIQUE(market, store_context_id)</code> 去重，D2 仅称为 <code>store_context_id</code>，不宣称为官方 Shop ID。解析器拒绝缺少官方隐藏 token、Advanced Template、宏、外部链接和嵌入对象。未知可选 token 留空并警告；未知必填 token 进入管理员映射队列。非空 <code>HiddenShopBrand</code> / <code>HiddenTax</code> 必须人工确认后才能共享。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>
@@ -440,7 +444,11 @@ DELETE /api/shopee/stores/:id   停用店铺，历史模板保留</pre>
 ews_users       (id, username, password_hash, role, credits, webhook_config)
 ews_tasks       (id, platform, name, status, user_id)  - 统一任务索引
 ews_callback_queue - 旧版D1回调队列（仅排空历史记录）
-ews_image_queue    - 旧版D1图片队列（仅排空历史记录）</pre>
+ews_image_queue    - 旧版D1图片队列（仅排空历史记录）
+ews_shopee_template_profiles   - 全局模板档案，按 market + store_context_id 唯一
+ews_shopee_template_versions   - 模板历史版本、R2 Key、SHA256、Schema Hash
+ews_shopee_template_user_meta  - 用户私有别名、备注和收藏
+ews_shopee_template_fields     - token 类型、必填性和语义映射</pre>
 
 <h4>聚水潭 (ews_jst_)</h4>
 <pre>ews_jst_tasks       - 任务扩展信息（内部备注、商品事实、模板字段、图片数量等）

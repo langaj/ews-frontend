@@ -36,14 +36,18 @@ const API = {
   async pushTask(id, testMode) { return this._post(`/api/tasks/${id}/push`, testMode ? { test_mode: true } : {}); },
   async retryPlan(taskId, planId) { return this._post(`/api/tasks/${taskId}/plans/${planId}/retry`, {}); },
   async getPushPlans(id) { return this._get(`/api/tasks/${id}/plans`); },
-  async getShopeeStores() { return this._get('/api/shopee/stores'); },
-  async getShopeeStore(id) { return this._get(`/api/shopee/stores/${id}`); },
-  async uploadShopeeStoreTemplate(name, file, storeId) {
-    const fd = new FormData(); fd.append('name', name || ''); fd.append('file', file); if (storeId) fd.append('store_id', storeId);
-    return _upload('/api/shopee/stores', fd);
+  async getShopeeTemplateProfiles() { return this._get('/api/shopee/template-profiles'); },
+  async getShopeeTemplateProfile(id) { return this._get(`/api/shopee/template-profiles/${id}`); },
+  async uploadShopeeTemplateProfile(alias, note, file, profileId, isFavorite) {
+    const fd = new FormData();
+    fd.append('alias', alias || ''); fd.append('note', note || ''); fd.append('is_favorite', isFavorite ? '1' : '0'); fd.append('file', file);
+    if (profileId) fd.append('profile_id', profileId);
+    return _upload('/api/shopee/template-profiles', fd);
   },
-  async renameShopeeStore(id, name) { return this._put(`/api/shopee/stores/${id}`, { name }); },
-  async deleteShopeeStore(id) { return this._del(`/api/shopee/stores/${id}`); },
+  async updateShopeeTemplateMeta(id, alias, note, isFavorite) { return this._put(`/api/shopee/template-profiles/${id}/meta`, { alias: alias || '', note: note || '', is_favorite: !!isFavorite }); },
+  async updateShopeeTemplateProfile(id, data) { return this._put(`/api/shopee/template-profiles/${id}`, data); },
+  async mapShopeeTemplateField(profileId, versionId, token, semanticKey) { return this._put(`/api/shopee/template-profiles/${profileId}/versions/${versionId}/fields/${encodeURIComponent(token)}`, { semantic_key: semanticKey }); },
+  async deleteShopeeTemplateProfile(id) { return this._del(`/api/shopee/template-profiles/${id}`); },
   async getUsers() { return this._get('/api/users'); },
   async createUser(username, password, role, platformAccess, imageConcurrencyLimit) { return this._post('/api/users', { username, password, role, platform_access: platformAccess || 'allow', image_concurrency_limit: imageConcurrencyLimit || 20 }); },
   async toggleUser(id) { return this._put(`/api/users/${id}/toggle`, {}); },
