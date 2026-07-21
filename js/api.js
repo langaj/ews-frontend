@@ -20,6 +20,7 @@ const API = {
   async getTask(id) { return this._get(`/api/tasks/${id}`); },
   async initTask(platform) { return this._post('/api/tasks/init', { platform: platform || 'jst' }); },
   async updateTask(id, data) { return this._put(`/api/tasks/${id}`, data); },
+  async switchShopeeTaskTemplate(id, templateProfileId) { return this._put(`/api/tasks/${id}/template`, { template_profile_id: templateProfileId }); },
   async deleteTask(id) { return this._del(`/api/tasks/${id}`); },
   async exportTask(id) {
     try {
