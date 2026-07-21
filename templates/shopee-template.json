@@ -11,7 +11,7 @@
   ],
   "shipping_channels": [
     { "id": "5001", "name": "Nhanh", "max_price": 100000000 },
-    { "id": "5012", "name": "Trong Ngày" },
+    { "id": "5012", "name": "Trong Ngày", "supports_preorder": false },
     { "id": "50039", "name": "Tủ nhận hàng - Viettel Smartbox" },
     { "id": "50052", "name": "Tủ nhận hàng - SPX", "default": true }
   ],

@@ -91,6 +91,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 .advanced-group{padding-top:22px}.advanced-group h3{font-size:13px;color:#344054;margin:0 0 14px}
 .shipping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .check-row{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid var(--shopee-line);border-radius:7px;font-size:12px;color:#475467;cursor:pointer;background:#fff}
+.check-row.is-disabled{opacity:.55;cursor:not-allowed;background:#f8fafc}
 .check-row input{margin-top:2px;accent-color:var(--shopee-accent)}
 .summary-rail{position:sticky;top:82px;background:#fff;border:1px solid var(--shopee-line);border-radius:8px;overflow:hidden}
 .summary-head{padding:20px;border-bottom:1px solid var(--shopee-line)}
@@ -235,7 +236,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                   <div class="form-group"><label class="form-label" for="lengthCm">长</label><div class="input-suffix"><input type="number" class="form-input" id="lengthCm" min="0" step="0.1"><span>cm</span></div></div>
                   <div class="form-group"><label class="form-label" for="widthCm">宽</label><div class="input-suffix"><input type="number" class="form-input" id="widthCm" min="0" step="0.1"><span>cm</span></div></div>
                   <div class="form-group"><label class="form-label" for="heightCm">高</label><div class="input-suffix"><input type="number" class="form-input" id="heightCm" min="0" step="0.1"><span>cm</span></div></div>
-                  <div class="form-group"><label class="form-label" for="preOrderDts">Pre-order DTS</label><div class="input-suffix"><input type="number" class="form-input" id="preOrderDts" min="5" max="30"><span>天</span></div></div>
+                  <div class="form-group"><label class="form-label" for="preOrderDts">Pre-order DTS</label><div class="input-suffix"><input type="number" class="form-input" id="preOrderDts" min="5" max="30" oninput="syncPreOrderShipping()"><span>天</span></div></div>
                 </div>
               </div>
 
@@ -280,7 +281,7 @@ var submitting=false;
 var operationToken=0;
 var channels=[
   {id:'5001',label:'Nhanh',limit:100000000},
-  {id:'5012',label:'Trong Ngày'},
+  {id:'5012',label:'Trong Ngày',supportsPreOrder:false},
   {id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},
   {id:'50052',label:'Tủ nhận hàng - SPX'}
 ];
@@ -366,7 +367,8 @@ function renderMatrix(){
   matrix.innerHTML=head+rows;updateSummary();
 }
 
-function renderShippingChannels(){document.getElementById('shippingChannels').innerHTML=channels.map(function(channel){return'<label class="check-row"><input type="checkbox" class="shipping-channel" value="'+channel.id+'"'+(channel.id==='50052'?' checked':'')+' onchange="updateSummary()"><span><strong>'+channel.label+'</strong><br>'+channel.id+(channel.limit?'，最高价 '+channel.limit.toLocaleString('en-US')+' VND':'')+'</span></label>'}).join('')}
+function renderShippingChannels(){document.getElementById('shippingChannels').innerHTML=channels.map(function(channel){return'<label class="check-row"><input type="checkbox" class="shipping-channel" value="'+channel.id+'"'+(channel.id==='50052'?' checked':'')+' onchange="updateSummary();syncPreOrderShipping()"><span><strong>'+channel.label+'</strong><br>'+channel.id+(channel.limit?'，最高价 '+channel.limit.toLocaleString('en-US')+' VND':'')+(channel.supportsPreOrder===false?'，不支持预售':'')+'</span></label>'}).join('')}
+function syncPreOrderShipping(){var input=document.querySelector('.shipping-channel[value="5012"]');var preOrder=!!document.getElementById('preOrderDts')?.value.trim();if(!input)return;if(preOrder)input.checked=false;input.disabled=preOrder;var row=input.closest('.check-row');if(row)row.classList.toggle('is-disabled',preOrder)}
 function getEnabledCombinations(){return getCombinations().filter(function(combo){return ensureCombinationState(combo).enabled})}
 function updateSummary(){
   var sets=Math.max(parseInt(document.getElementById('generateCount')?.value)||1,1);var mode=selectedValue('generationMode')||'full';var combos=getEnabledCombinations();var skuCount=Math.max(combos.length,1);var primaryCount=productType==='single'||imageMode!=='ai'?0:primaryOptions.filter(function(option){return option.value.trim()}).length;var plans=1+sets+(mode==='full'?8*sets:8)+(mode==='full'?primaryCount*sets:primaryCount);
@@ -387,13 +389,13 @@ function validateModel(){
   var lows=[];var highs=[];var skuCodes=new Set();
   for(var combo of combinations){var state=ensureCombinationState(combo);var stock=Number(state.stock);if(!Number.isInteger(stock)||stock<0||stock>10000000)return combo.label+' 的库存必须为0-10000000';var weight=Number(state.weight);if(!Number.isFinite(weight)||weight<=0||weight>100000)return combo.label+' 的重量必须大于0且不超过100000kg';var sku=state.sku.trim().toLowerCase();if(sku.length>90)return combo.label+' 的商家 SKU 最多90字符，系统随机前缀另占9字符';if(sku&&skuCodes.has(sku))return combo.label+' 的商家 SKU 与其他组合重复';if(sku)skuCodes.add(sku);if(state.float){var min=Number(state.min),max=Number(state.max);if(!Number.isFinite(min)||!Number.isFinite(max)||min<1000||max>120000000||max<min)return combo.label+' 的价格区间无效';lows.push(min);highs.push(max)}else{var price=Number(state.price);if(!Number.isFinite(price)||price<1000||price>120000000)return combo.label+' 的价格必须为1000-120000000';lows.push(price);highs.push(price)}}
   var lowest=Math.min.apply(null,lows),highest=Math.max.apply(null,highs);if(highest/lowest>5)return'最高 SKU 价格除以最低 SKU 价格不能超过5';
-  var selectedChannels=Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});if(!selectedChannels.length)return'至少选择一个物流渠道';for(var channel of channels){if(selectedChannels.includes(channel.id)&&channel.limit&&highest>channel.limit)return channel.label+' 的最高允许价格为 '+channel.limit.toLocaleString('en-US')+' VND'}
+  var preOrder=document.getElementById('preOrderDts').value.trim();var selectedChannels=Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});if(preOrder&&selectedChannels.includes('5012'))return'预售商品不能使用 Trong Ngày 渠道，请关闭渠道5012';if(!selectedChannels.length)return'至少选择一个物流渠道';for(var channel of channels){if(selectedChannels.includes(channel.id)&&channel.limit&&highest>channel.limit)return channel.label+' 的最高允许价格为 '+channel.limit.toLocaleString('en-US')+' VND'}
   var dimensions=['lengthCm','widthCm','heightCm'].map(function(id){return document.getElementById(id).value});var dimensionCount=dimensions.filter(Boolean).length;if(dimensionCount!==0&&dimensionCount!==3)return'长、宽、高必须同时填写或全部留空';
   if(dimensions.some(function(value){return value&&Number(value)<=0}))return'长、宽、高必须大于0';
   var categoryId=document.getElementById('categoryId').value.trim();if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';
   var gtin=document.getElementById('gtin').value.trim();if(gtin&&!/^\d{8,14}$/.test(gtin))return'GTIN 必须为8-14位数字';
   var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=getSizeChartFile();if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
-  var preOrder=document.getElementById('preOrderDts').value;if(preOrder&&(Number(preOrder)<5||Number(preOrder)>30))return'预售出货天数必须为5-30天';
+  if(preOrder&&(Number(preOrder)<5||Number(preOrder)>30))return'预售出货天数必须为5-30天';
   return'';
 }
 
