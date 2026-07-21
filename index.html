@@ -556,8 +556,11 @@ async function runWithOverlay(title,fn){
 }
 
 async function doExport(taskId){
-  if(!window.XLSX){showToast('导出组件加载中，请稍后再试','error');return}
   var res=await API.exportTask(taskId);
+  if(res.success&&res.export_format==='shopee-xlsx'&&res.blob){
+    var objectUrl=URL.createObjectURL(res.blob);var link=document.createElement('a');link.href=objectUrl;link.download=res.filename||'Shopee_export.xlsx';document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(objectUrl)},1000);showToast('导出成功！','success');return
+  }
+  if(!window.XLSX){showToast('导出组件加载中，请稍后再试','error');return}
   if(!res.success||!res.rows||!res.rows.length){
     var msg=res.error||'无数据';
     if(res.errors&&res.errors.length){
@@ -567,7 +570,6 @@ async function doExport(taskId){
     showToast(msg,'error');return
   }
   try{
-    if(res.export_format==='shopee'){await exportShopeeTemplate(res,taskId);showToast('导出成功！','success');return}
     if(res.export_format==='jst'){await exportJstTemplate(res,taskId);showToast('导出成功！','success');return}
     var keys=res.columns||Object.keys(res.rows[0]);var wsData=[keys];
     for(var r of res.rows) wsData.push(Array.isArray(r)?r:keys.map(function(k){return r[k]}));
@@ -593,26 +595,6 @@ async function exportJstTemplate(res,taskId){
   range.e.c=Math.max(range.e.c,21);
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.writeFile(wb,'聚水潭_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
-}
-
-async function exportShopeeTemplate(res,taskId){
-  var templateFile=res.template_file||'Shopee_mass_upload_current.xlsx';
-  var tpl=await fetch('/templates/'+templateFile);
-  if(!tpl.ok)throw new Error('找不到Shopee官方模板文件');
-  var wb=XLSX.read(await tpl.arrayBuffer(),{type:'array'});
-  var ws=wb.Sheets[res.template_sheet||'Template']||wb.Sheets[wb.SheetNames[0]];
-  var expectedColumns=Array.isArray(res.columns)?res.columns:[];
-  var templateRows=XLSX.utils.sheet_to_json(ws,{header:1,range:2,blankrows:false});
-  var templateColumns=templateRows[0]||[];
-  var contractMismatch=expectedColumns.length!==templateColumns.length||expectedColumns.some(function(column,index){return String(templateColumns[index]||'')!==column});
-  if(contractMismatch)throw new Error('Shopee官方模板字段与系统导出契约不一致，请联系管理员更新模板');
-  var startRow=Math.max(Number(res.template_start_row)||7,1);
-  XLSX.utils.sheet_add_aoa(ws,res.rows,{origin:'A'+startRow});
-  var range=XLSX.utils.decode_range(ws['!ref']||'A1:AI6');
-  range.e.r=Math.max(range.e.r,startRow-1+res.rows.length-1);
-  range.e.c=Math.max(range.e.c,(Number(res.template_column_count)||res.rows[0]?.length||35)-1);
-  ws['!ref']=XLSX.utils.encode_range(range);
-  XLSX.writeFile(wb,'Shopee_'+safeFileName(res.task_title||taskId.slice(0,8))+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 async function renderPushPlans(taskId,preloadedResponse){

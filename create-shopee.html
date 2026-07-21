@@ -14,6 +14,18 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 .create-header p{font-size:14px;color:var(--shopee-muted);margin:0}
 .back-link{font-size:13px;color:var(--shopee-muted)}
 .template-mark{font-size:12px;color:var(--shopee-muted);padding-bottom:4px;white-space:nowrap}
+.store-control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+.store-control .form-group{margin-bottom:0}.store-actions{display:flex;gap:8px;flex-wrap:wrap}.store-actions .btn{min-height:42px;white-space:nowrap}
+.store-status{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-top:12px;padding:13px 14px;border:1px solid var(--shopee-line);border-radius:8px;background:var(--shopee-soft)}
+.store-status-main{display:flex;gap:10px;min-width:0}.store-status-dot{flex:0 0 auto;width:8px;height:8px;margin-top:5px;border-radius:50%;background:#12b76a;box-shadow:0 0 0 3px rgba(18,183,106,.12)}
+.store-status.is-empty .store-status-dot{background:#f79009;box-shadow:0 0 0 3px rgba(247,144,9,.12)}
+.store-status strong{display:block;font-size:13px;color:#344054}.store-status p{margin:3px 0 0;font-size:11px;line-height:1.55;color:var(--shopee-muted)}
+.store-meta{flex:0 0 auto;text-align:right;font-size:11px;line-height:1.6;color:var(--shopee-muted);font-variant-numeric:tabular-nums}.store-meta .icon-command{margin-top:6px}
+.category-picker{position:relative}.category-picker .form-input{padding-right:36px}.category-clear{position:absolute;right:6px;top:5px;width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:#98a2b3;font-size:18px;cursor:pointer}.category-clear:hover{background:#f2f4f7;color:#344054}
+.category-results{position:absolute;z-index:20;top:calc(100% + 5px);left:0;right:0;max-height:310px;overflow:auto;border:1px solid #d0d5dd;border-radius:8px;background:#fff;box-shadow:0 12px 30px rgba(16,24,40,.14)}
+.category-results[hidden]{display:none}.category-option{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid #f0f1f3;background:#fff;text-align:left;cursor:pointer}.category-option:last-child{border-bottom:0}.category-option:hover,.category-option:focus{background:#f5f5ff;outline:0}.category-option strong{display:block;color:#344054;font-size:12px}.category-option span{display:block;margin-top:2px;color:#667085;font-size:11px;line-height:1.45}
+.template-drop{position:relative;display:grid;place-items:center;min-height:124px;padding:18px;border:1px dashed #b8c0cc;border-radius:8px;background:var(--shopee-soft);color:var(--shopee-muted);text-align:center;cursor:pointer}.template-drop input{display:none}.template-drop strong{display:block;margin-bottom:4px;color:#344054;font-size:13px}.template-drop.has-file{border-style:solid;border-color:#aab2c0;background:#fff}.template-drop.is-dragging{border-color:var(--shopee-accent);background:#f5f5ff;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.template-note{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--shopee-accent);background:#f5f5ff;color:#475467;font-size:11px;line-height:1.6}
 .create-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;align-items:start}
 .form-surface{background:#fff;border:1px solid var(--shopee-line);border-radius:8px;overflow:hidden}
 .form-section{display:grid;grid-template-columns:180px minmax(0,1fr);gap:30px;padding:30px;border-bottom:1px solid var(--shopee-line)}
@@ -110,7 +122,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
 @keyframes button-spin{to{transform:rotate(360deg)}}
 .inline-error{display:none;margin-top:6px;font-size:12px;color:#b42318}.inline-error.show{display:block}
 @media(max-width:1050px){.create-layout{grid-template-columns:1fr}.summary-rail{position:static}.summary-actions{grid-template-columns:1fr 1fr}.summary-output{display:none}}
-@media(max-width:760px){.navbar-inner{height:auto;min-height:60px;flex-wrap:wrap;padding:8px 0}.navbar-nav{order:3;width:100%;flex-basis:100%;overflow-x:auto;scrollbar-width:none}.navbar-nav::-webkit-scrollbar{display:none}.app-container.shopee-create{padding:0 14px 100px}.create-header{align-items:flex-start;margin-top:22px}.template-mark{display:none}.form-section{grid-template-columns:1fr;gap:18px;padding:22px 18px}.reference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-slot:first-child{grid-column:1/-1}.field-grid,.field-grid.three{grid-template-columns:1fr}.option-row{position:relative;grid-template-columns:1fr;padding-right:42px}.remove-option{position:absolute;right:0;top:16px}.matrix{overflow-x:auto}.matrix-head,.sku-row{min-width:780px}.price-range{padding-left:0}.shipping-grid{grid-template-columns:1fr}.advanced>summary{padding:17px 18px}.advanced-content{padding:2px 18px 22px}.output-strip{grid-template-columns:1fr}.output-cell{border-right:0;border-bottom:1px solid var(--shopee-line)}.output-cell:last-child{border-bottom:0}.summary-actions{grid-template-columns:1fr}.segmented span{font-size:12px;padding-inline:6px}}
+@media(max-width:760px){.navbar-inner{height:auto;min-height:60px;flex-wrap:wrap;padding:8px 0}.navbar-nav{order:3;width:100%;flex-basis:100%;overflow-x:auto;scrollbar-width:none}.navbar-nav::-webkit-scrollbar{display:none}.app-container.shopee-create{padding:0 14px 100px}.create-header{align-items:flex-start;margin-top:22px}.template-mark{display:none}.form-section{grid-template-columns:1fr;gap:18px;padding:22px 18px}.store-control{grid-template-columns:1fr}.store-actions{display:grid;grid-template-columns:1fr 1fr}.store-status{display:block}.store-meta{margin-top:8px;text-align:left}.reference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-slot:first-child{grid-column:1/-1}.field-grid,.field-grid.three{grid-template-columns:1fr}.option-row{position:relative;grid-template-columns:1fr;padding-right:42px}.remove-option{position:absolute;right:0;top:16px}.matrix{overflow-x:auto}.matrix-head,.sku-row{min-width:780px}.price-range{padding-left:0}.shipping-grid{grid-template-columns:1fr}.advanced>summary{padding:17px 18px}.advanced-content{padding:2px 18px 22px}.output-strip{grid-template-columns:1fr}.output-cell{border-right:0;border-bottom:1px solid var(--shopee-line)}.output-cell:last-child{border-bottom:0}.summary-actions{grid-template-columns:1fr}.segmented span{font-size:12px;padding-inline:6px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -123,12 +135,31 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
       <h1>创建 Shopee 任务</h1>
       <p>提供商品事实与交易参数，系统生成越南语商品元数据和整套图片。</p>
     </div>
-    <div class="template-mark">Shopee Basic Template A-AL</div>
+    <div class="template-mark" id="templateMark">等待选择店铺模板</div>
   </header>
 
   <form id="productForm" onsubmit="handleCreate(event)">
     <div class="create-layout">
       <main class="form-surface">
+        <section class="form-section">
+          <div class="section-title"><h2>店铺模板</h2><p>每个店铺使用自己从 Seller Centre 下载的最新基础模板。</p></div>
+          <div class="section-fields">
+            <div class="store-control">
+              <div class="form-group">
+                <label class="form-label" for="storeSelect">Shopee 店铺 <span class="required">*</span></label>
+                <select class="form-select" id="storeSelect" onchange="changeStore(this.value)"><option value="">正在加载店铺...</option></select>
+              </div>
+              <div class="store-actions">
+                <button type="button" class="btn btn-outline" onclick="openStoreTemplateModal(false)">添加店铺</button>
+                <button type="button" class="btn btn-outline" id="updateTemplateButton" onclick="openStoreTemplateModal(true)" disabled>更新模板</button>
+              </div>
+            </div>
+            <div class="store-status is-empty" id="storeStatus">
+              <div class="store-status-main"><span class="store-status-dot"></span><div><strong>尚未配置店铺模板</strong><p>上传模板后，系统会读取分类、物流渠道和隐藏字段。</p></div></div>
+            </div>
+          </div>
+        </section>
+
         <section class="form-section">
           <div class="section-title"><h2>商品素材</h2><p>参考图决定商品主体，商品事实约束 AI 输出。</p></div>
           <div class="section-fields">
@@ -139,9 +170,14 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                 <div class="form-hint">仅作为系统内部备注，不发送给工作流。</div>
               </div>
               <div class="form-group">
-                <label class="form-label" for="categoryId">Category ID <span class="optional">(可选)</span></label>
-                <input class="form-input" id="categoryId" inputmode="numeric" placeholder="留空时由平台推荐">
-                <div class="form-hint">填写 Shopee 对应类目的数字编码。</div>
+                <label class="form-label" for="categorySearch">Category ID <span class="optional">(可选)</span></label>
+                <div class="category-picker">
+                  <input class="form-input" id="categorySearch" autocomplete="off" placeholder="输入分类 ID 或英文类目名称" onfocus="searchCategories()" oninput="searchCategories()">
+                  <input type="hidden" id="categoryId">
+                  <button type="button" class="category-clear" aria-label="清空分类" onclick="clearCategory()">×</button>
+                  <div class="category-results" id="categoryResults" hidden></div>
+                </div>
+                <div class="form-hint" id="categoryHint">选择店铺后加载模板内分类。</div>
               </div>
             </div>
             <div class="form-group">
@@ -206,7 +242,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
             <div class="output-strip">
               <div class="output-cell"><b>1 张封面图</b><span>Cover image</span></div>
               <div class="output-cell"><b>8 张附图</b><span>Item Image 1-8</span></div>
-              <div class="output-cell"><b>SPX 默认开启</b><span>渠道 50052，可在高级设置调整</span></div>
+              <div class="output-cell"><b id="defaultShippingTitle">等待店铺模板</b><span id="defaultShippingHint">物流渠道按店铺动态加载</span></div>
             </div>
           </div>
         </section>
@@ -252,6 +288,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
       <aside class="summary-rail" aria-label="任务摘要">
         <div class="summary-head"><h2>任务摘要</h2><p>创建前检查成本与输出结构。</p></div>
         <div class="summary-body">
+          <div class="summary-row"><span>店铺模板</span><strong id="summaryStore">未选择</strong></div>
           <div class="summary-row"><span>生成模式</span><strong id="summaryMode">全量</strong></div>
           <div class="summary-row"><span>商品套数</span><strong id="summarySets">1</strong></div>
           <div class="summary-row"><span>SKU 数量</span><strong id="summarySkus">1</strong></div>
@@ -260,12 +297,33 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
         </div>
         <div class="summary-output" id="summaryOutput">AI 生成商品标题、商品描述、封面图和 8 张附图。</div>
         <div class="summary-actions">
-          <button type="submit" class="btn btn-primary" id="startButton" value="start">创建并生成</button>
-          <button type="submit" class="btn btn-outline" id="draftButton" value="draft">仅保存任务</button>
+          <button type="submit" class="btn btn-primary" id="startButton" value="start" disabled>创建并生成</button>
+          <button type="submit" class="btn btn-outline" id="draftButton" value="draft" disabled>仅保存任务</button>
         </div>
       </aside>
     </div>
   </form>
+</div>
+
+<div class="modal-overlay" id="storeTemplateModal" style="z-index:500" onclick="if(event.target===this)closeStoreTemplateModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="storeTemplateModalTitle">
+    <div class="modal-header"><div class="modal-title" id="storeTemplateModalTitle">添加 Shopee 店铺模板</div><button class="modal-close" type="button" onclick="closeStoreTemplateModal()" aria-label="关闭">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" for="storeNameInput">店铺名称 <span class="required">*</span></label><input class="form-input" id="storeNameInput" maxlength="60" placeholder="如：越南站主店"></div>
+      <div class="form-group"><label class="form-label">基础模板文件 <span class="required">*</span></label><label class="template-drop" id="storeTemplateDrop" ondragenter="setDropState(event,true)" ondragover="setDropState(event,true)" ondragleave="setDropState(event,false)" ondrop="dropStoreTemplate(event)"><input id="storeTemplateFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="selectStoreTemplate(event)"><span id="storeTemplateFileName"><strong>拖入或点击选择</strong>仅支持从 Seller Centre 下载的 .xlsx Basic Template</span></label></div>
+      <div class="template-note">系统会保存原始模板并提取隐藏字段。不要手动修改工作簿结构，也不要上传 Advanced Template、宏文件或其他平台模板。</div>
+      <div class="inline-error" id="storeTemplateError"></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeStoreTemplateModal()">取消</button><button type="button" class="btn btn-primary" id="storeTemplateSubmit" onclick="submitStoreTemplate()">解析并启用</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="disableStoreModal" style="z-index:510" onclick="if(event.target===this)closeDisableStoreModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="disableStoreTitle">
+    <div class="modal-header"><div class="modal-title" id="disableStoreTitle">停用店铺模板</div><button class="modal-close" type="button" onclick="closeDisableStoreModal()" aria-label="关闭">&times;</button></div>
+    <div class="modal-body"><p id="disableStoreText" class="form-hint">停用后新任务不能选择该店铺，历史任务和模板文件会保留。</p></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeDisableStoreModal()">取消</button><button type="button" class="btn btn-danger" id="disableStoreSubmit" onclick="disableCurrentStore()">确认停用</button></div>
+  </div>
 </div>
 
 <script src="/js/api.js"></script>
@@ -279,28 +337,76 @@ var productType='one';
 var imageMode='upload';
 var submitting=false;
 var operationToken=0;
-var channels=[
-  {id:'5001',label:'Nhanh',limit:100000000},
-  {id:'5012',label:'Trong Ngày',supportsPreOrder:false},
-  {id:'50039',label:'Tủ nhận hàng - Viettel Smartbox'},
-  {id:'50052',label:'Tủ nhận hàng - SPX'}
-];
+var stores=[];
+var activeStore=null;
+var storeCategories=[];
+var channels=[];
+var templateReady=false;
+var storeLoadToken=0;
+var editingStoreId='';
+var droppedStoreTemplateFile=null;
+var templateUploading=false;
 
 document.addEventListener('DOMContentLoaded',async function(){
   if(!await requireAuth())return;
   if(!canCreatePlatform('shopee')){showToast('当前账号无权创建 Shopee 任务','error');setTimeout(function(){location.href='/'},800);return}
   refreshNavCredits();
   renderReferenceGrid();
-  renderShippingChannels();
   renderPrimaryOptions();
   renderMatrix();
+  await loadShopeeStores();
   updateSummary();
+  document.addEventListener('click',function(event){if(!event.target.closest('.category-picker'))document.getElementById('categoryResults').hidden=true});
 });
 
 function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||'';var access=localStorage.getItem('ews_platform_access')||'allow';return role==='admin'||access==='allow'||access===platform}
 function escapeHtml(value){return String(value===undefined||value===null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function parseValues(value){return [...new Set(String(value||'').split(/[，,\n]/).map(function(item){return item.trim()}).filter(Boolean))]}
 function selectedValue(name){var input=document.querySelector('input[name="'+name+'"]:checked');return input?input.value:''}
+
+function setTemplateReady(ready){templateReady=!!ready;document.getElementById('startButton').disabled=submitting||!templateReady;document.getElementById('draftButton').disabled=submitting||!templateReady;document.getElementById('updateTemplateButton').disabled=!activeStore||submitting}
+function storeTemplateMeta(store){return store&&store.template?store.template:null}
+function renderStoreStatus(message,isError){
+  var box=document.getElementById('storeStatus');
+  if(!activeStore){box.className='store-status is-empty';box.innerHTML='<div class="store-status-main"><span class="store-status-dot"></span><div><strong>'+(isError?'店铺模板加载失败':'尚未配置店铺模板')+'</strong><p>'+escapeHtml(message||'上传模板后，系统会读取分类、物流渠道和隐藏字段。')+'</p></div></div>';return}
+  var template=storeTemplateMeta(activeStore);box.className='store-status';box.innerHTML='<div class="store-status-main"><span class="store-status-dot"></span><div><strong>'+escapeHtml(activeStore.name)+'</strong><p>'+escapeHtml(template.filename)+' · SHA256 '+escapeHtml(String(template.sha256||'').slice(0,12))+' · D2 '+escapeHtml(activeStore.template_context_id)+'</p></div></div><div class="store-meta">'+Number(template.field_count||0)+' 个字段<br>'+Number(template.category_count||0)+' 个分类<br><button type="button" class="icon-command" onclick="openDisableStoreModal()">停用店铺</button></div>';
+}
+function renderStoreSelect(selectedId){var select=document.getElementById('storeSelect');if(!stores.length){select.innerHTML='<option value="">暂无店铺，请先上传模板</option>';select.value='';return}select.innerHTML=stores.map(function(store){return'<option value="'+escapeHtml(store.id)+'">'+escapeHtml(store.name)+' · '+Number(store.template?.field_count||0)+'字段</option>'}).join('');select.value=selectedId||stores[0].id}
+async function loadShopeeStores(preferredId){
+  var result=await API.getShopeeStores();
+  if(!result.success){stores=[];activeStore=null;renderStoreSelect('');renderStoreStatus(result.error||'无法读取店铺模板',true);setTemplateReady(false);showToast(result.error||'店铺模板加载失败','error');return}
+  stores=result.stores||[];var remembered=preferredId||localStorage.getItem('ews_shopee_store_id')||'';var selected=stores.some(function(store){return store.id===remembered})?remembered:(stores[0]?.id||'');renderStoreSelect(selected);
+  if(selected)await changeStore(selected);else{activeStore=null;storeCategories=[];channels=[];renderStoreStatus();renderShippingChannels(true);clearCategory();document.getElementById('templateMark').textContent='等待上传店铺模板';setTemplateReady(false);updateSummary()}
+}
+async function changeStore(storeId){
+  var token=++storeLoadToken;setTemplateReady(false);activeStore=null;storeCategories=[];channels=[];document.getElementById('storeSelect').value=storeId||'';document.getElementById('storeStatus').className='store-status is-empty';document.getElementById('storeStatus').innerHTML='<div class="store-status-main"><span class="store-status-dot"></span><div><strong>正在读取店铺模板</strong><p>加载分类目录、物流渠道和隐藏字段。</p></div></div>';
+  if(!storeId){renderStoreStatus();return}
+  var result=await API.getShopeeStore(storeId);if(token!==storeLoadToken)return;
+  if(!result.success){renderStoreStatus(result.error||'模板加载失败',true);showToast(result.error||'模板加载失败','error');return}
+  activeStore=result.store;storeCategories=result.categories||[];channels=(result.shipping_channels||[]).map(function(channel){return{id:String(channel.id),label:channel.label||('渠道 '+channel.id),limit:Number(channel.price_limit)||null,supportsPreOrder:channel.supports_preorder!==false}});localStorage.setItem('ews_shopee_store_id',storeId);renderStoreStatus();clearCategory();renderShippingChannels(true);var template=storeTemplateMeta(activeStore);document.getElementById('templateMark').textContent=activeStore.name+' · '+Number(template.field_count||0)+' 字段';document.getElementById('summaryStore').textContent=activeStore.name;setTemplateReady(true);updateSummary()
+}
+
+function openStoreTemplateModal(updateExisting){
+  if(updateExisting&&!activeStore)return;editingStoreId=updateExisting?activeStore.id:'';droppedStoreTemplateFile=null;document.getElementById('storeTemplateFile').value='';document.getElementById('storeNameInput').value=updateExisting?activeStore.name:'';document.getElementById('storeTemplateModalTitle').textContent=updateExisting?'更新店铺基础模板':'添加 Shopee 店铺模板';document.getElementById('storeTemplateError').classList.remove('show');document.getElementById('storeTemplateError').textContent='';updateStoreTemplateFileLabel(null);document.getElementById('storeTemplateModal').classList.add('show');setTimeout(function(){document.getElementById('storeNameInput').focus()},50)
+}
+function closeStoreTemplateModal(){if(templateUploading)return;document.getElementById('storeTemplateModal').classList.remove('show')}
+function updateStoreTemplateFileLabel(file){var drop=document.getElementById('storeTemplateDrop');drop.classList.toggle('has-file',!!file);document.getElementById('storeTemplateFileName').innerHTML=file?'<strong>'+escapeHtml(file.name)+'</strong>'+Math.ceil(file.size/1024)+' KB':'<strong>拖入或点击选择</strong>仅支持从 Seller Centre 下载的 .xlsx Basic Template'}
+function setStoreTemplateFile(file){if(!file||!/\.xlsx$/i.test(file.name||'')){showToast('请选择 .xlsx 基础模板','error');return}if(file.size>5*1024*1024){showToast('模板文件不能超过5MB','error');return}droppedStoreTemplateFile=file;updateStoreTemplateFileLabel(file)}
+function selectStoreTemplate(event){droppedStoreTemplateFile=null;setStoreTemplateFile(event.target.files[0])}
+function dropStoreTemplate(event){event.preventDefault();event.stopPropagation();event.currentTarget.classList.remove('is-dragging');var file=Array.from(event.dataTransfer.files||[]).find(function(item){return /\.xlsx$/i.test(item.name||'')});setStoreTemplateFile(file)}
+async function submitStoreTemplate(){
+  if(templateUploading)return;var name=document.getElementById('storeNameInput').value.trim();var file=droppedStoreTemplateFile||document.getElementById('storeTemplateFile').files[0];var errorBox=document.getElementById('storeTemplateError');if(!name){errorBox.textContent='请填写店铺名称';errorBox.classList.add('show');return}if(!file){errorBox.textContent='请选择店铺基础模板';errorBox.classList.add('show');return}
+  templateUploading=true;var button=document.getElementById('storeTemplateSubmit');button.disabled=true;button.classList.add('is-loading');errorBox.classList.remove('show');var timeoutId;try{var timeout=new Promise(function(_,reject){timeoutId=setTimeout(function(){reject(new Error('服务器超过120秒未响应，请稍后重试'))},120000)});var result=await Promise.race([API.uploadShopeeStoreTemplate(name,file,editingStoreId),timeout]);if(!result.success)throw new Error(result.error||'模板上传失败');clearTimeout(timeoutId);templateUploading=false;button.disabled=false;button.classList.remove('is-loading');document.getElementById('storeTemplateModal').classList.remove('show');showToast(result.message||'店铺模板已启用','success');await loadShopeeStores(result.store?.id||editingStoreId)}catch(error){clearTimeout(timeoutId);errorBox.textContent=error.message||'模板上传失败';errorBox.classList.add('show');templateUploading=false;button.disabled=false;button.classList.remove('is-loading')}
+}
+function openDisableStoreModal(){if(!activeStore)return;document.getElementById('disableStoreText').textContent='停用“'+activeStore.name+'”后，新任务不能选择该店铺，历史任务和原模板仍会保留。';document.getElementById('disableStoreModal').classList.add('show')}
+function closeDisableStoreModal(){document.getElementById('disableStoreModal').classList.remove('show')}
+async function disableCurrentStore(){if(!activeStore)return;var button=document.getElementById('disableStoreSubmit');button.disabled=true;button.classList.add('is-loading');var result=await API.deleteShopeeStore(activeStore.id);button.disabled=false;button.classList.remove('is-loading');if(!result.success){showToast(result.error||'店铺停用失败','error');return}localStorage.removeItem('ews_shopee_store_id');closeDisableStoreModal();showToast(result.message||'店铺已停用','success');await loadShopeeStores()}
+
+function selectedCategory(){var id=document.getElementById('categoryId').value;return storeCategories.find(function(category){return String(category.id)===id})||null}
+function syncCategoryHint(){var category=selectedCategory();var input=document.getElementById('preOrderDts');if(!category){document.getElementById('categoryHint').textContent=storeCategories.length?'可按分类 ID 或英文路径搜索，留空时由平台推荐。':'选择店铺后加载模板内分类。';input.min='5';input.max='30';return}document.getElementById('categoryHint').textContent=category.name+(category.dts_range?' · Pre-order DTS '+category.dts_range:'');if(category.dts_min!==null&&category.dts_min!==undefined){input.min=category.dts_min;input.max=category.dts_max}}
+function searchCategories(){var input=document.getElementById('categorySearch');var query=input.value.trim().toLowerCase();var results=document.getElementById('categoryResults');var current=selectedCategory();if(current&&(input.value!==current.id+' · '+current.name))document.getElementById('categoryId').value='';if(!query){results.hidden=true;syncCategoryHint();return}var matches=storeCategories.filter(function(category){return String(category.id).includes(query)||String(category.name||'').toLowerCase().includes(query)}).slice(0,20);results.innerHTML=matches.length?matches.map(function(category){return'<button type="button" class="category-option" onclick="chooseCategory(\''+category.id+'\')"><strong>'+escapeHtml(category.id)+'</strong><span>'+escapeHtml(category.name)+(category.dts_range?' · DTS '+escapeHtml(category.dts_range):'')+'</span></button>'}).join(''):'<div class="category-option"><strong>没有匹配分类</strong><span>请检查 ID 或类目关键词。</span></div>';results.hidden=false;var exact=storeCategories.find(function(category){return String(category.id)===query});if(exact){document.getElementById('categoryId').value=String(exact.id);syncCategoryHint()}}
+function chooseCategory(id){var category=storeCategories.find(function(item){return String(item.id)===String(id)});if(!category)return;document.getElementById('categoryId').value=String(category.id);document.getElementById('categorySearch').value=category.id+' · '+category.name;document.getElementById('categoryResults').hidden=true;syncCategoryHint()}
+function clearCategory(){document.getElementById('categoryId').value='';document.getElementById('categorySearch').value='';document.getElementById('categoryResults').hidden=true;syncCategoryHint()}
 
 function renderReferenceGrid(){
   var labels=['核心参考图','辅助图 1','辅助图 2','辅助图 3','辅助图 4'];
@@ -367,16 +473,17 @@ function renderMatrix(){
   matrix.innerHTML=head+rows;updateSummary();
 }
 
-function renderShippingChannels(){document.getElementById('shippingChannels').innerHTML=channels.map(function(channel){return'<label class="check-row"><input type="checkbox" class="shipping-channel" value="'+channel.id+'"'+(channel.id==='50052'?' checked':'')+' onchange="updateSummary();syncPreOrderShipping()"><span><strong>'+channel.label+'</strong><br>'+channel.id+(channel.limit?'，最高价 '+channel.limit.toLocaleString('en-US')+' VND':'')+(channel.supportsPreOrder===false?'，不支持预售':'')+'</span></label>'}).join('')}
-function syncPreOrderShipping(){var input=document.querySelector('.shipping-channel[value="5012"]');var preOrder=!!document.getElementById('preOrderDts')?.value.trim();if(!input)return;if(preOrder)input.checked=false;input.disabled=preOrder;var row=input.closest('.check-row');if(row)row.classList.toggle('is-disabled',preOrder)}
+function renderShippingChannels(resetSelection){var container=document.getElementById('shippingChannels');if(!channels.length){container.innerHTML='<div class="matrix-empty">选择店铺后加载物流渠道</div>';document.getElementById('defaultShippingTitle').textContent='等待店铺模板';document.getElementById('defaultShippingHint').textContent='物流渠道按店铺动态加载';return}var selected=resetSelection?[]:Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});if(!selected.length){var preferred=channels.find(function(channel){return channel.id==='50052'})||channels[0];selected=[preferred.id]}container.innerHTML=channels.map(function(channel){return'<label class="check-row"><input type="checkbox" class="shipping-channel" value="'+channel.id+'"'+(selected.includes(channel.id)?' checked':'')+' onchange="updateSummary();syncPreOrderShipping()"><span><strong>'+escapeHtml(channel.label)+'</strong><br>'+channel.id+(channel.limit?'，最高价 '+channel.limit.toLocaleString('en-US')+' VND':'')+(channel.supportsPreOrder===false?'，不支持预售':'')+'</span></label>'}).join('');var defaultChannel=channels.find(function(channel){return selected.includes(channel.id)})||channels[0];document.getElementById('defaultShippingTitle').textContent=defaultChannel.label+' 默认开启';document.getElementById('defaultShippingHint').textContent='渠道 '+defaultChannel.id+'，可在高级设置调整';syncPreOrderShipping()}
+function syncPreOrderShipping(){var preOrder=!!document.getElementById('preOrderDts')?.value.trim();document.querySelectorAll('.shipping-channel').forEach(function(input){var channel=channels.find(function(item){return item.id===input.value});var blocked=preOrder&&channel&&channel.supportsPreOrder===false;if(blocked)input.checked=false;input.disabled=blocked;var row=input.closest('.check-row');if(row)row.classList.toggle('is-disabled',blocked)});updateSummary()}
 function getEnabledCombinations(){return getCombinations().filter(function(combo){return ensureCombinationState(combo).enabled})}
 function updateSummary(){
   var sets=Math.max(parseInt(document.getElementById('generateCount')?.value)||1,1);var mode=selectedValue('generationMode')||'full';var combos=getEnabledCombinations();var skuCount=Math.max(combos.length,1);var primaryCount=productType==='single'||imageMode!=='ai'?0:primaryOptions.filter(function(option){return option.value.trim()}).length;var plans=1+sets+(mode==='full'?8*sets:8)+(mode==='full'?primaryCount*sets:primaryCount);
-  document.getElementById('summaryMode').textContent=mode==='dedup'?'去重':'全量';document.getElementById('summarySets').textContent=sets;document.getElementById('summarySkus').textContent=skuCount;document.getElementById('summaryPlans').textContent=plans;
+  document.getElementById('summaryStore').textContent=activeStore?activeStore.name:'未选择';document.getElementById('summaryMode').textContent=mode==='dedup'?'去重':'全量';document.getElementById('summarySets').textContent=sets;document.getElementById('summarySkus').textContent=skuCount;document.getElementById('summaryPlans').textContent=plans;
   var variationText=productType==='single'?'无规格商品':skuCount+' 个 SKU';document.getElementById('summaryOutput').textContent='AI 生成 '+sets+' 套商品标题与描述，每套 1 张封面和 8 张附图，'+variationText+'。';
 }
 
 function validateModel(){
+  if(!templateReady||!activeStore)return'请先选择并加载 Shopee 店铺模板';
   if(!document.getElementById('taskName').value.trim())return'请填写任务名称';
   if(!referenceFiles[0]){document.getElementById('referenceError').classList.add('show');document.getElementById('referenceGrid').scrollIntoView({behavior:'smooth',block:'center'});return'请上传核心参考图'}
   var combinations=getEnabledCombinations();if(!combinations.length)return'至少启用一个 SKU 组合';
@@ -390,18 +497,18 @@ function validateModel(){
   var lows=[];var highs=[];var skuCodes=new Set();
   for(var combo of combinations){var state=ensureCombinationState(combo);var stock=Number(state.stock);if(!Number.isInteger(stock)||stock<0||stock>10000000)return combo.label+' 的库存必须为0-10000000';var weight=Number(state.weight);if(!Number.isFinite(weight)||weight<=0||weight>100000)return combo.label+' 的重量必须大于0且不超过100000kg';var sku=state.sku.trim().toLowerCase();if(sku.length>90)return combo.label+' 的商家 SKU 最多90字符，系统随机前缀另占9字符';if(sku&&skuCodes.has(sku))return combo.label+' 的商家 SKU 与其他组合重复';if(sku)skuCodes.add(sku);if(state.float){var min=Number(state.min),max=Number(state.max);if(!Number.isFinite(min)||!Number.isFinite(max)||min<1000||max>120000000||max<min)return combo.label+' 的价格区间无效';lows.push(min);highs.push(max)}else{var price=Number(state.price);if(!Number.isFinite(price)||price<1000||price>120000000)return combo.label+' 的价格必须为1000-120000000';lows.push(price);highs.push(price)}}
   var lowest=Math.min.apply(null,lows),highest=Math.max.apply(null,highs);if(highest/lowest>5)return'最高 SKU 价格除以最低 SKU 价格不能超过5';
-  var preOrder=document.getElementById('preOrderDts').value.trim();var selectedChannels=Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});if(preOrder&&selectedChannels.includes('5012'))return'预售商品不能使用 Trong Ngày 渠道，请关闭渠道5012';if(!selectedChannels.length)return'至少选择一个物流渠道';for(var channel of channels){if(selectedChannels.includes(channel.id)&&channel.limit&&highest>channel.limit)return channel.label+' 的最高允许价格为 '+channel.limit.toLocaleString('en-US')+' VND'}
+  var preOrder=document.getElementById('preOrderDts').value.trim();var selectedChannels=Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});var blockedChannel=channels.find(function(channel){return preOrder&&channel.supportsPreOrder===false&&selectedChannels.includes(channel.id)});if(blockedChannel)return'预售商品不能使用 '+blockedChannel.label+' 渠道';if(!selectedChannels.length)return'至少选择一个物流渠道';for(var channel of channels){if(selectedChannels.includes(channel.id)&&channel.limit&&highest>channel.limit)return channel.label+' 的最高允许价格为 '+channel.limit.toLocaleString('en-US')+' VND'}
   var dimensions=['lengthCm','widthCm','heightCm'].map(function(id){return document.getElementById(id).value});var dimensionCount=dimensions.filter(Boolean).length;if(dimensionCount!==0&&dimensionCount!==3)return'长、宽、高必须同时填写或全部留空';
   if(dimensions.some(function(value){return value&&Number(value)<=0}))return'长、宽、高必须大于0';
-  var categoryId=document.getElementById('categoryId').value.trim();if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';
+  var categoryId=document.getElementById('categoryId').value.trim();var categorySearch=document.getElementById('categorySearch').value.trim();if(categorySearch&&!categoryId)return'请从分类搜索结果中选择 Category ID';if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';
   var gtin=document.getElementById('gtin').value.trim();if(gtin&&!/^\d{8,14}$/.test(gtin))return'GTIN 必须为8-14位数字';
   var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=getSizeChartFile();if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
-  if(preOrder&&(Number(preOrder)<5||Number(preOrder)>30))return'预售出货天数必须为5-30天';
+  var category=selectedCategory();var minDts=category?.dts_min??5,maxDts=category?.dts_max??30;if(preOrder&&(Number(preOrder)<Number(minDts)||Number(preOrder)>Number(maxDts)))return'该分类的预售出货天数必须为'+minDts+'-'+maxDts+'天';
   return'';
 }
 
 async function uploadWithLimit(items,limit,worker){var results=new Array(items.length);var cursor=0;async function run(){while(cursor<items.length){var index=cursor++;results[index]=await worker(items[index],index)}}await Promise.all(Array.from({length:Math.min(limit,items.length)},run));return results}
-function setSubmitting(active,action){submitting=active;var start=document.getElementById('startButton'),draft=document.getElementById('draftButton');start.disabled=active;draft.disabled=active;start.classList.toggle('is-loading',active&&action==='start');draft.classList.toggle('is-loading',active&&action==='draft')}
+function setSubmitting(active,action){submitting=active;var start=document.getElementById('startButton'),draft=document.getElementById('draftButton');start.disabled=active||!templateReady;draft.disabled=active||!templateReady;document.getElementById('updateTemplateButton').disabled=active||!activeStore;start.classList.toggle('is-loading',active&&action==='start');draft.classList.toggle('is-loading',active&&action==='draft')}
 async function stopExpiredOperation(token,taskId,savedTask){if(operationToken===token)return false;if(taskId&&!savedTask){try{await API.deleteTask(taskId)}catch(error){}}return true}
 
 async function handleCreate(event){
@@ -418,7 +525,7 @@ async function handleCreate(event){
     var sizeChartUrl='';var sizeChartFile=getSizeChartFile();if(sizeChartFile){var chartResult=await API.uploadFile(taskId,sizeChartFile,'size-chart');if(!chartResult.success)throw new Error(chartResult.error||'尺码表上传失败');sizeChartUrl=chartResult.url;if(await stopExpiredOperation(token,taskId,savedTask))return}
     var brief=document.getElementById('sourceBrief').value.trim();var taskName=document.getElementById('taskName').value.trim();
     var variations=getEnabledCombinations().map(function(combo){var state=ensureCombinationState(combo);var primary=primaryOptions.find(function(option){return option.id===combo.primaryId});return{option1:combo.option1,option2:combo.option2,image_per_variation:primaryUrls[combo.primaryId]||'',sku_description:imageMode==='ai'&&primary?primary.description.trim():'',price:state.float?Number(state.min):Number(state.price),price_float_enabled:state.float?1:0,price_min:state.float?Number(state.min):null,price_max:state.float?Number(state.max):null,price_precision:Number(state.precision)||0,stock:Number(state.stock),weight_kg:Number(state.weight),sku:state.sku.trim()}});
-    var payload={name:taskName,source_brief:brief,product_type:productType,reference_title:document.getElementById('referenceTitle').value.trim(),main_description:document.getElementById('mainDescription').value.trim(),reference_image:coreUrl,auxiliary_images:JSON.stringify(auxiliaryUrls),cover_image:coreUrl,images:JSON.stringify(auxiliaryUrls),generate_count:Number(document.getElementById('generateCount').value),mode:selectedValue('generationMode'),main_image_count:9,detail_image_count:0,category_id:document.getElementById('categoryId').value.trim(),gtin:document.getElementById('gtin').value.trim(),length_cm:document.getElementById('lengthCm').value||null,width_cm:document.getElementById('widthCm').value||null,height_cm:document.getElementById('heightCm').value||null,variation_name1:productType==='single'?'':document.getElementById('variationName1').value.trim(),variation_name2:productType==='two'?document.getElementById('variationName2').value.trim():'',variation_image_mode:productType==='single'?'none':imageMode,size_chart_template_id:document.getElementById('sizeChartTemplate').value.trim(),size_chart_image:sizeChartUrl,pre_order_dts:document.getElementById('preOrderDts').value||null,shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value})),variations:variations};
+    var payload={store_id:activeStore.id,name:taskName,source_brief:brief,product_type:productType,reference_title:document.getElementById('referenceTitle').value.trim(),main_description:document.getElementById('mainDescription').value.trim(),reference_image:coreUrl,auxiliary_images:JSON.stringify(auxiliaryUrls),cover_image:coreUrl,images:JSON.stringify(auxiliaryUrls),generate_count:Number(document.getElementById('generateCount').value),mode:selectedValue('generationMode'),main_image_count:9,detail_image_count:0,category_id:document.getElementById('categoryId').value.trim(),gtin:document.getElementById('gtin').value.trim(),length_cm:document.getElementById('lengthCm').value||null,width_cm:document.getElementById('widthCm').value||null,height_cm:document.getElementById('heightCm').value||null,variation_name1:productType==='single'?'':document.getElementById('variationName1').value.trim(),variation_name2:productType==='two'?document.getElementById('variationName2').value.trim():'',variation_image_mode:productType==='single'?'none':imageMode,size_chart_template_id:document.getElementById('sizeChartTemplate').value.trim(),size_chart_image:sizeChartUrl,pre_order_dts:document.getElementById('preOrderDts').value||null,shipping_channels:JSON.stringify(Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value})),variations:variations};
     var saved=await API.updateTask(taskId,payload);if(!saved.success)throw new Error(saved.error||'任务保存失败');savedTask=true;if(await stopExpiredOperation(token,taskId,savedTask))return;
     if(action==='start'){var pushed=await API.pushTask(taskId,false);if(!pushed.success)throw new Error(pushed.error||'任务推送失败');if(await stopExpiredOperation(token,taskId,savedTask))return;showToast('任务已创建并进入生成队列','success')}else showToast('任务已保存，尚未开始生成','success');
     clearTimeout(timeout);location.href='/?task='+encodeURIComponent(taskId);

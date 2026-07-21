@@ -421,10 +421,18 @@ ${WEBHOOKS.slice(2).map(function(w){
 <pre>款式编码 | 商品编码 | 颜色 | 规格 | 商品主图(JSON数组) | 商品详情图(JSON数组) | 图片地址 | 商品名称 | 推荐文案 | 商品描述 | 宝贝链接 | 库存 | 重量(kg) | 基本售价 | 市场/吊牌价 | 最低分销控价 | 最高分销控价 | 供应商名 | 3:4主图 | 长图 | 透明素材图 | 白底图</pre>
 <div class="note">模板要求款式编码、商品编码、商品名称必填，库存、重量和价格保持数值类型。市场|吊牌价由系统自动复制最终基本售价；启用价格浮动时，同一导出行的两列使用同一个取值。导出只校验当前任务实际构造过的 AI 计划：已构造但尚未回调的元数据或图片会阻断。SKU 图片自上传模式直接使用 <code>sku_image</code>，AI 模式使用生成图。去重模式第 2 套开始复用第 1 套的 AI 附图、详情图和 SKU 图。</div>
 
-<h2 id="Shopee导出">Shopee 导出格式（A~AI 35列）</h2>
-<p>导出接口 <code>GET /api/tasks/:id/export</code> 为 Shopee 任务时返回 <code>export_format:'shopee'</code>，前端会写入当前 2026-07-21 官方 basic template 的 <code>Template</code> 工作表第 7 行开始。当前列顺序：</p>
-<pre>Category | Product Name | Product Description | Parent SKU | Variation Integration No. | Variation Name1 | Option for Variation 1 | Image per Variation | Variation Name2 | Option for Variation 2 | Price | Stock | SKU | Size Chart Template | Size Chart Image | GTIN | Cover image | Item Image 1 | Item Image 2 | Item Image 3 | Item Image 4 | Item Image 5 | Item Image 6 | Item Image 7 | Item Image 8 | Weight | Length | Width | Height | Shipping(5001) | Shipping(5012) | Shipping(50039) | Shipping(50052) | Pre-order DTS | Fail Reason</pre>
-<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。无规格商品的 E~J 规格列留空。2026-07-21 模板移除了 5000、5004、50053 三个物流渠道列，分类 ID 与 DTS 范围未变化。<code>5012 / Trong Ngày</code> 不支持预售，导出时会自动写为 Off。前端写入前会校验模板第 3 行字段，字段不一致时阻止导出。模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
+<h2 id="Shopee导出">Shopee 店铺模板导出</h2>
+<p>用户先通过 <code>GET /api/shopee/stores</code> 查看自己的店铺模板，通过 <code>POST /api/shopee/stores</code> 上传从 Seller Centre 下载的最新 Basic Template。任务更新接口必须携带 <code>store_id</code>。</p>
+<p><code>GET /api/tasks/:id/export</code> 对 Shopee 任务直接返回 <code>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</code> 文件。Worker 读取店铺模板的隐藏 token，保留官方工作簿结构，只在 <code>Template</code> 第 7 行开始写入数据。</p>
+<div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。物流渠道、列数和列顺序全部从用户模板解析，新增物流列无需改代码。模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
+
+<h3>Shopee 店铺模板接口</h3>
+<pre>GET    /api/shopee/stores
+POST   /api/shopee/stores       multipart/form-data: name, file, store_id(更新时可选)
+GET    /api/shopee/stores/:id   返回分类目录和物流渠道
+PUT    /api/shopee/stores/:id   JSON: {"name":"新店铺名"}
+DELETE /api/shopee/stores/:id   停用店铺，历史模板保留</pre>
+<div class="note">模板解析会拒绝 Advanced Template、宏文件、外部链接和嵌入对象。新增必填隐藏 token 尚未适配时，导出接口返回 409 并列出字段，不会生成可能无法上传的文件。</div>
 
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>

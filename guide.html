@@ -148,10 +148,11 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>选择无规格、一维规格或二维规格。需要图片区分的颜色、图案、款式放在一级规格，尺码等无图维度放在二级规格。</li>
             <li>填写每个 SKU 组合的价格、库存、重量和可选商家 SKU。重量默认 0.2kg，可按 SKU 修改。</li>
             <li>选择 SKU 图片自上传或 AI 生成模式；选择至少一个物流渠道。SPX 默认开启，库存默认 999。</li>
+            <li>先选择店铺模板。首次使用或官方更新模板时，上传该店铺从 Seller Centre 下载的最新 <strong>Basic Template</strong>；不要上传 Advanced Template。</li>
             <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
-            <li>任务完成后导出官方模板，数据从第 7 行开始写入。需要归档全部图片时可在任务列表打包下载。</li>
+            <li>任务完成后直接导出该店铺原始模板的派生文件，系统按隐藏字段写入，不会重建模板。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
-          <div class="ok-box">官方模板依据：系统内置稳定入口 <code>/templates/Shopee_mass_upload_current.xlsx</code>，当前对应 2026-07-21 basic template。<code>Template</code> 工作表第 3 行是字段名，第 4 行是必填性，第 6 行是填写规则，第 7 行开始写商品数据。</div>
+          <div class="ok-box">系统不再依赖内置固定模板。用户上传后，Worker 提取 <code>Template</code> 第 1 行隐藏 token、第 3/4/6 行字段契约、物流渠道和 <code>Pre-order DTS Range</code> 分类目录；第 7 行开始写商品数据。</div>
         </div>
 
         <div class="guide-section">

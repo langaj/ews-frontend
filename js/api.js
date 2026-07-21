@@ -21,10 +21,29 @@ const API = {
   async initTask(platform) { return this._post('/api/tasks/init', { platform: platform || 'jst' }); },
   async updateTask(id, data) { return this._put(`/api/tasks/${id}`, data); },
   async deleteTask(id) { return this._del(`/api/tasks/${id}`); },
-  async exportTask(id) { return this._get(`/api/tasks/${id}/export`); },
+  async exportTask(id) {
+    try {
+      const response = await fetch(API_BASE + `/api/tasks/${id}/export`, { headers: this._getAuthHeaders() });
+      const contentType = response.headers.get('Content-Type') || '';
+      if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+        const disposition = response.headers.get('Content-Disposition') || '';
+        const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+        return { success: response.ok, export_format: 'shopee-xlsx', blob: await response.blob(), filename: encodedName ? decodeURIComponent(encodedName) : 'Shopee_export.xlsx' };
+      }
+      return await response.json();
+    } catch (e) { return { success: false, error: '导出失败: ' + e.message }; }
+  },
   async pushTask(id, testMode) { return this._post(`/api/tasks/${id}/push`, testMode ? { test_mode: true } : {}); },
   async retryPlan(taskId, planId) { return this._post(`/api/tasks/${taskId}/plans/${planId}/retry`, {}); },
   async getPushPlans(id) { return this._get(`/api/tasks/${id}/plans`); },
+  async getShopeeStores() { return this._get('/api/shopee/stores'); },
+  async getShopeeStore(id) { return this._get(`/api/shopee/stores/${id}`); },
+  async uploadShopeeStoreTemplate(name, file, storeId) {
+    const fd = new FormData(); fd.append('name', name || ''); fd.append('file', file); if (storeId) fd.append('store_id', storeId);
+    return _upload('/api/shopee/stores', fd);
+  },
+  async renameShopeeStore(id, name) { return this._put(`/api/shopee/stores/${id}`, { name }); },
+  async deleteShopeeStore(id) { return this._del(`/api/shopee/stores/${id}`); },
   async getUsers() { return this._get('/api/users'); },
   async createUser(username, password, role, platformAccess, imageConcurrencyLimit) { return this._post('/api/users', { username, password, role, platform_access: platformAccess || 'allow', image_concurrency_limit: imageConcurrencyLimit || 20 }); },
   async toggleUser(id) { return this._put(`/api/users/${id}/toggle`, {}); },

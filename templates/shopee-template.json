@@ -1,19 +1,8 @@
 {
-  "version": "2026-07-21",
-  "source_file": "Shopee_mass_upload_2026-07-21_basic_template.xlsx",
-  "active_file": "Shopee_mass_upload_current.xlsx",
-  "sha256": "c21130b4eef820937927fd3167a0e1f1adeaea36151b810f7f43ad3ebbc659ad",
+  "mode": "user-uploaded",
+  "template_type": "basic",
   "sheet": "Template",
   "start_row": 7,
-  "column_count": 35,
-  "columns": [
-    "Category", "Product Name", "Product Description", "Parent SKU", "Variation Integration No.", "Variation Name1", "Option for Variation 1", "Image per Variation", "Variation Name2", "Option for Variation 2", "Price", "Stock", "SKU", "Size Chart Template", "Size Chart Image", "GTIN", "Cover image", "Item Image 1", "Item Image 2", "Item Image 3", "Item Image 4", "Item Image 5", "Item Image 6", "Item Image 7", "Item Image 8", "Weight", "Length", "Width", "Height", "Nhanh", "Trong Ngày", "Tủ nhận hàng - Viettel Smartbox", "Tủ nhận hàng - SPX", "Pre-order DTS", "Fail Reason"
-  ],
-  "shipping_channels": [
-    { "id": "5001", "name": "Nhanh", "max_price": 100000000 },
-    { "id": "5012", "name": "Trong Ngày", "supports_preorder": false },
-    { "id": "50039", "name": "Tủ nhận hàng - Viettel Smartbox" },
-    { "id": "50052", "name": "Tủ nhận hàng - SPX", "default": true }
-  ],
-  "category_count": 1817
+  "runtime_contract": "Template 第1行隐藏 token、字段规则、物流渠道和 Pre-order DTS Range 均从用户上传的店铺模板解析",
+  "legacy_builtin_templates": "仅作为历史样本保留，不参与导出"
 }
