@@ -67,6 +67,11 @@ const API = {
   async getUserWebhook(id) { return this._get(`/api/users/${id}/webhook`); },
   async updateUserWebhook(id, cfg) { return this._put(`/api/users/${id}/webhook`, cfg); },
   async uploadFile(taskId, file, folder) {
+    const targetFolder = folder || 'uploads';
+    const maxBytes = targetFolder === 'size-chart' ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (!file || typeof file.size !== 'number') return { success: false, error: '请选择有效文件' };
+    if (file.size > maxBytes) return { success: false, error: targetFolder === 'size-chart' ? '尺码表文件不能超过 2MB' : '文件大小不能超过 10MB' };
+    if (targetFolder === 'sku-upload' && file.type && !/^image\/(jpeg|png)$/i.test(file.type)) return { success: false, error: 'SKU成品图仅支持 JPG 或 PNG' };
     const fd = new FormData(); fd.append('file', file); fd.append('task_id', taskId); fd.append('folder', folder || 'uploads');
     return _upload(`/api/upload`, fd);
   },
@@ -88,8 +93,22 @@ async function _handleResponse(promise) {
 async function _upload(url, formData) {
   const token = localStorage.getItem('ews_token');
   const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-  try { const res = await fetch(API_BASE + url, { method: 'POST', headers, body: formData }); return await res.json(); }
-  catch (e) { return { success: false, error: '上传失败: ' + e.message }; }
+  let lastError = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(API_BASE + url, { method: 'POST', headers, body: formData });
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (_) {
+        if (res.status >= 500 && attempt === 0) { await new Promise(resolve => setTimeout(resolve, 800)); continue; }
+        return { success: false, error: `上传失败: HTTP ${res.status}${text ? '，服务器未返回有效 JSON' : ''}` };
+      }
+    } catch (e) {
+      lastError = e;
+      if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 800));
+    }
+  }
+  return { success: false, error: '上传失败: ' + (lastError?.message || '网络连接异常') };
 }
 
 // 全局认证检查

@@ -175,7 +175,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
                 <div class="form-hint">仅作为系统内部备注，不发送给工作流。</div>
               </div>
               <div class="form-group">
-                <label class="form-label" for="categorySearch">Category ID <span class="optional">(可选)</span></label>
+                <label class="form-label" for="categorySearch">Category ID <span class="optional">(填写预售时必选)</span></label>
                 <div class="category-picker">
                   <input class="form-input" id="categorySearch" autocomplete="off" placeholder="输入分类 ID 或英文类目名称" onfocus="searchCategories()" oninput="searchCategories()">
                   <input type="hidden" id="categoryId">
@@ -498,7 +498,7 @@ function validateModel(){
   var preOrder=document.getElementById('preOrderDts').value.trim();var selectedChannels=Array.from(document.querySelectorAll('.shipping-channel:checked')).map(function(input){return input.value});var blockedChannel=channels.find(function(channel){return preOrder&&channel.supportsPreOrder===false&&selectedChannels.includes(channel.id)});if(blockedChannel)return'预售商品不能使用 '+blockedChannel.label+' 渠道';if(!selectedChannels.length)return'至少选择一个物流渠道';for(var channel of channels){if(selectedChannels.includes(channel.id)&&channel.limit&&highest>channel.limit)return channel.label+' 的最高允许价格为 '+channel.limit.toLocaleString('en-US')+' VND'}
   var dimensions=['lengthCm','widthCm','heightCm'].map(function(id){return document.getElementById(id).value});var dimensionCount=dimensions.filter(Boolean).length;if(dimensionCount!==0&&dimensionCount!==3)return'长、宽、高必须同时填写或全部留空';
   if(dimensions.some(function(value){return value&&Number(value)<=0}))return'长、宽、高必须大于0';
-  var categoryId=document.getElementById('categoryId').value.trim();var categorySearch=document.getElementById('categorySearch').value.trim();if(categorySearch&&!categoryId)return'请从分类搜索结果中选择 Category ID';if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';
+  var categoryId=document.getElementById('categoryId').value.trim();var categorySearch=document.getElementById('categorySearch').value.trim();if(categorySearch&&!categoryId)return'请从分类搜索结果中选择 Category ID';if(categoryId&&!/^\d+$/.test(categoryId))return'分类 ID 只能填写数字';if(preOrder&&!categoryId)return'填写 Pre-order DTS 时必须选择 Category ID，DTS 范围按分类确定';
   var gtin=document.getElementById('gtin').value.trim();if(gtin&&!/^\d{8,14}$/.test(gtin))return'GTIN 必须为8-14位数字';
   var sizeChartTemplate=document.getElementById('sizeChartTemplate').value.trim();var sizeChartFile=getSizeChartFile();if(sizeChartTemplate&&sizeChartFile)return'尺码表模板和尺码表文件只能选择一个';if(sizeChartTemplate&&!/^\d+$/.test(sizeChartTemplate))return'尺码表模板 ID 只能填写数字';if(sizeChartFile&&sizeChartFile.size>2*1024*1024)return'尺码表文件不能超过2MB';
   var category=selectedCategory();var minDts=category?.dts_min??5,maxDts=category?.dts_max??30;if(preOrder&&(Number(preOrder)<Number(minDts)||Number(preOrder)>Number(maxDts)))return'该分类的预售出货天数必须为'+minDts+'-'+maxDts+'天';
@@ -515,10 +515,10 @@ async function handleCreate(event){
   try{
     var init=await API.initTask('shopee');if(!init.success)throw new Error(init.error||'任务初始化失败');taskId=init.task_id;if(await stopExpiredOperation(token,taskId,savedTask))return;
     var referenceItems=referenceFiles.map(function(item,index){return item?{item:item,index:index}:null}).filter(Boolean);
-    var referenceUrls=await uploadWithLimit(referenceItems,3,async function(entry){var result=await API.uploadFile(taskId,entry.item.file,entry.index===0?'reference':'auxiliary');if(!result.success)throw new Error(result.error||'参考图上传失败');return{index:entry.index,url:result.url}});
+    var referenceUrls=await uploadWithLimit(referenceItems,2,async function(entry){var result=await API.uploadFile(taskId,entry.item.file,entry.index===0?'reference':'auxiliary');if(!result.success)throw new Error(result.error||'参考图上传失败');return{index:entry.index,url:result.url}});
     if(await stopExpiredOperation(token,taskId,savedTask))return;
     var coreUrl=referenceUrls.find(function(item){return item.index===0}).url;var auxiliaryUrls=referenceUrls.filter(function(item){return item.index>0}).map(function(item){return item.url});
-    var primaryWithFiles=productType==='single'?[]:primaryOptions.filter(function(option){return option.file});var uploadedPrimary=await uploadWithLimit(primaryWithFiles,3,async function(option){var result=await API.uploadFile(taskId,option.file,imageMode==='ai'?'sku-reference':'sku-upload');if(!result.success)throw new Error(result.error||(imageMode==='ai'?'规格参考图上传失败':'SKU图片上传失败'));return{id:option.id,url:result.url}});var primaryUrls={};uploadedPrimary.forEach(function(item){primaryUrls[item.id]=item.url});
+    var primaryWithFiles=productType==='single'?[]:primaryOptions.filter(function(option){return option.file});var uploadedPrimary=await uploadWithLimit(primaryWithFiles,imageMode==='upload'?1:2,async function(option){var result=await API.uploadFile(taskId,option.file,imageMode==='ai'?'sku-reference':'sku-upload');if(!result.success)throw new Error(result.error||(imageMode==='ai'?'规格参考图上传失败':'SKU图片上传失败'));return{id:option.id,url:result.url}});var primaryUrls={};uploadedPrimary.forEach(function(item){primaryUrls[item.id]=item.url});
     if(await stopExpiredOperation(token,taskId,savedTask))return;
     var sizeChartUrl='';var sizeChartFile=getSizeChartFile();if(sizeChartFile){var chartResult=await API.uploadFile(taskId,sizeChartFile,'size-chart');if(!chartResult.success)throw new Error(chartResult.error||'尺码表上传失败');sizeChartUrl=chartResult.url;if(await stopExpiredOperation(token,taskId,savedTask))return}
     var brief=document.getElementById('sourceBrief').value.trim();var taskName=document.getElementById('taskName').value.trim();

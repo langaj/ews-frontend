@@ -184,7 +184,8 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>主图生成描述</td><td>描述封面和附图的视觉方向。</td><td>影响 <code>main_1</code> 和 <code>sub_2~sub_N</code>。Shopee 默认生成 9 张，即 1 张封面图 + 8 张附图。</td></tr>
               <tr><td>生成模式</td><td>每套都要独立图片选全量；同款只换封面选去重。</td><td>去重模式下每套生成 1 张独立封面，第 2 套开始复用第 1 套的 8 张附图和 SKU 图。</td></tr>
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
-              <tr><td>分类 ID</td><td>进入左侧 <a href="#shopee-category-directory" onclick="showGuide('category')">Shopee/分类ID</a>，按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前模板的 <code>Pre-order DTS Range</code> 工作表；留空时 Shopee 可能推荐类目。</td></tr>
+              <tr><td>分类 ID</td><td>进入左侧 <a href="#shopee-category-directory" onclick="showGuide('category')">Shopee/分类ID</a>，按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前店铺模板的 <code>Pre-order DTS Range</code> 工作表；不使用预售时可留空，填写 Pre-order DTS 时必须选择分类。</td></tr>
+              <tr><td>Pre-order DTS</td><td>先选择 Category ID，再填写该分类允许范围内的预售出货天数。</td><td>系统按当前店铺模板校验分类范围，并自动关闭模板标记为不支持预售的物流渠道；缺少 Category ID 时禁止保存和导出。</td></tr>
               <tr><td>重量(kg)</td><td>在每个 SKU 组合中填写，默认 0.2kg。</td><td>官方模板 Z Weight 单位是 g，系统逐 SKU 从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
               <tr><td>包装尺寸(cm)</td><td>默认使用全局尺寸；需要不同 SKU 使用不同包装尺寸时，在 SKU 区域切换为“按 SKU 尺寸”，逐个填写长、宽、高。</td><td>导出时写入每个 SKU 行的 <code>ps_length / ps_width / ps_height</code>；三项必须同时填写或全部留空。尺寸用于物流费计算，官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
@@ -194,8 +195,8 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>价格</td><td>按越南站 VND 填数字；也可在单个变体启用价格浮动。</td><td>当前模板规则为 1000~120000000；浮动价格会按每套商品在区间内取值。</td></tr>
               <tr><td>库存</td><td>默认 999，可按每个 SKU 组合修改。</td><td>官方范围 0~10000000；用户填写 0 时系统会保留 0。</td></tr>
               <tr><td>SKU</td><td>店铺内唯一，建议简短；用户输入最多 90 字符，同一任务内不能重复。</td><td>系统导出为“8位随机ID-商家SKU”，随机前缀计入官方小于 100 字符的限制。</td></tr>
-              <tr><td>SKU 图片</td><td>每个一级规格必须上传一张，不要按尺码重复上传。自上传成品图仅支持 JPG/PNG；AI 模式参考图保留原格式。</td><td>自上传图由 Worker 转为 quality 88 JPEG，超过 2MB 时进行一次等比缩小后直接导出；AI 模式最终导出生成后的 <code>sku_N</code>。同一一级规格的组合行复用 URL。</td></tr>
-              <tr><td>物流渠道</td><td>默认勾选 SPX，可按店铺实际渠道调整。</td><td>2026-07-21 模板保留 5001、5012、50039、50052；已移除 5000、5004、50053。每个商品至少一个渠道为 On。<code>5012 / Trong Ngày</code> 不支持预售，填写 Pre-order DTS 后系统会自动关闭该渠道。</td></tr>
+              <tr><td>SKU 图片</td><td>每个一级规格必须上传一张，不要按尺码重复上传。自上传成品图仅支持 JPG/PNG；AI 模式参考图保留原格式。</td><td>小于 2MB 的 JPG 直接保留；PNG 或超限 JPG 由 Worker 转为 quality 88 JPEG，仍超限时进行一次等比缩小。AI 模式最终导出生成后的 <code>sku_N</code>，同一一级规格的组合行复用 URL。</td></tr>
+              <tr><td>物流渠道</td><td>默认勾选 SPX，可按店铺实际渠道调整。</td><td>系统按当前店铺模板动态加载渠道。模板标记为不支持预售的渠道会在填写 Pre-order DTS 后自动关闭；当前常见的 <code>5012 / Trong Ngày</code> 不支持预售。</td></tr>
             </tbody>
           </table>
         </div>
@@ -243,7 +244,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
       <section class="guide-panel" id="guide-category">
         <div class="guide-section">
           <h2 id="shopee-category-directory">Shopee Category ID 中英对照表</h2>
-          <p>Category ID 是 Shopee 平台类目编码，不是系统自定义字段。准确类目有利于搜索结果和后续类目属性匹配；如果暂时无法确认，可以留空让 Shopee 推荐，但上传后可能还需要调整类目属性、物流或价格限制。</p>
+          <p>Category ID 是 Shopee 平台类目编码，不是系统自定义字段。准确类目有利于搜索结果和后续类目属性匹配；普通商品暂时无法确认时可以留空让 Shopee 推荐，预售商品必须选择分类，系统才能按官方范围校验 Pre-order DTS。</p>
           <div class="note-box">本页完整收录 2026-07-21 basic template 的 <code>Pre-order DTS Range</code> 工作表，共 1817 个唯一 Category ID。与 2026-07-20 版本相比没有新增、删除类目或调整 DTS 范围。中文路径用于检索辅助，最终填写请以同一行的官方 ID 和英文路径为准；平台更新模板后，类目与 DTS 范围也可能变化。</div>
           <div class="category-directory" aria-labelledby="shopee-category-directory">
             <div class="category-toolbar">

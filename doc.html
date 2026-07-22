@@ -81,7 +81,7 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
-  {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)'}},
+  {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)'}},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
   {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee',group_id:'string(默认default)',image_concurrency_limit:'integer(1~20，默认20)'}},
   {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用用户(admin)',a:true},
@@ -411,7 +411,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 
 <h2 id="上传">上传</h2>
 ${eps(['POST /api/upload'])}
-<div class="note">普通上传支持 JPG/PNG/WebP/GIF，单文件 ≤10MB，并保留原始字节、MIME 和对应扩展名。<code>folder=sku-upload</code> 仅接受 JPG/PNG，Worker 会统一编码为 quality 88 JPEG；首次结果超过 2,000,000 bytes 时只进行一次 Bilinear 等比缩小，仍超限则返回 400。<code>reference</code>、<code>auxiliary</code>、<code>sku-reference</code> 不转码、不压缩。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.{ext}</code>。成功响应增加 <code>content_type</code>、<code>size_bytes</code>，SKU 成品图另含 <code>image_processing</code>。所有任务接口仅允许任务所有者访问，管理员例外；越权返回 403。</div>
+<div class="note">普通上传支持 JPG/PNG/WebP/GIF，单文件 ≤10MB，并保留原始字节、MIME 和对应扩展名。<code>folder=sku-upload</code> 仅接受 JPG/PNG；小于 2,000,000 bytes 的 JPG 直接保留，PNG 或超限 JPG 才按 quality 88 编码为 JPEG，首次结果仍超限时只进行一次 <code>triangle</code>（线性/双线性核）等比缩小，仍超限则返回 400。<code>reference</code>、<code>auxiliary</code>、<code>sku-reference</code> 不转码、不压缩。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.{ext}</code>。成功响应增加 <code>content_type</code>、<code>size_bytes</code>，SKU 成品图另含 <code>image_processing.reencoded</code>。浏览器从 <code>https://ews.langaj.cn</code> 上传时，Worker 对 <code>OPTIONS</code> 和正式响应均返回 CORS 头，并兼容 Private Network Access 预检；前端对瞬时网络失败自动重试一次。所有任务接口仅允许任务所有者访问，管理员例外；越权返回 403。</div>
 
 <h2 id="用户管理">用户管理</h2>
 ${eps(['GET /api/groups','POST /api/groups','PUT /api/groups/:id','PUT /api/groups/:id/templates','GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/group','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','PUT /api/users/:id/concurrency','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
@@ -436,7 +436,7 @@ ${WEBHOOKS.slice(2).map(function(w){
 
 <h2 id="Shopee导出">Shopee 全局模板库导出</h2>
 <p>普通用户通过 <code>GET /api/shopee/template-profiles</code> 查看所属分组内已启用的模板档案及最近更新者，管理员查看全部档案；通过 <code>POST /api/shopee/template-profiles</code> 上传 Seller Centre 下载的最新 Basic Template 后，档案自动关联上传者当前分组。模板显示名称优先级为“我的别名”&gt;“全局别名”&gt;<code>SHP-VN-{store_context_id}</code>，其中全局别名由管理员维护、我的别名按用户隔离。新上下文可直接创建，已有档案允许任意登录用户更新。任务更新接口携带 <code>template_profile_id</code>，导出始终优先读取档案当前最新版。</p>
-<p><code>GET /api/tasks/:id/export</code> 对 Shopee 任务直接返回 <code>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</code> 文件。Worker 扫描全部工作表，按隐藏 token 锚点推导商品工作表、元数据行、规则行和数据起始行，再把系统语义字段写入原始工作簿。</p>
+<p><code>GET /api/tasks/:id/export</code> 对 Shopee 任务直接返回 <code>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</code> 文件。Worker 扫描全部工作表，按隐藏 token 锚点推导商品工作表、元数据行、规则行和数据起始行，再把系统语义字段写入原始工作簿。填写 <code>Pre-order DTS</code> 时必须同时提供当前模板中的 <code>Category ID</code>，并按该分类的 <code>Pre-order DTS Range</code> 校验；空 DTS 代表普通商品，平台使用默认 DTS。</p>
 <div class="note">Shopee 导出前会阻断缺失 AI 资源：每套必须有 Product Name、Product Description、封面图和 8 张附图；规格商品必须有规范化规格标签，AI 生成模式下每个一级规格必须有 SKU 变体图。自上传模式直接使用用户图片 URL。Weight 按每条 SKU 的 <code>weight_kg</code> 从 kg 转为 g。物流渠道、列数和列顺序全部从用户模板解析，新增物流列无需改代码。模板没有详情图字段，任务图片可通过任务列表打包下载。</div>
 
 <h3>Shopee 全局模板库接口</h3>
