@@ -71,7 +71,7 @@ const API = {
     const maxBytes = targetFolder === 'size-chart' ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
     if (!file || typeof file.size !== 'number') return { success: false, error: '请选择有效文件' };
     if (file.size > maxBytes) return { success: false, error: targetFolder === 'size-chart' ? '尺码表文件不能超过 2MB' : '文件大小不能超过 10MB' };
-    if (targetFolder === 'sku-upload' && file.type && !/^image\/(jpeg|png)$/i.test(file.type)) return { success: false, error: 'SKU成品图仅支持 JPG 或 PNG' };
+    if (targetFolder === 'sku-upload' && file.type && !/^image\/(jpeg|jpg|png)$/i.test(file.type) && file.type !== 'application/octet-stream') return { success: false, error: 'SKU成品图仅支持 JPG 或 PNG' };
     const fd = new FormData(); fd.append('file', file); fd.append('task_id', taskId); fd.append('folder', folder || 'uploads');
     return _upload(`/api/upload`, fd);
   },
