@@ -178,6 +178,10 @@ async function showShopeeDetail(t,plansResponse){
   var done=(p.sub_tasks||[]).filter(function(s){return s.status==='completed'}).length;
   var v=(p.variations||[]).map(function(v){return escapeHtml(v.option1+(v.option2?'/'+v.option2:''))}).join(', ');
   var weights=[...new Set((p.variations||[]).map(function(v){return Number(v.weight_kg||0.2)}))].join(' / ');
+  var dimensionMode=p.dimension_mode==='variant'?'按 SKU 尺寸':'全局尺寸';
+  var dimensionValues=p.dimension_mode==='variant'
+    ? [...new Set((p.variations||[]).map(function(item){return [item.length_cm,item.width_cm,item.height_cm].every(function(value){return value!==null&&value!==undefined&&value!==''})?[item.length_cm,item.width_cm,item.height_cm].join(' × '):'未填写'}))].join(' / ')
+    : [p.length_cm,p.width_cm,p.height_cm].every(function(value){return value!==null&&value!==undefined&&value!==''})?[p.length_cm,p.width_cm,p.height_cm].join(' × '):'未填写';
   var skuImageMode=p.variation_image_mode==='ai'||p.variation_image_mode==='option1'?'AI 生成':p.variation_image_mode==='upload'?'自上传':'无规格';
   var templateProfiles=(t.template_profiles||[]).slice();
   var currentTemplate=t.template_profile||templateProfiles.find(function(profile){return profile.id===p.template_profile_id})||null;
@@ -194,7 +198,8 @@ async function showShopeeDetail(t,plansResponse){
   html+='<div class="detail-section"><div class="detail-label">规格结构</div><div class="detail-value">'+escapeHtml((p.variation_name1||'无规格')+(p.variation_name2?'/'+p.variation_name2:''))+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">规格值</div><div class="detail-value">'+(v||'无')+'</div></div>';
   html+='<div class="detail-section"><div class="detail-label">SKU 图片模式</div><div class="detail-value">'+skuImageMode+'</div></div>';
-  html+='<div class="detail-section"><div class="detail-label">SKU 重量</div><div class="detail-value">'+weights+' kg</div></div></div>';
+  html+='<div class="detail-section"><div class="detail-label">SKU 重量</div><div class="detail-value">'+weights+' kg</div></div>';
+  html+='<div class="detail-section"><div class="detail-label">包装尺寸</div><div class="detail-value">'+dimensionMode+' · '+escapeHtml(dimensionValues)+(dimensionValues==='未填写'?'':' cm')+'</div></div></div>';
   if(templateProfiles.length){
     var templateOptions=templateProfiles.map(function(profile){var name=profile.display_name||profile.global_alias||profile.profile_code;return'<option value="'+escapeHtml(profile.id)+'" '+(profile.id===p.template_profile_id?'selected':'')+'>'+escapeHtml(name)+' · '+escapeHtml(profile.profile_code)+'</option>'}).join('');
     html+='<div class="template-switcher"><label class="form-label" for="taskTemplateSelect">切换导出模板</label><div class="template-switch-controls"><select class="form-select" id="taskTemplateSelect" data-current-template="'+escapeHtml(p.template_profile_id||'')+'">'+templateOptions+'</select><button class="btn btn-outline" type="button" onclick="switchShopeeTemplate(\''+escapeHtml(t.id)+'\',this)">切换模板</button></div><div class="form-hint">仅更新模板关联，现有商品、图片和工作流结果不会重建。</div></div>';

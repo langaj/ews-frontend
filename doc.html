@@ -213,6 +213,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
   "length_cm": null,
   "width_cm": null,
   "height_cm": null,
+  "dimension_mode": "global",
   "variation_name1": "Color",
   "variation_name2": "",
   "variation_image_mode": "upload|ai",
@@ -228,6 +229,9 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price": 1000,
     "stock": 999,
     "weight_kg": 0.2,
+    "length_cm": null,
+    "width_cm": null,
+    "height_cm": null,
     "sku": "RED",
     "price_float_enabled": 0,
     "price_min": null,
@@ -235,7 +239,7 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
     "price_precision": 0
   }]
 }</pre>
-<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填；商品元数据工作流为每套商品生成 Product Name 与 100~3000 字符的 Product Description，但商品事实不进入 SKU 图片工作流。非空 <code>sku</code> 在任务内必须唯一且最多 90 字符；导出时系统固定拼接“8位随机ID-用户SKU”，最终满足小于 100 字符。<code>weight_kg</code> 省略时默认 0.2kg。每个一级规格必须且只能上传一张 <code>image_per_variation</code>；AI 模式可填写最多 300 字符的 <code>sku_description</code>。SKU 图片工作流只接收这两个字段，不接收规格名、商品事实或核心参考图；提示词为空时使用工作流内置一致性提示词。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量和 SKU 的记录。</div>
+<div class="note"><strong>Shopee：</strong><code>source_brief</code> 必填；商品元数据工作流为每套商品生成 Product Name 与 100~3000 字符的 Product Description，但商品事实不进入 SKU 图片工作流。<code>dimension_mode</code> 默认 <code>global</code>，使用商品级长宽高；设为 <code>variant</code> 时改为读取每条 <code>variations</code> 的长宽高，并逐 SKU 行导出。任一模式下三项尺寸都必须同时填写或全部留空。非空 <code>sku</code> 在任务内必须唯一且最多 90 字符；导出时系统固定拼接“8位随机ID-用户SKU”，最终满足小于 100 字符。<code>weight_kg</code> 省略时默认 0.2kg。每个一级规格必须且只能上传一张 <code>image_per_variation</code>；AI 模式可填写最多 300 字符的 <code>sku_description</code>。SKU 图片工作流只接收这两个字段，不接收规格名、商品事实或核心参考图；提示词为空时使用工作流内置一致性提示词。<code>product_type=single</code> 仍传一条仅用于价格、库存、重量、尺寸和 SKU 的记录。</div>
 <h4>变体价格浮动字段</h4>
 <table class="ftable">
 <tr><th>字段</th><th>说明</th></tr>

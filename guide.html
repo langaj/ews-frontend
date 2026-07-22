@@ -186,7 +186,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>生成套数</td><td>要生成多少套商品资源就填多少。</td><td>导出行数 = 生成套数 × 变体数。</td></tr>
               <tr><td>分类 ID</td><td>进入左侧 <a href="#shopee-category-directory" onclick="showGuide('category')">Shopee/分类ID</a>，按 ID、中文或英文类目检索并点击复制。</td><td>对照表来自当前模板的 <code>Pre-order DTS Range</code> 工作表；留空时 Shopee 可能推荐类目。</td></tr>
               <tr><td>重量(kg)</td><td>在每个 SKU 组合中填写，默认 0.2kg。</td><td>官方模板 Z Weight 单位是 g，系统逐 SKU 从 kg 转成 g，必须大于 0 且不超过 100000000g。</td></tr>
-              <tr><td>长/宽/高(cm)</td><td>按包裹尺寸填。</td><td>用于物流费计算；官方提示尺寸不准会影响运费和履约。</td></tr>
+              <tr><td>包装尺寸(cm)</td><td>默认使用全局尺寸；需要不同 SKU 使用不同包装尺寸时，在 SKU 区域切换为“按 SKU 尺寸”，逐个填写长、宽、高。</td><td>导出时写入每个 SKU 行的 <code>ps_length / ps_width / ps_height</code>；三项必须同时填写或全部留空。尺寸用于物流费计算，官方提示尺寸不准会影响运费和履约。</td></tr>
               <tr><td>一级规格名</td><td>优先放需要图片区分的维度，通常是颜色、图案或款式。</td><td>官方要求 1~14 字符；Image per Variation 只映射一级规格值。</td></tr>
               <tr><td>规格值1</td><td>例如 Red、Blue、Black。</td><td>官方要求 1~20 字符，SKU 变体图映射到规格值1。</td></tr>
               <tr><td>二级规格名/值</td><td>放不需要独立图片的维度，例如 Size / S、M、L。</td><td>启用后系统自动生成笛卡尔组合，可逐个关闭不售卖组合；二级规格不会新增图片工作流。</td></tr>

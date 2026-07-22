@@ -530,5 +530,6 @@ async function handleCreate(event){
   }catch(error){clearTimeout(timeout);if(taskId&&!savedTask){try{await API.deleteTask(taskId)}catch(cleanupError){}}if(operationToken!==token)return;showToast(error.message||'创建失败','error');setSubmitting(false,action)}
 }
 </script>
+<script src="/js/shopee-dimensions.js"></script>
 </body>
 </html>
