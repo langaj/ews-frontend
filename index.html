@@ -102,11 +102,11 @@ async function refreshTasks(btn){
     document.getElementById('taskRange').textContent=tasks.length?'本页 '+tasks.length+' 个，共 '+(res.total||tasks.length)+' 个任务':'当前筛选暂无任务';
     if(tasks.length===0){c.innerHTML='<div class="empty-state"><div class="empty-text">暂无任务</div><div style="margin-top:16px">'+(createTaskButtonsHtml()||'<span class="muted">当前账号暂无可创建的平台</span>')+'</div></div>';return}
     var isAdminList=localStorage.getItem('ews_role')==='admin';
-    var html='<div class="table-container"><table'+(isAdminList?' class="admin-task-table"':'')+'><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th>'+(isAdminList?'<th>创建用户</th>':'')+'<th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+    var html='<div class="table-container"><table'+(isAdminList?' class="admin-task-table"':'')+'><thead><tr><th>平台</th><th>任务ID</th><th>任务名称</th>'+(isAdminList?'<th>创建用户</th>':'')+'<th>状态</th><th>创建时间</th><th>完成时间</th><th>操作</th></tr></thead><tbody>';
     for(var i=0;i<tasks.length;i++){
       var t=tasks[i];
       var platTag=t.platform==='jst'?'<span class="platform-tag tag-jst">聚水潭</span>':'<span class="platform-tag tag-shopee">虾皮</span>';
-      html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td><span class="task-name">'+escapeHtml(t.name||'(未命名)')+'</span></td>'+(isAdminList?'<td>'+escapeHtml(t.user_id||'未知')+'</td>':'')+'<td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td><div class="task-actions">';
+      html+='<tr><td>'+platTag+'</td><td><code class="muted">'+escapeHtml((t.id||'').slice(0,8))+'</code></td><td><span class="task-name">'+escapeHtml(t.name||'(未命名)')+'</span></td>'+(isAdminList?'<td>'+escapeHtml(t.user_id||'未知')+'</td>':'')+'<td>'+statusBadge(t.status)+'</td><td>'+formatDate(t.created_at)+'</td><td>'+formatDate(t.completed_at||'')+'</td><td><div class="task-actions">';
       html+='<button class="btn btn-sm btn-outline" onclick="viewTask(\''+t.id+'\',this)">详情</button>';
       html+='<button class="btn btn-sm btn-outline" onclick="downloadTaskImages(\''+t.id+'\',this)">打包图片</button>';
       var hasPlans=(parseInt(t.plan_count)||0)>0;

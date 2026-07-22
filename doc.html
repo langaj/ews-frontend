@@ -68,7 +68,7 @@ const EP = [
   {m:'POST',p:'/api/groups',d:'创建分组(admin)',a:true,b:{name:'string(1~40字符)'}},
   {m:'PUT',p:'/api/groups/:id',d:'重命名或启停分组(admin)',a:true,b:{name:'string',status:'active|disabled'}},
   {m:'PUT',p:'/api/groups/:id/templates',d:'覆盖该分组的Shopee模板范围(admin)',a:true,b:{template_profile_ids:'string[]'}},
-  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=10；管理员响应含任务创建用户名)',a:true},
+  {m:'GET',p:'/api/tasks',d:'统一任务列表(?platform=jst|shopee&page=1&limit=10；管理员响应含任务创建用户名；任务整体完成后返回 completed_at)',a:true},
   {m:'POST',p:'/api/tasks/init',d:'初始化任务',a:true,b:{platform:'jst|shopee，默认jst'}},
   {m:'GET',p:'/api/tasks/:id',d:'任务详情(Shopee响应含当前模板与可切换模板)',a:true},
   {m:'PUT',p:'/api/tasks/:id',d:'更新任务(JST/Shopee，按任务平台自动识别请求体)',a:true},
