@@ -325,7 +325,7 @@ body{background:var(--shopee-bg);color:var(--shopee-ink)}
   </div>
 </div>
 
-<script src="/js/api.js"></script>
+<script src="/js/api.js?v=20260722-2"></script>
 <script>
 var referenceFiles=[null,null,null,null,null];
 var droppedSizeChartFile=null;
@@ -417,7 +417,8 @@ function renderReferenceGrid(){
       '<div class="upload-copy"><strong>'+(index===0?'拖入或点击上传':'拖入或点击添加')+'</strong>'+(index===0?'必填；可一次拖入多张':'可选')+'</div></div><div class="reference-caption">'+label+'</div></div>';
   }).join('');
 }
-function isImageFile(file){return file&&/^image\//i.test(file.type)}
+function isImageFile(file){return file&&(/^image\//i.test(file.type)||/\.(jpe?g|png|webp|gif)$/i.test(file.name||''))}
+function isSkuFile(file){return file&&(/^image\/(jpeg|jpg|png)$/i.test(file.type)||file.type==='application/octet-stream'||/\.(jpe?g|png)$/i.test(file.name||''))}
 function setDropState(event,active){event.preventDefault();event.stopPropagation();if(!active&&event.relatedTarget&&event.currentTarget.contains(event.relatedTarget))return;event.currentTarget.classList.toggle('is-dragging',active)}
 function setReferenceFile(index,file){var entry={file:file,preview:''};referenceFiles[index]=entry;var reader=new FileReader();reader.onload=function(result){if(referenceFiles[index]!==entry)return;entry.preview=result.target.result;renderReferenceGrid()};reader.readAsDataURL(file)}
 function assignReferenceFiles(index,files){var images=Array.from(files||[]).filter(isImageFile);if(!images.length){showToast('请拖入图片文件','error');return}var accepted=images.slice(0,referenceFiles.length-index);accepted.forEach(function(file,offset){setReferenceFile(index+offset,file)});renderReferenceGrid();if(images.length>accepted.length)showToast('参考图区最多保留5张图片','info');document.getElementById('referenceError').classList.remove('show')}
@@ -428,10 +429,10 @@ function removeReference(event,index){event.stopPropagation();referenceFiles[ind
 function setProductType(value){productType=value;document.getElementById('variationEditor').hidden=value==='single';document.getElementById('tier2Panel').hidden=value!=='two';renderMatrix();updateSummary()}
 function setImageMode(value){imageMode=value;renderPrimaryOptions();renderMatrix();updateSummary()}
 function addPrimaryOption(){if(primaryOptions.length>=20){showToast('一级规格最多20个值','warning');return}primaryCounter++;primaryOptions.push({id:'primary-'+primaryCounter,value:'',description:'',file:null,preview:''});renderPrimaryOptions();renderMatrix()}
-function removePrimaryOption(id){if(primaryOptions.length<=1){showToast('至少保留一个一级规格值','warning');return}primaryOptions=primaryOptions.filter(function(option){return option.id!==id});renderPrimaryOptions();renderMatrix()}
+function removePrimaryOption(id){if(primaryOptions.length<=1){showToast('至少保留一个一级规格值','warning');return}var removed=primaryOptions.find(function(option){return option.id===id});if(removed?.preview?.startsWith('blob:'))URL.revokeObjectURL(removed.preview);primaryOptions=primaryOptions.filter(function(option){return option.id!==id});renderPrimaryOptions();renderMatrix()}
 function updatePrimaryValue(id,value){var option=primaryOptions.find(function(item){return item.id===id});if(option)option.value=value;renderMatrix();updateSummary()}
 function updatePrimaryDescription(id,value){var option=primaryOptions.find(function(item){return item.id===id});if(option)option.description=value}
-function setPrimaryFile(id,file){if(!isImageFile(file)){showToast('请拖入图片文件','error');return}if(imageMode==='upload'&&!/^image\/(jpeg|png)$/i.test(file.type)){showToast('SKU 成品图仅支持 JPG 或 PNG','error');return}var option=primaryOptions.find(function(item){return item.id===id});if(!option)return;option.file=file;var reader=new FileReader();reader.onload=function(result){if(option.file!==file)return;option.preview=result.target.result;renderPrimaryOptions()};reader.readAsDataURL(file)}
+function setPrimaryFile(id,file){if(!isImageFile(file)){showToast('请拖入图片文件','error');return}if(imageMode==='upload'&&!isSkuFile(file)){showToast('SKU 成品图仅支持 JPG 或 PNG','error');return}var option=primaryOptions.find(function(item){return item.id===id});if(!option)return;if(option.preview?.startsWith('blob:'))URL.revokeObjectURL(option.preview);option.file=file;option.preview=URL.createObjectURL(file);renderPrimaryOptions()}
 function handlePrimaryFile(event,id){setPrimaryFile(id,event.target.files[0])}
 function dropPrimaryFile(event,id){event.preventDefault();event.stopPropagation();event.currentTarget.classList.remove('is-dragging');setPrimaryFile(id,Array.from(event.dataTransfer.files||[]).find(isImageFile))}
 function renderPrimaryOptions(){
@@ -489,7 +490,7 @@ function validateModel(){
     var name1=document.getElementById('variationName1').value.trim();if(!name1||name1.length>14)return'一级规格名必须为1-14字符';
     var primaryValues=primaryOptions.map(function(option){return option.value.trim()}).filter(Boolean);if(!primaryValues.length)return'请填写一级规格值';if(new Set(primaryValues.map(function(value){return value.toLowerCase()})).size!==primaryValues.length)return'一级规格值不能重复';
     if(primaryOptions.some(function(option){return option.value.trim()&&!option.file}))return imageMode==='ai'?'AI 生成模式下，每个一级规格值都要上传参考图':'自上传模式下，每个一级规格值都要上传 SKU 成品图';
-    if(imageMode==='upload'&&primaryOptions.some(function(option){return option.file&&!/^image\/(jpeg|png)$/i.test(option.file.type)}))return'SKU 成品图仅支持 JPG 或 PNG';
+    if(imageMode==='upload'&&primaryOptions.some(function(option){return option.file&&!isSkuFile(option.file)}))return'SKU 成品图仅支持 JPG 或 PNG';
     if(productType==='two'){var name2=document.getElementById('variationName2').value.trim();var tier2=parseValues(document.getElementById('tier2Values').value);if(!name2||name2.length>14)return'二级规格名必须为1-14字符';if(!tier2.length)return'请填写二级规格值';if(combinations.length>50)return'二维规格最多50个 SKU 组合'}
   }
   var lows=[];var highs=[];var skuCodes=new Set();

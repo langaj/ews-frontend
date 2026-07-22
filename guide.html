@@ -60,7 +60,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
-<script src="/js/api.js"></script>
+<script src="/js/api.js?v=20260722-2"></script>
 <div class="app-container guide-page">
   <div class="page-header">
     <div class="page-kicker">User Guide</div>
@@ -119,7 +119,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>款式编码 / 商品编码</td><td>每套子任务 ID / 子任务 ID + 商家 SKU</td><td>模板必填，同一套所有 SKU 共用款式编码，商品编码保持唯一。</td></tr>
               <tr><td>颜色 / 规格</td><td>AI SKU 标题或一级规格值 / 二级规格值</td><td>无规格商品留空；商品元数据工作流关闭时使用用户填写的一级规格值。</td></tr>
               <tr><td>商品主图 / 商品详情图</td><td>R2 中的 <code>main_1 + sub_2~N</code> / <code>detail_1~M</code></td><td>写入 JSON URL 数组。</td></tr>
-              <tr><td>图片地址</td><td>一级规格 SKU 图片</td><td>自上传模式接受 JPG/PNG，系统统一处理为不超过 2MB 的 quality 88 JPEG 并使用 R2 URL；AI 模式使用生成图。二维规格下同一一级规格的组合复用 URL。</td></tr>
+              <tr><td>图片地址</td><td>一级规格 SKU 图片</td><td>自上传模式接受 JPG/PNG，浏览器逐张处理为不超过 2MB 的 quality 88 JPEG 并使用 R2 URL；AI 模式使用生成图。二维规格下同一一级规格的组合复用 URL。</td></tr>
               <tr><td>商品名称 / 推荐文案 / 商品描述</td><td>AI 商品元数据</td><td>每套商品独立生成；工作流关闭时商品名称回退到参考标题，内部任务名称始终不会导出。</td></tr>
               <tr><td>库存 / 重量 / 售价与分销控价</td><td>SKU 设置 / 任务重量 / SKU 价格设置</td><td>保持数值类型；基本售价同步写入市场|吊牌价，空的可选分销控价不写入字符串。</td></tr>
               <tr><td>3:4主图 / 长图 / 透明素材图 / 白底图</td><td>当前没有独立工作流</td><td>保持空值，不用参考图或 SKU 图冒充。</td></tr>
@@ -195,7 +195,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
               <tr><td>价格</td><td>按越南站 VND 填数字；也可在单个变体启用价格浮动。</td><td>当前模板规则为 1000~120000000；浮动价格会按每套商品在区间内取值。</td></tr>
               <tr><td>库存</td><td>默认 999，可按每个 SKU 组合修改。</td><td>官方范围 0~10000000；用户填写 0 时系统会保留 0。</td></tr>
               <tr><td>SKU</td><td>店铺内唯一，建议简短；用户输入最多 90 字符，同一任务内不能重复。</td><td>系统导出为“8位随机ID-商家SKU”，随机前缀计入官方小于 100 字符的限制。</td></tr>
-              <tr><td>SKU 图片</td><td>每个一级规格必须上传一张，不要按尺码重复上传。自上传成品图仅支持 JPG/PNG；AI 模式参考图保留原格式。</td><td>小于 2MB 的 JPG 直接保留；PNG 或超限 JPG 由 Worker 转为 quality 88 JPEG，仍超限时进行一次等比缩小。AI 模式最终导出生成后的 <code>sku_N</code>，同一一级规格的组合行复用 URL。</td></tr>
+              <tr><td>SKU 图片</td><td>每个一级规格必须上传一张，不要按尺码重复上传。自上传成品图仅支持 JPG/PNG；AI 模式参考图保留原格式。</td><td>小于 2MB 的 JPG 直接保留；PNG 或超限 JPG 由浏览器逐张转为 quality 88 JPEG，仍超限时进行一次等比缩小，再由 Worker 直接写入 R2。AI 模式最终导出生成后的 <code>sku_N</code>，同一一级规格的组合行复用 URL。</td></tr>
               <tr><td>物流渠道</td><td>默认勾选 SPX，可按店铺实际渠道调整。</td><td>系统按当前店铺模板动态加载渠道。模板标记为不支持预售的渠道会在填写 Pre-order DTS 后自动关闭；当前常见的 <code>5012 / Trong Ngày</code> 不支持预售。</td></tr>
             </tbody>
           </table>

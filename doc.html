@@ -36,7 +36,7 @@
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
-<script src="/js/api.js"></script>
+<script src="/js/api.js?v=20260722-2"></script>
 <div class="doc-wrap">
 <nav class="doc-sidebar" id="sidebar"></nav>
 <main class="doc-content" id="content"></main>
@@ -81,7 +81,7 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
-  {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)'}},
+  {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)',upload_id:'string(可选，8~64位幂等ID)',client_processed:'1(浏览器已处理SKU图时使用)'}},
   {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
   {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee',group_id:'string(默认default)',image_concurrency_limit:'integer(1~20，默认20)'}},
   {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用用户(admin)',a:true},
@@ -411,7 +411,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 
 <h2 id="上传">上传</h2>
 ${eps(['POST /api/upload'])}
-<div class="note">普通上传支持 JPG/PNG/WebP/GIF，单文件 ≤10MB，并保留原始字节、MIME 和对应扩展名。<code>folder=sku-upload</code> 仅接受 JPG/PNG；小于 2,000,000 bytes 的 JPG 直接保留，PNG 或超限 JPG 才按 quality 88 编码为 JPEG，首次结果仍超限时只进行一次 <code>triangle</code>（线性/双线性核）等比缩小，仍超限则返回 400。<code>reference</code>、<code>auxiliary</code>、<code>sku-reference</code> 不转码、不压缩。R2 路径格式：<code>ews/{task_id}/{folder}/{uuid}.{ext}</code>。成功响应增加 <code>content_type</code>、<code>size_bytes</code>，SKU 成品图另含 <code>image_processing.reencoded</code>。浏览器从 <code>https://ews.langaj.cn</code> 上传时，Worker 对 <code>OPTIONS</code> 和正式响应均返回 CORS 头，并兼容 Private Network Access 预检；前端对瞬时网络失败自动重试一次。所有任务接口仅允许任务所有者访问，管理员例外；越权返回 403。</div>
+<div class="note">普通上传支持 JPG/PNG/WebP/GIF，单文件 ≤10MB，并保留原始字节、MIME 和对应扩展名。浏览器提交 <code>folder=sku-upload</code> 时会逐张把 PNG 或超限 JPG 转为 quality 88 JPEG，首次结果仍超限时只进行一次等比缩小，并在每张完成后释放浏览器图片内存；Worker 只接受小于 2,000,000 bytes 的最终 JPG 并直接写入 R2，不再运行图片 WASM。<code>reference</code>、<code>auxiliary</code>、<code>sku-reference</code> 不转码、不压缩。R2 路径格式：<code>ews/{task_id}/{folder}/{upload_id}.{ext}</code>，未传 <code>upload_id</code> 的旧客户端继续使用随机 ID；同一请求重试会覆盖同一个对象，避免重复文件。成功响应增加 <code>content_type</code>、<code>size_bytes</code>，SKU 成品图另含 <code>image_processing.processor</code>。浏览器上传使用串行 SKU 队列，对网络错误或 HTTP 5xx 最多进行 4 次指数退避尝试。Worker 对 <code>OPTIONS</code> 和正式响应均返回 CORS 头，并兼容 Private Network Access 预检。所有任务接口仅允许任务所有者访问，管理员例外；越权返回 403。</div>
 
 <h2 id="用户管理">用户管理</h2>
 ${eps(['GET /api/groups','POST /api/groups','PUT /api/groups/:id','PUT /api/groups/:id/templates','GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/group','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','PUT /api/users/:id/concurrency','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}

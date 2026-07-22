@@ -2,6 +2,85 @@
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8787'
   : 'https://ewsz.langaj.cc';
+const SKU_UPLOAD_MAX_BYTES = 2_000_000;
+const SKU_UPLOAD_TARGET_BYTES = 1_800_000;
+const SKU_UPLOAD_MAX_PIXELS = 12_000_000;
+const SKU_UPLOAD_JPEG_QUALITY = 0.88;
+
+function wait(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+function isJpegFile(file) {
+  return /^image\/(jpeg|jpg)$/i.test(file?.type || '') || /\.jpe?g$/i.test(file?.name || '');
+}
+
+async function decodeLocalImage(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { image: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+    } catch (_) {
+      try {
+        const bitmap = await createImageBitmap(file);
+        return { image: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+      } catch (_) {}
+    }
+  }
+  return await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => resolve({ image, width: image.naturalWidth, height: image.naturalHeight, close: () => URL.revokeObjectURL(url) });
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('无法读取 SKU 图片，请重新导出后上传')); };
+    image.src = url;
+  });
+}
+
+async function renderJpeg(source, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d', { alpha: false });
+  if (!context) throw new Error('当前浏览器不支持图片处理');
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, width, height);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(source.image, 0, 0, width, height);
+  const blob = await new Promise((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('SKU 图片转 JPG 失败')), 'image/jpeg', SKU_UPLOAD_JPEG_QUALITY));
+  canvas.width = 1;
+  canvas.height = 1;
+  return blob;
+}
+
+async function prepareSkuUploadFile(file) {
+  if (isJpegFile(file) && file.size <= SKU_UPLOAD_MAX_BYTES) return file;
+  const source = await decodeLocalImage(file);
+  try {
+    const pixels = Number(source.width) * Number(source.height);
+    if (!Number.isSafeInteger(pixels) || pixels < 1) throw new Error('无法读取 SKU 图片尺寸');
+    if (pixels > SKU_UPLOAD_MAX_PIXELS) throw new Error('SKU图片像素过大，最大支持1200万像素');
+    let width = source.width;
+    let height = source.height;
+    let output = await renderJpeg(source, width, height);
+    if (output.size > SKU_UPLOAD_MAX_BYTES) {
+      const scale = Math.min(0.98, Math.sqrt(SKU_UPLOAD_TARGET_BYTES / output.size));
+      width = Math.max(1, Math.floor(width * scale));
+      height = Math.max(1, Math.floor(height * scale));
+      output = await renderJpeg(source, width, height);
+    }
+    if (output.size > SKU_UPLOAD_MAX_BYTES) throw new Error('SKU图片等比缩小后仍超过2MB，请上传尺寸更小的图片');
+    const filename = String(file.name || 'sku-image').replace(/\.[^.]+$/, '') + '.jpg';
+    return new File([output], filename, { type: 'image/jpeg', lastModified: file.lastModified || Date.now() });
+  } finally {
+    source.close();
+  }
+}
+
+function uploadId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+}
 
 const API = {
   async login(password, username) { return this._post('/api/auth/login', { password, username }); },
@@ -72,7 +151,13 @@ const API = {
     if (!file || typeof file.size !== 'number') return { success: false, error: '请选择有效文件' };
     if (file.size > maxBytes) return { success: false, error: targetFolder === 'size-chart' ? '尺码表文件不能超过 2MB' : '文件大小不能超过 10MB' };
     if (targetFolder === 'sku-upload' && file.type && !/^image\/(jpeg|jpg|png)$/i.test(file.type) && file.type !== 'application/octet-stream') return { success: false, error: 'SKU成品图仅支持 JPG 或 PNG' };
-    const fd = new FormData(); fd.append('file', file); fd.append('task_id', taskId); fd.append('folder', folder || 'uploads');
+    let preparedFile = file;
+    if (targetFolder === 'sku-upload') {
+      try { preparedFile = await prepareSkuUploadFile(file); }
+      catch (error) { return { success: false, error: error.message || 'SKU图片处理失败' }; }
+    }
+    const fd = new FormData(); fd.append('file', preparedFile); fd.append('task_id', taskId); fd.append('folder', targetFolder); fd.append('upload_id', uploadId());
+    if (targetFolder === 'sku-upload') fd.append('client_processed', '1');
     return _upload(`/api/upload`, fd);
   },
   // 内部方法
@@ -94,21 +179,26 @@ async function _upload(url, formData) {
   const token = localStorage.getItem('ews_token');
   const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
   let lastError = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const retryDelays = [0, 1200, 3000, 6000];
+  for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+    if (retryDelays[attempt]) await wait(retryDelays[attempt]);
     try {
       const res = await fetch(API_BASE + url, { method: 'POST', headers, body: formData });
       const text = await res.text();
-      try { return JSON.parse(text); }
+      try {
+        const result = JSON.parse(text);
+        if (res.status >= 500 && attempt < retryDelays.length - 1) { lastError = new Error(result.error || `HTTP ${res.status}`); continue; }
+        return result;
+      }
       catch (_) {
-        if (res.status >= 500 && attempt === 0) { await new Promise(resolve => setTimeout(resolve, 800)); continue; }
+        if (res.status >= 500 && attempt < retryDelays.length - 1) { lastError = new Error(`HTTP ${res.status}`); continue; }
         return { success: false, error: `上传失败: HTTP ${res.status}${text ? '，服务器未返回有效 JSON' : ''}` };
       }
     } catch (e) {
       lastError = e;
-      if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 800));
     }
   }
-  return { success: false, error: '上传失败: ' + (lastError?.message || '网络连接异常') };
+  return { success: false, error: '上传失败，已自动重试: ' + (lastError?.message || '网络连接异常') };
 }
 
 // 全局认证检查
