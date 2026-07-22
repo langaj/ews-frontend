@@ -256,25 +256,27 @@ ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/ta
 <tr><td><code>init</code></td><td>已创建任务ID，尚未提交完整任务数据。</td><td><code>POST /api/tasks/init</code> 创建。</td></tr>
 <tr><td><code>pending</code></td><td>任务数据已保存，等待触发推送。</td><td><code>PUT /api/tasks/:id</code> 保存后进入。</td></tr>
 <tr><td><code>processing</code></td><td>已创建子任务和推送计划，队列正在释放到不同工作流地址。</td><td><code>POST /api/tasks/:id/push</code> 后进入。</td></tr>
-<tr><td><code>partial_failed</code></td><td>至少一条推送计划失败，但仍存在 pending/processing 计划或可继续处理的任务；系统会继续推进其他计划。</td><td>修复元数据或图片 webhook 后，在任务列表点击继续或在详情中重试失败计划。</td></tr>
+<tr><td><code>partial_failed</code></td><td>至少一条推送计划失败，但仍存在 pending/dispatching/processing 计划或可继续处理的任务；系统会继续推进其他计划。</td><td>修复元数据或图片 webhook 后，在任务列表点击继续或在详情中重试失败计划。</td></tr>
 <tr><td><code>completed</code></td><td>子任务资源完成且无待处理推送计划。</td><td>回调保存标题/图片后由系统检查完成度。</td></tr>
-<tr><td><code>failed</code></td><td>任务进入最终失败，通常表示已无 pending/processing 计划但仍存在 failed 计划。</td><td>查看推送计划失败原因后重试，重试成功会恢复 processing 并继续释放队列。</td></tr>
+<tr><td><code>failed</code></td><td>任务进入最终失败，通常表示已无 pending/dispatching/processing 计划但仍存在 failed 计划。</td><td>查看推送计划失败原因后重试，重试成功会恢复 processing 并继续释放队列。</td></tr>
 </table>
 <h3>推送计划状态机</h3>
 <table class="ftable">
 <tr><th>状态</th><th>触发条件</th><th>系统动作</th></tr>
 <tr><td><code>pending</code></td><td>新计划，或可重试错误进入30/120/300秒退避等待。</td><td>达到 <code>next_retry_at</code> 后重新参加用户公平调度。</td></tr>
-<tr><td><code>processing</code></td><td>队列释放计划前检查并扣减 1 点算力。</td><td>按 <code>webhook_type</code> 推送到对应平台配置的 webhook 地址。</td></tr>
+<tr><td><code>dispatching</code></td><td>已扣减 1 点算力，正在把计划投递到工作流。</td><td>工作流必须在15秒内返回 HTTP 202 和匹配的 <code>plan_id</code> ACK；90秒仍未确认会进入自动重试。</td></tr>
+<tr><td><code>processing</code></td><td>工作流已确认接收，正在执行模型或图片流程。</td><td>等待成功或失败回调；20分钟无回调时进入兜底重试。</td></tr>
 <tr><td><code>done</code></td><td>工作流回调成功，标题或图片资源被系统保存。</td><td>图片服务直传 R2；Queue consumer 校验对象后写入对应平台资源表。</td></tr>
 <tr><td><code>failed</code></td><td>永久错误、算力不足，或自动重试3次后仍失败。</td><td>记录最终错误；已扣算力会退还，用户仍可人工重试。</td></tr>
 </table>
 <div class="note"><strong>并发与补位：</strong>系统不设置跨用户的全局 processing 上限。<code>main/main_1</code>、<code>sub_*</code>、<code>detail_*</code>、<code>sku_数字</code> 统一计入任务所有者的图片并发额度；JST 与 Shopee 跨平台合并统计，默认且最高为 20。JST <code>metadata</code> 不占图片额度，但为避免大模型请求挤压，每用户同时最多处理 2 个批次；每批最多 10 套商品且最多 100 个 SKU 标题。</div>
 <div class="note"><strong>通用推送体：</strong>n8n 工作流不需要接收或回传 <code>platform</code>。系统会在所有新推送体中增加 <code>plan_id</code> 和 <code>workflow_type</code>，回调与错误回调应原样带回；平台差异由 EWS 内部根据 <code>task_id</code> 调度和落库。</div>
+<div class="note"><strong>工作流接收 ACK：</strong>Webhook 必须在15秒内返回 HTTP 202，JSON 固定为 <code>{"success":true,"status":"accepted","plan_id":"原始计划ID"}</code>。HTTP 状态、JSON 结构或 <code>plan_id</code> 不匹配均视为未确认接收并按可重试错误处理。</div>
 
 <h2 id="JST任务">JST 任务</h2>
 ${eps(['POST /api/tasks/:id/push','GET /api/tasks/:id/plans','POST /api/tasks/:id/plans/:planId/retry','GET /api/tasks/:id/export'])}
 <div class="note"><strong>推送流程：</strong>创建任务 init → 上传图片 → updateTask 提交完整数据 → pushTask 触发推送。<br>推送后系统创建子任务（款式编码）和推送计划。商品元数据按动态批次一次生成每套商品标题、推荐文案、商品描述和全部 SKU 标题；每个批次以 <code>plan_id</code> 精确回调，并通过 JSON1 批量写入 D1。AI 模式的 SKU 图片只按唯一一级规格生成，二维规格复用一级规格图；自上传模式不创建 SKU 图片计划。<br>全量模式每套生成完整资源；去重模式第 2 套开始只生成主图，其余 AI 附图/详情图/SKU图在导出时复用第 1 套。</div>
-<div class="note"><strong>失败重试：</strong>网络异常、HTTP 408/425/429/5xx、工作流900秒超时错误回调、Worker 20分钟无回调兜底及其他临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>processing</code> 计划拒绝重复提交。正式推送会先按实际计划数量预检用户算力，余额不足时不会创建子任务或推送计划。</div>
+<div class="note"><strong>失败重试：</strong>网络异常、ACK校验失败、HTTP 408/425/429/5xx、工作流900秒超时错误回调、Worker 20分钟无回调兜底及其他临时错误会自动重试3次，退避时间为30/120/300秒。Webhook缺失、HTTP 400/401/403/404和 <code>retryable:false</code> 直接失败。任务详情仍支持单条或全部人工重试；<code>dispatching</code>/<code>processing</code> 计划拒绝重复提交。正式推送会先按实际计划数量预检用户算力，余额不足时不会创建子任务或推送计划。</div>
 <div class="note"><strong>阶段性图片优先：</strong>当 <code>push_primary_images_only=true</code> 时，系统只构造 <code>main/main_1</code> 和 <code>sub_*</code> 主图/附图计划；商品元数据、详情图、SKU图不会创建计划。关闭总开关只影响之后重新推送或重新生成的任务，不会自动补建已有任务计划。</div>
 
 <h2 id="Shopee商品">Shopee 商品</h2>
@@ -287,7 +289,7 @@ ${eps(['POST /api/callback','POST /api/internal/r2-upload-ticket'])}
 <div class="note"><strong>回调地址：</strong><code>POST ${API_ROOT}/api/callback</code><br><strong>验证：</strong><code>body.secret</code> 或 <code>body.callback_secret</code> 等于系统 <code>callback_secret</code><br><strong>处理方式：</strong>回调直接写入原生 Cloudflare Queue <code>ews-callback-events</code>。只有 <code>send()</code> 成功后才返回 <code>queued:true</code>；写入失败返回 <code>503</code>、<code>success:false</code>、<code>retryable:true</code>，调用方应等待后重试。Queue 采用单跳消费、最多重试 5 次和 DLQ，成功处理具备幂等性。超过 48KB 的聚合元数据正文暂存 R2 inbox，Queue 只传 key，消费成功或最终失败后删除。旧 D1 表 <code>ews_callback_queue</code>、<code>ews_image_queue</code> 仅用于排空历史记录。<br><strong>图片直传：</strong>n8n 将模型临时 URL 提交到 Fastify 图片服务，服务写入 BullMQ/Valkey 后立即返回 <code>202</code>。独立 Sharp Worker 转为 quality 88 JPEG，超过 1.9MB 时再 Bilinear 等比缩小，并使用同一个 <code>callback_secret</code> 请求单对象 PUT 票据直传 R2。最终成功或失败 callback 均由图片服务负责，n8n 不等待处理结果。R2 长期凭据只保存在 Worker secret，不进入推送体、图片服务或 D1。<br><strong>Shopee 校验：</strong>products 数量必须等于子任务数，每项 Product Name 10~120 字符、Product Description 100~3000 字符；variation_labels 必须完整保留变体 ID 和组合数量。</div>
 
 <h3>R2 上传票据</h3>
-<div class="note"><code>POST /api/internal/r2-upload-ticket</code> 仅供可信图片服务调用。请求携带现有 <code>callback_secret</code>、任务/计划/图片定位字段、<code>image/jpeg</code>、字节数和 SHA-256。系统验证计划处于 <code>processing</code> 后返回只允许写入当前计划对象的 presigned PUT URL、必需 headers、<code>r2_key</code>、过期时间和最大体积。它不会返回 R2 Access Key 或 Secret Access Key。</div>
+<div class="note"><code>POST /api/internal/r2-upload-ticket</code> 仅供可信图片服务调用。请求携带现有 <code>callback_secret</code>、任务/计划/图片定位字段、<code>image/jpeg</code>、字节数和 SHA-256。系统验证计划处于 <code>dispatching</code> 或 <code>processing</code> 后返回只允许写入当前计划对象的 presigned PUT URL、必需 headers、<code>r2_key</code>、过期时间和最大体积。它不会返回 R2 Access Key 或 Secret Access Key。</div>
 
 <h3>回调字段</h3>
 <table class="ftable">

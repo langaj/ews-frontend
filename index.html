@@ -631,12 +631,13 @@ async function renderPushPlans(taskId,preloadedResponse){
   var res=preloadedResponse;
   if(res===undefined){try{res=await API.getPushPlans(taskId)}catch(e){res=null}}
   var plans=(res&&res.success)?(res.plans||[]):[];
-  var stats=(res&&res.success&&res.stats)?res.stats:{pending:0,processing:0,done:0,failed:0,total:0};
+  var stats=(res&&res.success&&res.stats)?res.stats:{pending:0,dispatching:0,processing:0,done:0,failed:0,total:0};
   var html='<div class="detail-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">';
   html+='<div class="detail-label">推送计划 <span class="muted">共 '+(stats.total||plans.length)+' 项';
   if(stats.done) html+='，成功 '+stats.done;
   if(stats.failed) html+='，失败 '+stats.failed;
   if(stats.pending) html+='，待推送 '+stats.pending;
+  if(stats.dispatching) html+='，正在投递 '+stats.dispatching;
   if(stats.processing) html+='，处理中 '+stats.processing;
   html+='</span></div>';
   html+='<div class="plan-toolbar">';
@@ -670,7 +671,7 @@ function planTypeLabel(type){
 }
 
 function planStatusBadge(status){
-  var map={pending:['待推送','badge-warning'],processing:['处理中','badge-info'],done:['已完成','badge-success'],failed:['失败','badge-danger']};
+  var map={pending:['待推送','badge-warning'],dispatching:['正在投递','badge-info'],processing:['处理中','badge-info'],done:['已完成','badge-success'],failed:['失败','badge-danger']};
   var s=map[status]||[status||'', 'badge-default'];
   return '<span class="badge '+s[1]+'">'+escapeHtml(s[0])+'</span>';
 }
