@@ -86,6 +86,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>选择 SKU 图片自上传或 AI 生成模式，再点击 <strong>创建并生成</strong>。自上传模式不会创建 SKU 图片工作流。</li>
             <li>任务完成后导出，系统会保留模板说明和表头，从第 3 行写入数据。</li>
           </ol>
+          <div class="note-box">任务和任务图片保留 7 天。完成任务从完成时间开始计算，失败或未完成任务从创建时间开始计算；到期后无法继续预览、导出或重试，请及时下载表格和图片包。</div>
           <div class="ok-box">模板依据：系统内置 <code>/templates/聚水潭_商品模板.xlsx</code> 的“商品导入模板”工作表。第 1 行是导入说明，第 2 行是 22 列表头，第 3 行开始写商品数据。</div>
         </div>
 
@@ -152,6 +153,7 @@ code{background:var(--gray-100);border-radius:4px;padding:2px 5px;font-size:12px
             <li>点击 <strong>创建并生成</strong>。系统固定生成每套 1 张封面和 8 张附图，不构造 Shopee 详情图计划。</li>
             <li>任务完成后默认使用档案当前最新版导出，同时保留任务创建时版本 ID 供审计。Shopee 任务详情可在分类、DTS、物流和价格限制兼容时切换模板，不会重建商品图片或工作流结果。系统按隐藏字段写入，不会重建模板。需要归档全部图片时可在任务列表打包下载。</li>
           </ol>
+          <div class="note-box">任务和任务图片保留 7 天。完成任务从完成时间开始计算，失败或未完成任务从创建时间开始计算；到期后无法继续预览、导出或重试，请及时下载表格和图片包。</div>
           <div class="ok-box">系统采用“结构推理 + token 注册表”，会扫描所有工作表定位隐藏 token、元数据、字段规则、数据起始行和分类目录，不依赖固定工作表名称、行号或已登记店铺 ID。未见过的店铺上下文可自动建档；缺少官方 token、结构损坏、未知必填 token 的文件不会直接用于导出。</div>
           <div class="note-box">系统按官方签名、字段规则、分类/DTS、物流和条件必填关系判断是否更新。与当前模板一致时返回“模板已是最新，无需更新”；与保留的上一版本一致时阻止回退；存在新变化时新文件立即成为当前版本，并只保留一个上一版本供管理员校对。</div>
           <div class="note-box">系统已用 Advanced Template 语料预识别 <code>ps_brand</code>、<code>ps_product_global_attribute.{attribute_id}</code> 和 <code>HiddenCatProps</code> 规则。属性 ID 不是店铺 ID；<code>Conditional Mandatory</code> 会按叶子类目判断，不再被当成所有类目都必填。Advanced Template 本身仍不作为运行时导出模板。</div>

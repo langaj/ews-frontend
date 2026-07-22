@@ -79,6 +79,7 @@ const EP = [
   {m:'GET',p:'/api/tasks/:id/plans',d:'推送计划列表',a:true},
   {m:'POST',p:'/api/tasks/:id/plans/:planId/retry',d:'重试推送计划',a:true},
   {m:'GET',p:'/api/tasks/:id/export',d:'导出(自动识别平台)',a:true},
+  {m:'POST',p:'/api/admin/task-cleanup',d:'到期任务清理(admin；默认仅预览)',a:true,b:{execute:'boolean(默认false；true立即执行)',limit:'integer(1~50，默认20)'}},
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)',upload_id:'string(可选，8~64位幂等ID)',client_processed:'1(浏览器已处理SKU图时使用)'}},
@@ -155,6 +156,7 @@ ${eps(['GET /api/config','PUT /api/config'])}
 <h2 id="任务(通用)">任务(通用)</h2>
 ${eps(['GET /api/tasks','POST /api/tasks/init','GET /api/tasks/:id','PUT /api/tasks/:id','DELETE /api/tasks/:id','PUT /api/tasks/:id/status'])}
 <div class="note"><strong>任务ID体系：</strong>JST 和 Shopee 共用同一套 8 字符 <code>task_id</code>。平台归属只保存在系统内部的 <code>ews_tasks.platform</code>，外部推送、回调和导出接口都以 <code>task_id</code> 为路由键。</div>
+<div class="note"><strong>7 天缓存：</strong>完成任务从 <code>completed_at</code> 开始保留 7 天，其他状态从 <code>created_at</code> 开始保留。到期后任务立即从列表隐藏，详情、上传和任务操作返回 HTTP 410；工作流回调返回 <code>retryable:false</code>。系统每 72 小时启动一次物理清理，先删除任务 R2 前缀，再原子删除 D1 关联记录。</div>
 <h3>双平台 updateTask 路由规则</h3>
 <div class="note">同一个 <code>PUT /api/tasks/:id</code> 会先读取 <code>ews_tasks.platform</code>，再进入 JST 或 Shopee 的保存逻辑。调用方不需要额外传平台字段，但必须先用 <code>POST /api/tasks/init</code> 创建正确平台的任务。</div>
 <h4>JST 请求体核心字段</h4>
