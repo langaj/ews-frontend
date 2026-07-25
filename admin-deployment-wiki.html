@@ -1,42 +1,422 @@
-<!DOCTYPE html><html lang="zh-CN"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>管理员部署 Wiki - EWS</title>
-<link rel="stylesheet" href="/css/style.css">
-<style>
-body{background:var(--gray-50);color:var(--gray-900)}.wiki-page{max-width:1320px;padding-bottom:64px}.wiki-header{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin:34px 0 22px}.wiki-header h1{margin:0;color:#1d2939;font-size:27px;line-height:1.25}.wiki-header p{max-width:680px;margin:8px 0 0;color:var(--gray-500);font-size:13px;line-height:1.65}.wiki-badge{display:inline-flex;align-items:center;min-height:28px;padding:4px 9px;border:1px solid #b2ddff;border-radius:6px;background:#eff8ff;color:#175cd3;font-size:11px;font-weight:700;white-space:nowrap}.wiki-loading{display:grid;gap:12px;padding:26px 0}.wiki-skeleton{height:18px;border-radius:4px;background:linear-gradient(90deg,#eef2f6 25%,#f8fafc 37%,#eef2f6 63%);background-size:400% 100%;animation:wiki-loading 1.4s ease infinite}.wiki-skeleton:nth-child(2){width:76%}.wiki-skeleton:nth-child(3){width:54%}@keyframes wiki-loading{0%{background-position:100% 0}100%{background-position:0 0}}.wiki-error{max-width:650px;padding:18px;border-left:3px solid #d92d20;background:#fef3f2;color:#7a271a;font-size:13px;line-height:1.65}.wiki-workbench{display:grid;grid-template-columns:minmax(250px,1.25fr) minmax(190px,1fr) 150px 120px auto;gap:10px;align-items:end;padding:16px 0;border-top:1px solid var(--gray-200);border-bottom:1px solid var(--gray-200)}.wiki-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px}.wiki-mode-option input{position:absolute;opacity:0;pointer-events:none}.wiki-mode-option span{display:flex;align-items:center;justify-content:center;min-height:38px;padding:7px 9px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;color:#475467;font-size:11px;font-weight:700;cursor:pointer}.wiki-mode-option input:checked+span{border-color:#6941c6;background:#f4f3ff;color:#53389e}.wiki-input label,.wiki-mode-label{display:block;margin-bottom:5px;color:var(--gray-600);font-size:11px;font-weight:700}.wiki-input .form-input{width:100%}.wiki-download{align-self:end;min-height:38px;white-space:nowrap}.wiki-validation{grid-column:1/-1;min-height:18px;margin-top:8px;color:#b42318;font-size:11px}.wiki-mode-summary{grid-column:1/-1;color:#667085;font-size:11px;line-height:1.55}.wiki-layout{display:grid;grid-template-columns:198px minmax(0,1fr);gap:34px;margin-top:26px}.wiki-nav{position:sticky;top:76px;align-self:start;border-right:1px solid var(--gray-200);padding:3px 18px 8px 0}.wiki-nav-title{display:block;margin-bottom:8px;color:var(--gray-500);font-size:10px;font-weight:700}.wiki-nav a{display:block;padding:7px 0;color:#667085;font-size:12px;line-height:1.35;text-decoration:none}.wiki-nav a:hover{color:#344054}.wiki-nav b{display:inline-block;width:28px;color:#98a2b3;font-size:10px}.wiki-main{min-width:0}.wiki-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.wiki-stat{min-height:80px;padding:14px 16px;border-right:1px solid var(--gray-200)}.wiki-stat:first-child{padding-left:0}.wiki-stat:last-child{border-right:0}.wiki-stat span{display:block;color:#667085;font-size:10px}.wiki-stat strong{display:block;margin-top:6px;color:#344054;font-size:13px;overflow-wrap:anywhere}.wiki-section{scroll-margin-top:82px;padding:30px 0;border-bottom:1px solid var(--gray-200)}.wiki-section-head{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;margin-bottom:20px}.wiki-section-no{padding-top:2px;color:#98a2b3;font-size:11px;font-weight:700}.wiki-section h2{margin:0;color:#1d2939;font-size:18px;line-height:1.35}.wiki-section-intro{margin:7px 0 0;color:#667085;font-size:13px;line-height:1.7}.wiki-step{padding:18px 0;border-top:1px solid #eaecf0}.wiki-step:first-of-type{border-top:0;padding-top:0}.wiki-step h3{margin:0;color:#344054;font-size:14px}.wiki-step p{max-width:820px;margin:7px 0 0;color:#667085;font-size:12px;line-height:1.7}.wiki-bullets{display:grid;gap:5px;max-width:840px;margin:12px 0 0;padding:0;list-style:none}.wiki-bullets li{position:relative;padding-left:14px;color:#475467;font-size:12px;line-height:1.55}.wiki-bullets li::before{position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:#98a2b3;content:''}.command-list{display:grid;gap:10px;margin-top:14px}.command-block{border:1px solid #d0d5dd;border-radius:7px;background:#fff;overflow:hidden}.command-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 10px;border-bottom:1px solid #eaecf0;background:#f9fafb}.command-head span{color:#475467;font-size:11px;font-weight:700}.command-head code{color:#98a2b3;font-size:10px}.command-copy,.webhook-copy{min-height:28px;padding:4px 8px;border:1px solid #d0d5dd;border-radius:5px;background:#fff;color:#344054;font-size:11px;cursor:pointer}.command-copy:hover,.webhook-copy:hover{border-color:#98a2b3;background:#f9fafb}.command-code{display:block;max-height:310px;overflow:auto;margin:0;padding:12px;background:#101828;color:#e4e7ec;font:11px/1.65 Consolas,"SFMono-Regular",monospace;white-space:pre-wrap;overflow-wrap:anywhere}.wiki-webhook-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px}.wiki-webhook-table th,.wiki-webhook-table td{padding:10px 8px;border-bottom:1px solid #eaecf0;text-align:left;vertical-align:top}.wiki-webhook-table th{color:#667085;font-size:10px}.wiki-webhook-table code{color:#344054;font-size:11px;overflow-wrap:anywhere}.wiki-webhook-table td:last-child{text-align:right}.wiki-footer-note{margin-top:16px;color:#667085;font-size:11px;line-height:1.6}.wiki-credentials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.credential-row{padding:11px 12px;border:1px solid #eaecf0;border-radius:7px;background:#fff}.credential-row strong{display:block;color:#344054;font-size:12px}.credential-row code{display:block;margin-top:5px;color:#667085;font-size:10px;overflow-wrap:anywhere}.credential-row span{display:block;margin-top:5px;color:#667085;font-size:11px;line-height:1.45}.wiki-references{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.wiki-reference{padding:10px 12px;border:1px solid #eaecf0;border-radius:7px;background:#fff;color:#344054;text-decoration:none;font-size:12px}.wiki-reference:hover{border-color:#98a2b3}.wiki-toast{position:fixed;right:18px;bottom:18px;z-index:300;display:none;max-width:310px;padding:10px 12px;border-radius:6px;background:#101828;color:#fff;font-size:12px;box-shadow:0 8px 20px rgba(16,24,40,.22)}.wiki-toast.show{display:block}@media(max-width:950px){.wiki-workbench{grid-template-columns:1fr 1fr}.wiki-download{width:100%}.wiki-layout{grid-template-columns:1fr}.wiki-nav{position:static;display:flex;gap:12px;overflow:auto;border-right:0;border-bottom:1px solid var(--gray-200);padding:0 0 10px}.wiki-nav-title{display:none}.wiki-nav a{flex:0 0 auto;padding:3px 0}.wiki-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.wiki-stat:nth-child(2){border-right:0}.wiki-stat:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}}@media(max-width:640px){.wiki-page{padding-right:14px;padding-left:14px}.wiki-header{display:block;margin-top:24px}.wiki-badge{margin-top:12px}.wiki-workbench{grid-template-columns:1fr}.wiki-mode-switch{grid-template-columns:1fr}.wiki-layout{margin-top:18px;gap:20px}.wiki-overview{display:block}.wiki-stat,.wiki-stat:first-child{min-height:0;padding:12px 0;border-right:0;border-bottom:1px solid var(--gray-200)}.wiki-section{padding:24px 0}.wiki-section-head{grid-template-columns:34px minmax(0,1fr)}.wiki-credentials,.wiki-references{grid-template-columns:1fr}.wiki-webhook-table,.wiki-webhook-table tbody{display:block}.wiki-webhook-table thead,.wiki-webhook-table td:nth-child(3){display:none}.wiki-webhook-table tr{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:6px 8px;padding:11px 0;border-bottom:1px solid #eaecf0}.wiki-webhook-table td{padding:0;border:0}.wiki-webhook-table td:nth-child(4){grid-column:1/4;min-width:0}.wiki-webhook-table td:last-child{grid-column:3;grid-row:1;text-align:right}.wiki-webhook-table code{display:block;white-space:normal;overflow-wrap:anywhere}}
-</style></head><body>
-<script src="/js/nav.js"></script>
-<div class="app-container wiki-page">
-  <header class="wiki-header"><div><h1>管理员部署 Wiki</h1><p>正在验证身份并加载受保护的部署资料。</p></div><span class="wiki-badge">ADMIN ONLY</span></header>
-  <main id="wikiMount" aria-live="polite"><div class="wiki-loading"><div class="wiki-skeleton"></div><div class="wiki-skeleton"></div><div class="wiki-skeleton"></div></div></main>
-</div>
-<div class="wiki-toast" id="wikiToast" role="status"></div>
-<script src="/js/api.js?v=20260725-1"></script>
-<script>
-var wikiData=null,commandTemplates={},wikiState={mode:'local-tunnel',domain:'',nodeName:'',port:'',tunnelToken:''};
-function escapeHtml(value){return String(value===undefined||value===null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function showWikiToast(message){var toast=document.getElementById('wikiToast');toast.textContent=message;toast.classList.add('show');clearTimeout(showWikiToast.timer);showWikiToast.timer=setTimeout(function(){toast.classList.remove('show')},2400)}
-function commandId(prefix,index){return prefix+'-'+index}
-function normalizeDomain(value){var raw=String(value||'').trim().replace(/^https?:\/\//i,'').replace(/\/$/,'');if(!raw||/[\s/]/.test(raw))return'';try{var parsed=new URL('https://'+raw);return parsed.hostname?parsed.host:''}catch(_){return''}}
-function validNodeName(value){return/^[a-z0-9][a-z0-9-]{0,31}$/.test(String(value||''))}
-function selectedMode(){var modes=wikiData&&wikiData.modes||[];return modes.find(function(item){return item.id===wikiState.mode})||modes[0]||{id:'local-tunnel',default_port:5679,summary:''}}
-function defaultPort(modeId){var modes=wikiData&&wikiData.modes||[];var mode=modes.find(function(item){return item.id===modeId});return String(mode&&mode.default_port||5679)}
-function visibleForMode(item){return !item.mode||item.mode==='all'||item.mode===wikiState.mode}
-function validPort(value){var port=Number(value);if(!Number.isInteger(port)||port<1||port>65535)return false;if(wikiState.mode==='cloud-dns')return[443,2053,2083,2087,2096,8443].indexOf(port)>=0;return port>=1024}
-function tokens(){var domain=normalizeDomain(wikiState.domain)||wikiState.domain.trim();return{'{{DOMAIN}}':domain,'{{NODE_NAME}}':wikiState.nodeName.trim(),'{{PORT}}':wikiState.port.trim(),'{{TUNNEL_TOKEN}}':wikiState.tunnelToken.trim()||'<CLOUDFLARE_TUNNEL_TOKEN>'}}
-function resolveTemplate(template){var values=tokens();return String(template||'').replace(/\{\{DOMAIN\}\}|\{\{NODE_NAME\}\}|\{\{PORT\}\}|\{\{TUNNEL_TOKEN\}\}/g,function(token){return values[token]||token})}
-function registerCommand(template,prefix,index){var id=commandId(prefix,index);commandTemplates[id]=template;return id}
-function commandBlock(command,prefix,index){var id=registerCommand(command.template,prefix,index);return'<div class="command-block"><div class="command-head"><span>'+escapeHtml(command.label)+'</span><div><code>'+escapeHtml(command.language)+'</code> <button class="command-copy" type="button" data-copy="'+id+'">复制</button></div></div><code class="command-code" id="'+id+'"></code></div>'}
-function renderStep(step,sectionIndex,stepIndex){if(!visibleForMode(step))return'';var commands=(step.commands||[]).filter(visibleForMode);var bullets=(step.bullets||[]).map(function(item){return'<li>'+escapeHtml(item)+'</li>'}).join('');var commandHtml=commands.map(function(command,index){return commandBlock(command,'command-'+sectionIndex+'-'+stepIndex,index)}).join('');return'<article class="wiki-step"><h3>'+escapeHtml(step.title)+'</h3><p>'+escapeHtml(step.body||'')+'</p>'+(bullets?'<ul class="wiki-bullets">'+bullets+'</ul>':'')+(commandHtml?'<div class="command-list">'+commandHtml+'</div>':'')+'</article>'}
-function renderCredentialRows(credentials){return credentials.map(function(item){return'<div class="credential-row"><strong>'+escapeHtml(item.name)+'</strong><code>'+escapeHtml(item.id)+' · '+escapeHtml(item.type)+'</code><span>'+escapeHtml(item.usage)+'</span></div>'}).join('')}
-function renderReferences(items){return(items||[]).map(function(item){return'<a class="wiki-reference" href="'+escapeHtml(item.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(item.name)+'</a>'}).join('')}
-function renderModePicker(modes){return'<div><span class="wiki-mode-label">部署方式</span><div class="wiki-mode-switch">'+modes.map(function(mode){return'<label class="wiki-mode-option"><input type="radio" name="wikiMode" value="'+escapeHtml(mode.id)+'" '+(mode.id===wikiState.mode?'checked':'')+'><span>'+escapeHtml(mode.short_label||mode.label)+'</span></label>'}).join('')+'</div></div>'}
-function renderWikiHeader(wiki){var header=document.querySelector('.wiki-header');if(!header)return;header.querySelector('h1').textContent=wiki.title||'管理员部署 Wiki';header.querySelector('p').textContent=wiki.subtitle||'受保护的管理员部署资料。'}
-function renderWiki(wiki,preserveState){wikiData=wiki;if(!preserveState){wikiState.mode=wiki.defaults.mode||'local-tunnel';wikiState.domain=wiki.defaults.domain;wikiState.nodeName=wiki.defaults.node_name;wikiState.port=String(wiki.defaults.port);wikiState.tunnelToken=''}commandTemplates={};var mode=selectedMode();var nav=wiki.sections.map(function(section){return'<a href="#'+escapeHtml(section.id)+'"><b>'+escapeHtml(section.number)+'</b>'+escapeHtml(section.title)+'</a>'}).join('');var sections=wiki.sections.map(function(section,sectionIndex){var steps=section.steps.map(function(step,stepIndex){return renderStep(step,sectionIndex,stepIndex)}).join('');return'<section class="wiki-section" id="'+escapeHtml(section.id)+'"><div class="wiki-section-head"><span class="wiki-section-no">'+escapeHtml(section.number)+'</span><div><h2>'+escapeHtml(section.title)+'</h2><p class="wiki-section-intro">'+escapeHtml(section.intro)+'</p></div></div>'+steps+'</section>'}).join('');var webhookRows=wiki.webhooks.map(function(item,index){var id=registerCommand('https://{{DOMAIN}}'+item.path,'webhook',index);return'<tr><td>'+escapeHtml(item.platform)+'</td><td>'+escapeHtml(item.name)+'</td><td><code>'+escapeHtml(item.path)+'</code></td><td><code id="'+id+'"></code></td><td><button class="webhook-copy" type="button" data-copy="'+id+'">复制</button></td></tr>'}).join('');document.getElementById('wikiMount').innerHTML='<section class="wiki-workbench" aria-label="部署命令参数">'+renderModePicker(wiki.modes||[])+'<div class="wiki-input"><label for="wikiDomain">公开域名</label><input class="form-input" id="wikiDomain" autocomplete="url" value="'+escapeHtml(wikiState.domain)+'" placeholder="n8n-node2.example.com"></div><div class="wiki-input"><label for="wikiNodeName">节点名称</label><input class="form-input" id="wikiNodeName" value="'+escapeHtml(wikiState.nodeName)+'" maxlength="32"></div><div class="wiki-input"><label for="wikiPort">端口</label><input class="form-input" id="wikiPort" inputmode="numeric" value="'+escapeHtml(wikiState.port)+'"></div><button class="btn btn-secondary wiki-download" id="downloadScript" type="button">下载可选辅助脚本</button><div class="wiki-input" id="tunnelTokenWrap" '+(wikiState.mode==='local-tunnel'?'':'hidden')+'><label for="wikiTunnelToken">Tunnel Token（不保存）</label><input class="form-input" id="wikiTunnelToken" value="'+escapeHtml(wikiState.tunnelToken)+'" autocomplete="off" placeholder="<CLOUDFLARE_TUNNEL_TOKEN>"></div><div class="wiki-mode-summary" id="wikiModeSummary">'+escapeHtml(mode.summary||'')+'</div><div class="wiki-validation" id="wikiValidation" aria-live="polite"></div></section><div class="wiki-layout"><aside class="wiki-nav"><span class="wiki-nav-title">部署目录</span>'+nav+'</aside><div class="wiki-main"><div class="wiki-overview"><div class="wiki-stat"><span>入口模式</span><strong>'+escapeHtml(mode.label||'')+'</strong></div><div class="wiki-stat"><span>n8n 版本</span><strong>'+escapeHtml(wiki.defaults.n8n_version)+'</strong></div><div class="wiki-stat"><span>默认并发</span><strong>'+escapeHtml(wiki.defaults.concurrency)+'</strong></div><div class="wiki-stat"><span>脚本校验</span><strong>'+escapeHtml(wiki.script.sha256.slice(0,16))+'...</strong></div></div><section class="wiki-section" id="credential-registry"><div class="wiki-section-head"><span class="wiki-section-no">KEY</span><div><h2>凭证登记</h2><p class="wiki-section-intro">凭证 ID 必须随工作流迁移，避免导入后节点引用失效。</p></div></div><div class="wiki-credentials">'+renderCredentialRows(wiki.credentials)+'</div></section>'+sections+'<section class="wiki-section" id="references"><div class="wiki-section-head"><span class="wiki-section-no">REF</span><div><h2>官方参考</h2><p class="wiki-section-intro">这些链接用于管理员核对 Cloudflare 与 n8n 的官方配置口径。</p></div></div><div class="wiki-references">'+renderReferences(wiki.references)+'</div></section><section class="wiki-section" id="webhook-map"><div class="wiki-section-head"><span class="wiki-section-no">URL</span><div><h2>用户分流地址</h2><p class="wiki-section-intro">在系统配置 → 用户管理 → 工作流地址中填写对应 URL。复制内容会随上方域名输入实时更新。</p></div></div><table class="wiki-webhook-table"><thead><tr><th>平台</th><th>工作流</th><th>路径</th><th>完整地址</th><th></th></tr></thead><tbody>'+webhookRows+'</tbody></table><p class="wiki-footer-note">Wiki 正文和可选辅助脚本均由管理员 API 二次鉴权返回；标准部署命令仅依赖 Docker，浏览器静态文件不包含凭证 ID 或部署正文。</p></section></div></div>';bindWikiControls();updateDynamicContent()}
-function updateDynamicContent(){if(!wikiData)return;var domain=normalizeDomain(wikiState.domain),warning='',hint='';if(!domain)warning='请输入有效的公开域名，例如 n8n-node2.example.com。';else if(!validNodeName(wikiState.nodeName))warning='节点名称仅允许小写字母、数字和连字符，最长 32 位。';else if(!validPort(wikiState.port))warning=wikiState.mode==='cloud-dns'?'云服务器 DNS 模式端口必须是 Cloudflare 支持的 HTTPS 端口：443/2053/2083/2087/2096/8443。':'本地主机 Tunnel 模式端口必须为 1024-65535。';else if(wikiState.mode==='local-tunnel'&&!wikiState.tunnelToken.trim())hint='Tunnel Token 留空时，复制命令会保留 <CLOUDFLARE_TUNNEL_TOKEN> 占位符。';document.getElementById('wikiValidation').textContent=warning||hint;document.getElementById('wikiValidation').style.color=warning?'#b42318':'#667085';document.querySelectorAll('[id^="command-"],[id^="webhook-"]').forEach(function(node){if(commandTemplates[node.id])node.textContent=resolveTemplate(commandTemplates[node.id])});var download=document.getElementById('downloadScript');download.disabled=!!warning}
-function bindWikiControls(){document.querySelectorAll('input[name="wikiMode"]').forEach(function(input){input.addEventListener('change',function(event){var oldDefault=defaultPort(wikiState.mode);wikiState.mode=event.target.value;if(String(wikiState.port)===oldDefault)wikiState.port=defaultPort(wikiState.mode);renderWiki(wikiData,true)})});['wikiDomain','wikiNodeName','wikiPort','wikiTunnelToken'].forEach(function(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('input',function(event){if(id==='wikiDomain')wikiState.domain=event.target.value;else if(id==='wikiNodeName')wikiState.nodeName=event.target.value;else if(id==='wikiPort')wikiState.port=event.target.value;else wikiState.tunnelToken=event.target.value;updateDynamicContent()})});document.querySelectorAll('[data-copy]').forEach(function(button){button.addEventListener('click',function(){copyCommand(button.dataset.copy)})});document.getElementById('downloadScript').addEventListener('click',downloadScript)}
-async function copyCommand(id){var value=resolveTemplate(commandTemplates[id]);try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(value);else{var area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();document.execCommand('copy');area.remove()}showWikiToast('命令已复制')}catch(_){showWikiToast('复制失败，请手动选择命令文本')}}
-async function downloadScript(){var button=document.getElementById('downloadScript');button.disabled=true;button.textContent='下载中...';try{var result=await API.downloadDistributedN8nScript();if(!result.success)throw new Error(result.error||'脚本下载失败');var objectUrl=URL.createObjectURL(result.blob),link=document.createElement('a');link.href=objectUrl;link.download=result.filename;document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(objectUrl)},1000);showWikiToast('辅助脚本已下载')}catch(error){showWikiToast(error.message||'脚本下载失败')}finally{button.textContent='下载可选辅助脚本';updateDynamicContent()}}
-async function loadWiki(){if(!await requireAuth())return;if(localStorage.getItem('ews_role')!=='admin'){location.replace('/');return}refreshNavCredits();var result=await API.getDistributedN8nWiki();if(!result.success||!result.wiki){document.getElementById('wikiMount').innerHTML='<div class="wiki-error">'+escapeHtml(result.error||'部署资料加载失败，请重新登录后再试。')+'</div>';return}renderWikiHeader(result.wiki);renderWiki(result.wiki)}
-document.addEventListener('DOMContentLoaded',loadWiki);
-</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>n8n 一键部署 - EWS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--gray-50); color: var(--gray-900); }
+    .deploy-page { max-width: 1240px; padding-bottom: 72px; }
+    .deploy-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 34px 0 22px; }
+    .deploy-header h1 { margin: 0; font-size: 27px; line-height: 1.25; letter-spacing: 0; }
+    .deploy-header p { max-width: 720px; margin: 7px 0 0; color: var(--gray-500); font-size: 13px; line-height: 1.65; }
+    .admin-badge { flex: 0 0 auto; padding: 5px 9px; border: 1px solid #b2ddff; border-radius: 6px; background: #eff8ff; color: #175cd3; font-size: 11px; font-weight: 750; }
+    .deploy-loading { display: grid; gap: 12px; padding: 32px 0; }
+    .deploy-skeleton { height: 18px; border-radius: 5px; background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 37%, #eef2f6 63%); background-size: 400% 100%; animation: deploy-loading 1.4s ease infinite; }
+    .deploy-skeleton:nth-child(2) { width: 72%; }
+    .deploy-skeleton:nth-child(3) { width: 48%; }
+    @keyframes deploy-loading { from { background-position: 100% 0; } to { background-position: 0 0; } }
+    .deploy-error { padding: 17px 18px; border-left: 3px solid var(--danger); background: #fef3f2; color: #7a271a; font-size: 13px; line-height: 1.6; }
+    .deploy-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr); gap: 22px; align-items: start; }
+    .deploy-surface { border: 1px solid var(--gray-200); border-radius: 8px; background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+    .deploy-section { padding: 22px; border-bottom: 1px solid var(--gray-200); }
+    .deploy-section:last-child { border-bottom: 0; }
+    .deploy-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .deploy-section h2 { margin: 0; font-size: 16px; line-height: 1.4; letter-spacing: 0; }
+    .deploy-section-head p { max-width: 68ch; margin: 4px 0 0; color: var(--gray-500); font-size: 12px; line-height: 1.6; }
+    .section-index { flex: 0 0 auto; color: var(--gray-400); font-size: 11px; font-weight: 750; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .field-span { grid-column: 1 / -1; }
+    .field-group label { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; color: var(--gray-700); font-size: 12px; font-weight: 650; }
+    .field-group label small { color: var(--gray-400); font-size: 10px; font-weight: 500; }
+    .field-hint { min-height: 17px; margin-top: 5px; color: var(--gray-500); font-size: 11px; line-height: 1.5; }
+    .secret-switch { display: inline-flex; align-items: center; gap: 7px; color: var(--gray-600); font-size: 11px; cursor: pointer; user-select: none; }
+    .deploy-actions { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+    .deploy-actions .btn { min-width: 168px; }
+    .form-message { min-height: 18px; color: var(--danger); font-size: 11px; line-height: 1.55; }
+    .form-message.success { color: var(--success); }
+    .security-note { margin-top: 14px; padding: 11px 13px; border-left: 3px solid #f79009; background: #fffaeb; color: #7a4b12; font-size: 11px; line-height: 1.65; }
+    .command-block { border: 1px solid var(--gray-300); border-radius: 7px; background: #101828; overflow: hidden; }
+    .command-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; padding: 7px 9px 7px 12px; border-bottom: 1px solid #344054; background: #1d2939; }
+    .command-head span { color: #d0d5dd; font-size: 11px; font-weight: 650; }
+    .command-copy { min-height: 27px; padding: 4px 8px; border: 1px solid #475467; border-radius: 5px; background: #344054; color: #fff; cursor: pointer; font-size: 11px; }
+    .command-copy:disabled { cursor: not-allowed; opacity: .5; }
+    .command-code { display: block; max-height: 220px; overflow: auto; margin: 0; padding: 12px; color: #e4e7ec; font: 11px/1.65 Consolas, "SFMono-Regular", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .command-block + .command-block { margin-top: 10px; }
+    .step-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; counter-reset: deploy-step; }
+    .step-list li { position: relative; min-height: 62px; padding: 0 0 17px 42px; color: var(--gray-600); font-size: 12px; line-height: 1.6; counter-increment: deploy-step; }
+    .step-list li:last-child { min-height: 34px; padding-bottom: 0; }
+    .step-list li::before { position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--gray-300); border-radius: 6px; background: var(--gray-50); color: var(--gray-700); content: counter(deploy-step); font-size: 11px; font-weight: 750; }
+    .step-list li:not(:last-child)::after { position: absolute; left: 13px; top: 32px; bottom: 4px; width: 1px; background: var(--gray-200); content: ''; }
+    .step-list strong { display: block; margin-bottom: 2px; color: var(--gray-800); font-size: 12px; }
+    .status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--gray-200); border-left: 1px solid var(--gray-200); }
+    .status-item { min-width: 0; padding: 11px 12px; border-right: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200); }
+    .status-item span { display: block; color: var(--gray-500); font-size: 10px; }
+    .status-item strong { display: block; margin-top: 4px; color: var(--gray-800); font-size: 11px; overflow-wrap: anywhere; }
+    .service-value { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; padding: 10px 11px; border: 1px solid var(--gray-200); border-radius: 7px; background: var(--gray-50); }
+    .service-value code { min-width: 0; color: var(--gray-700); font-size: 11px; overflow-wrap: anywhere; }
+    .link-row { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
+    .link-row a { font-size: 11px; font-weight: 650; }
+    .webhook-list { display: grid; gap: 0; }
+    .webhook-row { display: grid; grid-template-columns: 70px 92px minmax(0, 1fr) 46px; gap: 9px; align-items: center; min-height: 43px; border-top: 1px solid var(--gray-200); }
+    .webhook-row:first-child { border-top: 0; }
+    .webhook-row span { color: var(--gray-600); font-size: 11px; }
+    .webhook-row code { min-width: 0; color: var(--gray-700); font-size: 10px; overflow-wrap: anywhere; }
+    .webhook-row button { justify-self: end; min-height: 27px; padding: 4px 7px; border: 1px solid var(--gray-300); border-radius: 5px; background: #fff; color: var(--gray-700); cursor: pointer; font-size: 10px; }
+    .wiki-toast { position: fixed; right: 18px; bottom: 18px; z-index: 300; display: none; max-width: 330px; padding: 10px 12px; border-radius: 6px; background: #101828; color: #fff; box-shadow: 0 8px 20px rgba(16, 24, 40, .22); font-size: 12px; }
+    .wiki-toast.show { display: block; }
+    @media (max-width: 920px) {
+      .deploy-layout { grid-template-columns: 1fr; }
+      .deploy-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .deploy-side .deploy-surface { height: fit-content; }
+    }
+    @media (max-width: 640px) {
+      .deploy-page { padding-inline: 14px; }
+      .deploy-header { display: block; margin-top: 24px; }
+      .admin-badge { display: inline-block; margin-top: 12px; }
+      .deploy-section { padding: 18px 15px; }
+      .field-grid, .deploy-side { grid-template-columns: 1fr; }
+      .field-span { grid-column: auto; }
+      .deploy-actions { align-items: stretch; }
+      .deploy-actions .btn { width: 100%; }
+      .form-message { width: 100%; }
+      .secret-head { display: block; }
+      .secret-head .secret-switch { margin-top: 10px; }
+      .webhook-row { grid-template-columns: 62px minmax(0, 1fr) 44px; padding: 9px 0; }
+      .webhook-row span:nth-child(2) { grid-column: 2; }
+      .webhook-row code { grid-column: 1 / 4; grid-row: 2; }
+      .webhook-row button { grid-column: 3; grid-row: 1; }
+    }
+  </style>
+</head>
+<body>
+  <script src="/js/nav.js"></script>
+  <main class="app-container deploy-page">
+    <header class="deploy-header">
+      <div>
+        <h1>n8n 一键部署</h1>
+        <p>填写节点和密钥，生成一份可直接双击执行的 CMD 脚本。宿主机只需要 Docker Desktop，Cloudflare Tunnel 在部署完成后单独连接。</p>
+      </div>
+      <span class="admin-badge">仅管理员</span>
+    </header>
+    <div id="wikiMount" aria-live="polite">
+      <div class="deploy-loading"><div class="deploy-skeleton"></div><div class="deploy-skeleton"></div><div class="deploy-skeleton"></div></div>
+    </div>
+  </main>
+  <div class="wiki-toast" id="wikiToast" role="status"></div>
+  <script src="/js/api.js?v=20260725-2"></script>
+  <script>
+    var wikiData = null;
+    var installerBusy = false;
+
+    function escapeHtml(value) {
+      return String(value === undefined || value === null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function showWikiToast(message) {
+      var toast = document.getElementById('wikiToast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showWikiToast.timer);
+      showWikiToast.timer = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+    }
+
+    function requestWithTimeout(promise) {
+      var timeoutId;
+      var timeout = new Promise(function (_, reject) {
+        timeoutId = setTimeout(function () { reject(new Error('服务器超过120秒未响应，请稍后重试')); }, 120000);
+      });
+      return Promise.race([promise, timeout]).finally(function () { clearTimeout(timeoutId); });
+    }
+
+    function normalizeDomain(value) {
+      var raw = String(value || '').trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+      if (!raw || /[\s/]/.test(raw)) return '';
+      try { return new URL('https://' + raw).hostname; } catch (_) { return ''; }
+    }
+
+    function normalizeNodeName(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function utf8ToBase64(value) {
+      var bytes = new TextEncoder().encode(String(value));
+      var binary = '';
+      for (var offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + 0x8000));
+      }
+      return btoa(binary);
+    }
+
+    function stripBearer(value) {
+      return String(value || '').trim().replace(/^Bearer\s+/i, '');
+    }
+
+    function formValue(id) {
+      var field = document.getElementById(id);
+      return field ? field.value.trim() : '';
+    }
+
+    function deploymentValues() {
+      return {
+        nodeName: normalizeNodeName(formValue('nodeName')),
+        domain: normalizeDomain(formValue('publicDomain')),
+        port: formValue('localPort'),
+        imageServiceUrl: formValue('imageServiceUrl').replace(/\/+$/, ''),
+        ownerEmail: formValue('ownerEmail'),
+        ownerPassword: document.getElementById('ownerPassword').value,
+        grsaiKey: stripBearer(document.getElementById('grsaiKey').value),
+        deepseekKey: stripBearer(document.getElementById('deepseekKey').value),
+        backupKey: stripBearer(document.getElementById('backupKey').value)
+      };
+    }
+
+    function validateDeployment(values) {
+      if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(values.nodeName)) return '节点名称仅允许小写字母、数字和连字符，最长 32 位。';
+      if (!values.domain) return '请输入有效的公开域名，例如 n8n-node2.example.com。';
+      var port = Number(values.port);
+      if (!Number.isInteger(port) || port < 1024 || port > 65535) return '本地端口必须为 1024 到 65535 的整数。';
+      try {
+        var imageUrl = new URL(values.imageServiceUrl);
+        if (imageUrl.protocol !== 'http:' && imageUrl.protocol !== 'https:') throw new Error('invalid protocol');
+      } catch (_) { return '请输入可由 n8n 容器访问的 HTTP 或 HTTPS 图片服务地址。'; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.ownerEmail)) return '请输入有效的 n8n 管理员邮箱。';
+      if (values.ownerPassword.length < 8) return 'n8n 管理员密码至少需要 8 个字符。';
+      if (!values.grsaiKey || !values.deepseekKey || !values.backupKey) return '三组模型 API Key 均为必填。';
+      return '';
+    }
+
+    function installerFileName(nodeName) {
+      return 'install-ews-' + nodeName + '.cmd';
+    }
+
+    function executionCommand(nodeName) {
+      return installerFileName(nodeName || 'node2');
+    }
+
+    function tunnelCommand() {
+      var nodeName = normalizeNodeName(formValue('nodeName')) || 'node2';
+      var token = document.getElementById('tunnelToken').value.trim() || '<CLOUDFLARE_TUNNEL_TOKEN>';
+      var containerName = 'ews-cloudflared-' + nodeName;
+      var networkName = 'ews-' + nodeName;
+      return 'set "TUNNEL_TOKEN=' + token + '" && (docker rm -f ' + containerName + ' >nul 2>nul || ver >nul) && docker run -d --name ' + containerName + ' --restart unless-stopped --network ' + networkName + ' -e TUNNEL_TOKEN cloudflare/cloudflared:latest tunnel --no-autoupdate run & set "TUNNEL_TOKEN="';
+    }
+
+    function setFormMessage(message, type) {
+      var box = document.getElementById('formMessage');
+      box.textContent = message || '';
+      box.className = 'form-message' + (type === 'success' ? ' success' : '');
+    }
+
+    function updateDynamicContent() {
+      var nodeName = normalizeNodeName(formValue('nodeName')) || 'node2';
+      var domain = normalizeDomain(formValue('publicDomain')) || formValue('publicDomain') || 'n8n-node2.example.com';
+      var runCommand = document.getElementById('runCommand');
+      var cloudflareCommand = document.getElementById('cloudflareCommand');
+      var serviceValue = document.getElementById('cloudflareService');
+      if (runCommand) runCommand.textContent = executionCommand(nodeName);
+      if (cloudflareCommand) cloudflareCommand.textContent = tunnelCommand();
+      if (serviceValue) serviceValue.textContent = 'http://n8n:5678';
+      var tunnelToken = document.getElementById('tunnelToken');
+      var tunnelCopy = document.getElementById('copyTunnelCommand');
+      if (tunnelToken && tunnelCopy) tunnelCopy.disabled = !/^[A-Za-z0-9._-]+$/.test(tunnelToken.value.trim());
+      document.querySelectorAll('[data-webhook-path]').forEach(function (node) {
+        node.textContent = 'https://' + domain + node.dataset.webhookPath;
+      });
+    }
+
+    function toggleSecrets(visible) {
+      document.querySelectorAll('.secret-field').forEach(function (field) { field.type = visible ? 'text' : 'password'; });
+    }
+
+    async function copyText(value, successMessage) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(value);
+        else {
+          var area = document.createElement('textarea');
+          area.value = value;
+          area.style.position = 'fixed';
+          area.style.opacity = '0';
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand('copy');
+          area.remove();
+        }
+        showWikiToast(successMessage || '已复制');
+      } catch (_) { showWikiToast('复制失败，请手动选择文本'); }
+    }
+
+    function injectInstaller(template, values) {
+      var replacements = {
+        '__EWS_NODE_NAME_B64__': utf8ToBase64(values.nodeName),
+        '__EWS_DOMAIN_B64__': utf8ToBase64(values.domain),
+        '__EWS_OWNER_EMAIL_B64__': utf8ToBase64(values.ownerEmail),
+        '__EWS_OWNER_PASSWORD_B64__': utf8ToBase64(values.ownerPassword),
+        '__EWS_GRSAI_KEY_B64__': utf8ToBase64(values.grsaiKey),
+        '__EWS_DEEPSEEK_KEY_B64__': utf8ToBase64(values.deepseekKey),
+        '__EWS_BACKUP_KEY_B64__': utf8ToBase64(values.backupKey),
+        '__EWS_IMAGE_SERVICE_URL_B64__': utf8ToBase64(values.imageServiceUrl),
+        '__EWS_PORT__': String(Number(values.port))
+      };
+      var result = String(template);
+      Object.keys(replacements).forEach(function (token) { result = result.split(token).join(replacements[token]); });
+      if (/__EWS_(?:NODE_NAME|DOMAIN|OWNER_EMAIL|OWNER_PASSWORD|GRSAI_KEY|DEEPSEEK_KEY|BACKUP_KEY|IMAGE_SERVICE_URL|PORT)(?:_B64)?__/.test(result)) {
+        throw new Error('安装脚本仍有未填写参数，请刷新页面后重试');
+      }
+      return result;
+    }
+
+    async function generateInstaller() {
+      if (installerBusy) return;
+      var values = deploymentValues();
+      var validationError = validateDeployment(values);
+      if (validationError) { setFormMessage(validationError); return; }
+      installerBusy = true;
+      var button = document.getElementById('generateInstaller');
+      button.disabled = true;
+      button.classList.add('is-loading');
+      button.textContent = '生成中...';
+      setFormMessage('');
+      try {
+        var response = await requestWithTimeout(API.downloadDistributedN8nScript());
+        if (!response.success || !response.blob) throw new Error(response.error || '安装脚本下载失败');
+        var template = await response.blob.text();
+        var installer = injectInstaller(template, values);
+        var fileName = installerFileName(values.nodeName);
+        var objectUrl = URL.createObjectURL(new Blob([installer], { type: 'text/plain;charset=utf-8' }));
+        var link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 1000);
+        setFormMessage('脚本已生成。执行成功后请删除下载文件。', 'success');
+        showWikiToast('一键部署脚本已下载');
+        updateDynamicContent();
+      } catch (error) {
+        setFormMessage(error.message || '安装脚本生成失败');
+      } finally {
+        installerBusy = false;
+        button.disabled = false;
+        button.classList.remove('is-loading');
+        button.textContent = '生成一键部署脚本';
+      }
+    }
+
+    function renderWebhookRows(webhooks) {
+      return (webhooks || []).map(function (item) {
+        return '<div class="webhook-row"><span>' + escapeHtml(item.platform) + '</span><span>' + escapeHtml(item.name) + '</span><code data-webhook-path="' + escapeHtml(item.path) + '"></code><button type="button" data-copy-webhook="' + escapeHtml(item.path) + '">复制</button></div>';
+      }).join('');
+    }
+
+    function renderReferences(references) {
+      return (references || []).map(function (item) {
+        return '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(item.name) + '</a>';
+      }).join('');
+    }
+
+    function renderSteps(sections) {
+      return (sections || []).map(function (item) {
+        return '<li><strong>' + escapeHtml(item.title) + '</strong>' + escapeHtml(item.body) + '</li>';
+      }).join('');
+    }
+
+    function renderWiki(wiki) {
+      wikiData = wiki;
+      document.querySelector('.deploy-header h1').textContent = wiki.title || 'n8n 一键部署';
+      document.querySelector('.deploy-header p').textContent = wiki.subtitle || '';
+      var defaults = wiki.defaults || {};
+      document.getElementById('wikiMount').innerHTML =
+        '<div class="deploy-layout">' +
+          '<div class="deploy-surface">' +
+            '<section class="deploy-section">' +
+              '<div class="deploy-section-head"><div><h2>节点配置</h2><p>脚本会自动创建独立 Docker network、volume、n8n owner、凭证和 9 个已发布工作流。</p></div><span class="section-index">01</span></div>' +
+              '<div class="field-grid">' +
+                '<div class="field-group"><label for="nodeName">节点名称</label><input class="form-input" id="nodeName" maxlength="32" value="' + escapeHtml(defaults.node_name || 'node2') + '" autocomplete="off"><div class="field-hint">用于 Docker 容器、网络和数据卷命名</div></div>' +
+                '<div class="field-group"><label for="publicDomain">公开域名</label><input class="form-input" id="publicDomain" value="' + escapeHtml(defaults.domain || '') + '" placeholder="n8n-node2.example.com" autocomplete="url"><div class="field-hint">填写 Cloudflare Tunnel 最终绑定的域名</div></div>' +
+                '<div class="field-group"><label for="localPort">本地端口</label><input class="form-input" id="localPort" inputmode="numeric" value="' + escapeHtml(defaults.port || 5679) + '"><div class="field-hint">仅绑定 127.0.0.1，不暴露公网</div></div>' +
+                '<div class="field-group"><label for="imageServiceUrl">图片处理服务地址</label><input class="form-input" id="imageServiceUrl" value="' + escapeHtml(defaults.image_service_url || 'http://ews-image-sidecar:3000') + '" autocomplete="url"><div class="field-hint">同主机自动接入容器网络；异地主机填写外部 HTTPS 端点</div></div>' +
+              '</div>' +
+            '</section>' +
+            '<section class="deploy-section">' +
+              '<div class="deploy-section-head secret-head"><div><h2>管理员与模型密钥</h2><p>敏感信息只在当前浏览器内注入下载脚本，不会通过 API 上传或保存在页面缓存。</p></div><label class="secret-switch"><input id="showSecrets" type="checkbox">显示敏感信息</label></div>' +
+              '<div class="field-grid">' +
+                '<div class="field-group"><label for="ownerEmail">n8n 管理员邮箱</label><input class="form-input" id="ownerEmail" type="email" autocomplete="off" placeholder="admin@example.com"></div>' +
+                '<div class="field-group"><label for="ownerPassword">n8n 管理员密码 <small>至少 8 位</small></label><input class="form-input secret-field" id="ownerPassword" type="password" autocomplete="new-password"></div>' +
+                '<div class="field-group"><label for="grsaiKey">GRSAI API Key</label><input class="form-input secret-field" id="grsaiKey" type="password" autocomplete="off"></div>' +
+                '<div class="field-group"><label for="deepseekKey">DeepSeek API Key</label><input class="form-input secret-field" id="deepseekKey" type="password" autocomplete="off"></div>' +
+                '<div class="field-group field-span"><label for="backupKey">备用图片 API Key</label><input class="form-input secret-field" id="backupKey" type="password" autocomplete="off"></div>' +
+              '</div>' +
+              '<div class="deploy-actions"><button class="btn btn-primary" id="generateInstaller" type="button">生成一键部署脚本</button><span class="form-message" id="formMessage" aria-live="polite"></span></div>' +
+              '<div class="security-note">下载的脚本包含 Base64 编码的密码和模型密钥。部署完成后立即删除该文件，不要提交到仓库或通过聊天工具传输。</div>' +
+            '</section>' +
+            '<section class="deploy-section">' +
+              '<div class="deploy-section-head"><div><h2>执行脚本</h2><p>直接双击下载的 CMD 文件，或在下载目录的 cmd.exe 中执行这一条命令。</p></div><span class="section-index">02</span></div>' +
+              '<div class="command-block"><div class="command-head"><span>Windows CMD</span><button class="command-copy" id="copyRunCommand" type="button">复制</button></div><code class="command-code" id="runCommand"></code></div>' +
+            '</section>' +
+            '<section class="deploy-section">' +
+              '<div class="deploy-section-head"><div><h2>连接 Cloudflare Tunnel</h2><p>先在 Cloudflare 控制台创建 remotely-managed tunnel 并复制 connector token，再执行生成的 Docker 命令。</p></div><span class="section-index">03</span></div>' +
+              '<div class="field-group"><label for="tunnelToken">Tunnel Token <small>不写入安装脚本</small></label><input class="form-input secret-field" id="tunnelToken" type="password" autocomplete="off" placeholder="粘贴 Cloudflare connector token"><div class="field-hint">填写后才能复制连接命令，仅在当前页面内使用</div></div>' +
+              '<div class="service-value"><code id="cloudflareService">http://n8n:5678</code><button class="btn btn-sm btn-outline" id="copyService" type="button">复制 Service</button></div>' +
+              '<div class="command-block"><div class="command-head"><span>Windows CMD</span><button class="command-copy" id="copyTunnelCommand" type="button">复制</button></div><code class="command-code" id="cloudflareCommand"></code></div>' +
+              '<div class="link-row">' + renderReferences(wiki.references) + '</div>' +
+            '</section>' +
+          '</div>' +
+          '<aside class="deploy-side">' +
+            '<section class="deploy-surface">' +
+              '<div class="deploy-section"><div class="deploy-section-head"><div><h2>部署顺序</h2><p>保持四步执行，失败时停在当前步骤排查。</p></div><span class="section-index">流程</span></div><ol class="step-list">' + renderSteps(wiki.sections) + '</ol></div>' +
+              '<div class="status-grid">' +
+                '<div class="status-item"><span>必要依赖</span><strong>Docker Desktop</strong></div>' +
+                '<div class="status-item"><span>n8n 镜像</span><strong>' + escapeHtml(defaults.n8n_version || 'stable') + '</strong></div>' +
+                '<div class="status-item"><span>工作流</span><strong>' + escapeHtml((wiki.webhooks || []).length) + ' 个</strong></div>' +
+                '<div class="status-item"><span>默认并发</span><strong>' + escapeHtml(defaults.concurrency || 20) + '</strong></div>' +
+                '<div class="status-item field-span"><span>安装器 SHA256</span><strong>' + escapeHtml((wiki.script && wiki.script.sha256) || '-') + '</strong></div>' +
+              '</div>' +
+            '</section>' +
+            '<section class="deploy-surface">' +
+              '<div class="deploy-section"><div class="deploy-section-head"><div><h2>用户分流地址</h2><p>部署验收后，在系统配置的用户工作流地址中按需替换。</p></div><span class="section-index">04</span></div><div class="webhook-list">' + renderWebhookRows(wiki.webhooks) + '</div></div>' +
+            '</section>' +
+          '</aside>' +
+        '</div>';
+
+      ['nodeName', 'publicDomain', 'localPort', 'imageServiceUrl', 'tunnelToken'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', updateDynamicContent);
+      });
+      document.getElementById('showSecrets').addEventListener('change', function (event) { toggleSecrets(event.target.checked); });
+      document.getElementById('generateInstaller').addEventListener('click', generateInstaller);
+      document.getElementById('copyRunCommand').addEventListener('click', function () { copyText(document.getElementById('runCommand').textContent, '执行命令已复制'); });
+      document.getElementById('copyService').addEventListener('click', function () { copyText('http://n8n:5678', 'Service 地址已复制'); });
+      document.getElementById('copyTunnelCommand').addEventListener('click', function () {
+        if (!/^[A-Za-z0-9._-]+$/.test(document.getElementById('tunnelToken').value.trim())) { showWikiToast('请先填写有效的 Tunnel Token'); return; }
+        copyText(tunnelCommand(), 'Cloudflare CMD 命令已复制');
+      });
+      document.querySelectorAll('[data-copy-webhook]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var domain = normalizeDomain(formValue('publicDomain')) || formValue('publicDomain');
+          copyText('https://' + domain + button.dataset.copyWebhook, 'Webhook 地址已复制');
+        });
+      });
+      updateDynamicContent();
+    }
+
+    async function loadWiki() {
+      if (!await requireAuth()) return;
+      if (localStorage.getItem('ews_role') !== 'admin') { location.replace('/'); return; }
+      refreshNavCredits();
+      try {
+        var result = await requestWithTimeout(API.getDistributedN8nWiki());
+        if (!result.success || !result.wiki) throw new Error(result.error || '部署资料加载失败');
+        renderWiki(result.wiki);
+      } catch (error) {
+        document.getElementById('wikiMount').innerHTML = '<div class="deploy-error">' + escapeHtml(error.message || '部署资料加载失败，请重新登录后再试。') + '</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadWiki);
+  </script>
+</body>
+</html>

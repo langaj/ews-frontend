@@ -151,7 +151,7 @@ const API = {
       const response = await fetch(API_BASE + '/api/admin/wiki/distributed-n8n/script', { headers: this._getAuthHeaders() });
       if (!response.ok) return await response.json();
       const disposition = response.headers.get('Content-Disposition') || '';
-      const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'deploy-extra-node.ps1';
+      const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'install-ews-node.cmd';
       return { success: true, blob: await response.blob(), filename };
     } catch (error) { return { success: false, error: '脚本下载失败: ' + error.message }; }
   },
