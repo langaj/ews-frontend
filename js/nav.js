@@ -18,6 +18,7 @@
     allPages.push({ p: '/guide.html', l: '使用说明' });
     if (isAdmin) allPages.push({ p: '/shopee-templates.html', l: '模板管理' });
     if (isAdmin) allPages.push({ p: '/config.html', l: '系统配置' });
+    if (isAdmin) allPages.push({ p: '/admin-deployment-wiki.html', l: '部署 Wiki' });
     if (isLoggedIn) allPages.push({ p: '/password.html', l: '账号安全' });
 
     for (var i = 0; i < allPages.length; i++) {

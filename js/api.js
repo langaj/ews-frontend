@@ -145,6 +145,16 @@ const API = {
   async getMyCredits() { return this._get('/api/users/me/credits'); },
   async getUserWebhook(id) { return this._get(`/api/users/${id}/webhook`); },
   async updateUserWebhook(id, cfg) { return this._put(`/api/users/${id}/webhook`, cfg); },
+  async getDistributedN8nWiki() { return this._get('/api/admin/wiki/distributed-n8n'); },
+  async downloadDistributedN8nScript() {
+    try {
+      const response = await fetch(API_BASE + '/api/admin/wiki/distributed-n8n/script', { headers: this._getAuthHeaders() });
+      if (!response.ok) return await response.json();
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'deploy-extra-node.ps1';
+      return { success: true, blob: await response.blob(), filename };
+    } catch (error) { return { success: false, error: '脚本下载失败: ' + error.message }; }
+  },
   async uploadFile(taskId, file, folder) {
     const targetFolder = folder || 'uploads';
     const maxBytes = targetFolder === 'size-chart' ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
