@@ -146,6 +146,7 @@ const API = {
   async getUserWebhook(id) { return this._get(`/api/users/${id}/webhook`); },
   async updateUserWebhook(id, cfg) { return this._put(`/api/users/${id}/webhook`, cfg); },
   async getDistributedN8nWiki() { return this._get('/api/admin/wiki/distributed-n8n'); },
+  async getUpdateLog() { return this._get('/api/admin/wiki/update-log'); },
   async downloadDistributedN8nScript() {
     try {
       const response = await fetch(API_BASE + '/api/admin/wiki/distributed-n8n/script', { headers: this._getAuthHeaders() });

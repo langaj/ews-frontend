@@ -371,7 +371,12 @@ function canCreatePlatform(platform){var role=localStorage.getItem('ews_role')||
 function escapeHtml(value){return String(value===undefined||value===null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function parseValues(value){return [...new Set(String(value||'').split(/[，,\n]/).map(function(item){return item.trim()}).filter(Boolean))]}
 function selectedValue(name){var input=document.querySelector('input[name="'+name+'"]:checked');return input?input.value:''}
-function isPreOrderChannel(channel){return['5001','50039','50052'].includes(String(channel?.id||''))}
+function normalizeChannelLabel(value){return String(value||'').normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim()}
+function isPreOrderChannel(channel){
+  if(Object.prototype.hasOwnProperty.call(channel||{},'supports_preorder')&&channel.supports_preorder!==undefined&&channel.supports_preorder!==null)return channel.supports_preorder===true||channel.supports_preorder===1||channel.supports_preorder==='1';
+  var label=normalizeChannelLabel(channel?.label);if(label)return['nhanh','tu nhan hang - spx','tu nhan hang - viettel smartbox'].includes(label);
+  return['5001','50039','50052'].includes(String(channel?.id||''));
+}
 
 function isAdmin(){return localStorage.getItem('ews_role')==='admin'}
 function requestWithTimeout(promise){var timeoutId;var timeout=new Promise(function(_,reject){timeoutId=setTimeout(function(){reject(new Error('服务器超过120秒未响应，请稍后重试'))},120000)});return Promise.race([promise,timeout]).finally(function(){clearTimeout(timeoutId)})}
@@ -394,7 +399,7 @@ async function changeStore(storeId){
   if(!storeId){renderStoreStatus();return}
   var result=await API.getShopeeTemplateProfile(storeId);if(token!==storeLoadToken)return;
   if(!result.success){renderStoreStatus(result.error||'模板加载失败',true);showToast(result.error||'模板加载失败','error');return}
-  activeStore=result.profile;storeCategories=result.categories||[];channels=(result.shipping_channels||[]).map(function(channel){var mapped={id:String(channel.id),label:channel.label||('渠道 '+channel.id),limit:Number(channel.price_limit)||null};mapped.supportsPreOrder=isPreOrderChannel(mapped);return mapped});localStorage.setItem('ews_shopee_template_profile_id',storeId);renderStoreStatus();clearCategory();renderShippingChannels(true);var template=storeTemplateMeta(activeStore);document.getElementById('templateMark').textContent=(activeStore.display_name||activeStore.system_name)+(template?' · '+Number(template.field_count||0)+' 字段':' · 无可用版本');document.getElementById('summaryStore').textContent=activeStore.display_name||activeStore.system_name;setTemplateReady(activeStore.status==='active'&&!!activeStore.current_version_id);updateSummary()
+  activeStore=result.profile;storeCategories=result.categories||[];channels=(result.shipping_channels||[]).map(function(channel){var mapped={id:String(channel.id),label:channel.label||('渠道 '+channel.id),limit:Number(channel.price_limit)||null,supports_preorder:channel.supports_preorder};mapped.supportsPreOrder=isPreOrderChannel(mapped);return mapped});localStorage.setItem('ews_shopee_template_profile_id',storeId);renderStoreStatus();clearCategory();renderShippingChannels(true);var template=storeTemplateMeta(activeStore);document.getElementById('templateMark').textContent=(activeStore.display_name||activeStore.system_name)+(template?' · '+Number(template.field_count||0)+' 字段':' · 无可用版本');document.getElementById('summaryStore').textContent=activeStore.display_name||activeStore.system_name;setTemplateReady(activeStore.status==='active'&&!!activeStore.current_version_id);updateSummary()
 }
 
 function openStoreTemplateModal(updateExisting){

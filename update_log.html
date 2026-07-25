@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>更新日志与技术栈 - EWS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--gray-50); color: var(--gray-900); }
+    .update-page { max-width: 1260px; padding-bottom: 72px; }
+    .update-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 34px 0 20px; }
+    .update-header h1 { margin: 0; font-size: 27px; line-height: 1.25; letter-spacing: 0; }
+    .update-header p { max-width: 760px; margin: 7px 0 0; color: var(--gray-500); font-size: 13px; line-height: 1.65; }
+    .release-stamp { flex: 0 0 auto; display: grid; justify-items: end; gap: 5px; }
+    .release-stamp strong { padding: 5px 9px; border: 1px solid #b2ddff; border-radius: 6px; background: #eff8ff; color: #175cd3; font-size: 11px; }
+    .release-stamp span { color: var(--gray-400); font-size: 10px; }
+    .update-loading { display: grid; gap: 12px; padding: 34px 0; }
+    .update-skeleton { height: 18px; border-radius: 5px; background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 37%, #eef2f6 63%); background-size: 400% 100%; animation: update-loading 1.4s ease infinite; }
+    .update-skeleton:nth-child(2) { width: 74%; }
+    .update-skeleton:nth-child(3) { width: 52%; }
+    @keyframes update-loading { from { background-position: 100% 0; } to { background-position: 0 0; } }
+    .update-error { padding: 17px 18px; border-left: 3px solid var(--danger); background: #fef3f2; color: #7a271a; font-size: 13px; line-height: 1.6; }
+    .metric-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 18px; border: 1px solid var(--gray-200); border-radius: 8px; background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+    .metric { min-width: 0; padding: 15px 17px; border-left: 1px solid var(--gray-200); }
+    .metric:first-child { border-left: 0; }
+    .metric span { display: block; color: var(--gray-500); font-size: 10px; }
+    .metric strong { display: block; margin-top: 5px; color: var(--gray-900); font-size: 19px; line-height: 1.2; overflow-wrap: anywhere; }
+    .metric small { display: block; margin-top: 4px; color: var(--gray-400); font-size: 9px; }
+    .update-workspace { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 20px; align-items: start; }
+    .update-index { position: sticky; top: 18px; border: 1px solid var(--gray-200); border-radius: 8px; background: #fff; box-shadow: var(--shadow); overflow: hidden; }
+    .index-title { padding: 15px 16px 10px; color: var(--gray-400); font-size: 10px; font-weight: 750; text-transform: uppercase; }
+    .view-tab { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 9px 16px; border: 0; border-top: 1px solid var(--gray-100); background: transparent; color: var(--gray-600); cursor: pointer; font-size: 12px; text-align: left; }
+    .view-tab::after { content: ''; width: 6px; height: 6px; border-top: 1px solid currentColor; border-right: 1px solid currentColor; transform: rotate(45deg); }
+    .view-tab:hover { background: var(--gray-50); color: var(--gray-900); }
+    .view-tab.active { background: #f5f8ff; color: #175cd3; font-weight: 700; box-shadow: inset 3px 0 #2e6ce6; }
+    .index-foot { padding: 13px 16px; border-top: 1px solid var(--gray-200); color: var(--gray-400); font-size: 10px; line-height: 1.55; }
+    .update-content { min-width: 0; border: 1px solid var(--gray-200); border-radius: 8px; background: #fff; box-shadow: var(--shadow); }
+    .content-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 20px 22px; border-bottom: 1px solid var(--gray-200); }
+    .content-head h2 { margin: 0; font-size: 17px; line-height: 1.4; letter-spacing: 0; }
+    .content-head p { margin: 5px 0 0; color: var(--gray-500); font-size: 11px; line-height: 1.6; }
+    .content-head a { flex: 0 0 auto; font-size: 11px; font-weight: 650; }
+    .content-body { padding: 0 22px; }
+    .release-entry { position: relative; display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 22px; padding: 23px 0; border-bottom: 1px solid var(--gray-200); }
+    .release-entry:last-child { border-bottom: 0; }
+    .release-meta strong { display: block; color: var(--gray-900); font-size: 12px; }
+    .release-meta time { display: block; margin-top: 4px; color: var(--gray-400); font-size: 10px; }
+    .status-label { display: inline-block; margin-top: 9px; padding: 3px 6px; border-radius: 4px; background: #ecfdf3; color: #067647; font-size: 9px; font-weight: 750; }
+    .release-copy h3 { margin: 0; font-size: 14px; letter-spacing: 0; }
+    .release-copy > p { margin: 6px 0 12px; color: var(--gray-500); font-size: 11px; line-height: 1.65; }
+    .change-list { margin: 0; padding: 0; list-style: none; }
+    .change-list li { position: relative; padding: 4px 0 4px 14px; color: var(--gray-700); font-size: 11px; line-height: 1.55; }
+    .change-list li::before { position: absolute; left: 0; top: 11px; width: 4px; height: 4px; border-radius: 50%; background: #2e6ce6; content: ''; }
+    .stack-row { display: grid; grid-template-columns: 105px 230px minmax(0, 1fr); gap: 18px; align-items: start; padding: 17px 0; border-bottom: 1px solid var(--gray-200); }
+    .stack-row:last-child { border-bottom: 0; }
+    .stack-row strong { color: var(--gray-900); font-size: 11px; }
+    .stack-row code { color: #175cd3; font: 10px/1.6 Consolas, monospace; overflow-wrap: anywhere; }
+    .stack-row p { margin: 0; color: var(--gray-600); font-size: 11px; line-height: 1.65; }
+    .flow-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 21px 0; border-top: 1px solid var(--gray-200); border-left: 1px solid var(--gray-200); }
+    .flow-step { min-height: 128px; padding: 15px; border-right: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200); }
+    .flow-step span { color: #175cd3; font-size: 10px; font-weight: 750; }
+    .flow-step h3 { margin: 7px 0 5px; font-size: 12px; letter-spacing: 0; }
+    .flow-step p { margin: 0; color: var(--gray-500); font-size: 10px; line-height: 1.65; }
+    .audit-row, .roadmap-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 18px; padding: 17px 0; border-bottom: 1px solid var(--gray-200); }
+    .audit-row:last-child, .roadmap-row:last-child { border-bottom: 0; }
+    .audit-badge, .priority-badge { align-self: start; justify-self: start; padding: 4px 7px; border-radius: 4px; background: var(--gray-100); color: var(--gray-600); font-size: 9px; font-weight: 750; }
+    .audit-badge.fixed { background: #ecfdf3; color: #067647; }
+    .audit-badge.verified { background: #eff8ff; color: #175cd3; }
+    .audit-copy h3, .roadmap-copy h3 { margin: 0; font-size: 12px; letter-spacing: 0; }
+    .audit-copy p, .roadmap-copy p { margin: 5px 0 0; color: var(--gray-500); font-size: 11px; line-height: 1.65; }
+    .roadmap-meta { display: flex; align-items: center; gap: 7px; }
+    .roadmap-meta span:last-child { color: var(--gray-400); font-size: 9px; }
+    @media (max-width: 940px) {
+      .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric { border-top: 1px solid var(--gray-200); }
+      .metric:nth-child(-n+2) { border-top: 0; }
+      .metric:nth-child(odd) { border-left: 0; }
+      .update-workspace { grid-template-columns: 1fr; }
+      .update-index { position: static; display: flex; overflow-x: auto; }
+      .index-title, .index-foot { display: none; }
+      .view-tab { flex: 0 0 auto; width: auto; min-width: 118px; border-top: 0; border-left: 1px solid var(--gray-100); }
+      .view-tab:first-of-type { border-left: 0; }
+      .view-tab::after { display: none; }
+      .view-tab.active { box-shadow: inset 0 -3px #2e6ce6; }
+    }
+    @media (max-width: 640px) {
+      .update-page { padding-inline: 14px; }
+      .update-header { display: block; margin-top: 24px; }
+      .release-stamp { justify-items: start; margin-top: 12px; }
+      .metric-strip { grid-template-columns: 1fr; }
+      .metric, .metric:nth-child(-n+2) { border-top: 1px solid var(--gray-200); border-left: 0; }
+      .metric:first-child { border-top: 0; }
+      .content-head, .content-body { padding-inline: 15px; }
+      .release-entry { grid-template-columns: 1fr; gap: 10px; }
+      .stack-row { grid-template-columns: 1fr; gap: 5px; }
+      .flow-list { grid-template-columns: 1fr; }
+      .flow-step { min-height: 0; }
+      .audit-row, .roadmap-row { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <script src="/js/nav.js"></script>
+  <main class="app-container update-page">
+    <header class="update-header">
+      <div>
+        <h1>更新日志与技术栈</h1>
+        <p>线上实现、模板系统审计、发布记录与工程路线图统一在此维护。</p>
+      </div>
+      <div class="release-stamp"><strong>仅管理员</strong><span id="updatedAt">正在读取版本</span></div>
+    </header>
+    <div id="updateMount" aria-live="polite">
+      <div class="update-loading"><div class="update-skeleton"></div><div class="update-skeleton"></div><div class="update-skeleton"></div></div>
+    </div>
+  </main>
+  <script src="/js/api.js?v=20260725-3"></script>
+  <script>
+    var updateWiki = null;
+    var activeView = 'releases';
+
+    function escapeHtml(value) {
+      return String(value === undefined || value === null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function requestWithTimeout(promise) {
+      var timeoutId;
+      var timeout = new Promise(function (_, reject) {
+        timeoutId = setTimeout(function () { reject(new Error('服务器超过120秒未响应，请稍后重试')); }, 120000);
+      });
+      return Promise.race([promise, timeout]).finally(function () { clearTimeout(timeoutId); });
+    }
+
+    function formatDate(value, withTime) {
+      if (!value) return '-';
+      var normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value) ? value.replace(' ', 'T') + 'Z' : value;
+      var date = new Date(normalized);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: withTime ? '2-digit' : undefined, minute: withTime ? '2-digit' : undefined, hour12: false
+      }).format(date);
+    }
+
+    function metricsHtml(audit) {
+      var values = [
+        ['启用模板', audit.active_profiles, '全局档案'],
+        ['模板版本', audit.current_versions, '可用于导出'],
+        ['预售就绪', audit.preorder_ready_profiles, '已注册 DTS token'],
+        ['预售商品', audit.preorder_products, '线上累计记录'],
+        ['模板最近更新', formatDate(audit.last_template_update, true), 'UTC+8']
+      ];
+      return '<div class="metric-strip">' + values.map(function (item) {
+        return '<div class="metric"><span>' + escapeHtml(item[0]) + '</span><strong>' + escapeHtml(item[1]) + '</strong><small>' + escapeHtml(item[2]) + '</small></div>';
+      }).join('') + '</div>';
+    }
+
+    function releaseHtml(items) {
+      return (items || []).map(function (item) {
+        return '<article class="release-entry"><div class="release-meta"><strong>' + escapeHtml(item.version) + '</strong><time>' + escapeHtml(item.date) + '</time><span class="status-label">' + escapeHtml(item.status) + '</span></div>'
+          + '<div class="release-copy"><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.summary) + '</p><ul class="change-list">'
+          + (item.changes || []).map(function (change) { return '<li>' + escapeHtml(change) + '</li>'; }).join('') + '</ul></div></article>';
+      }).join('');
+    }
+
+    function stackHtml(items) {
+      return (items || []).map(function (item) {
+        return '<div class="stack-row"><strong>' + escapeHtml(item.layer) + '</strong><code>' + escapeHtml(item.components) + '</code><p>' + escapeHtml(item.responsibility) + '</p></div>';
+      }).join('');
+    }
+
+    function templateHtml(wiki) {
+      var flow = (wiki.template_flow || []).map(function (item, index) {
+        return '<div class="flow-step"><span>0' + (index + 1) + '</span><h3>' + escapeHtml(item.step) + '</h3><p>' + escapeHtml(item.detail) + '</p></div>';
+      }).join('');
+      var audit = (wiki.template_audit || []).map(function (item) {
+        var badgeClass = item.severity === '已修复' ? ' fixed' : (item.severity === '已验证' ? ' verified' : '');
+        return '<div class="audit-row"><span class="audit-badge' + badgeClass + '">' + escapeHtml(item.severity) + '</span><div class="audit-copy"><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.detail) + '</p></div></div>';
+      }).join('');
+      return '<div class="flow-list">' + flow + '</div>' + audit;
+    }
+
+    function roadmapHtml(items) {
+      return (items || []).map(function (item) {
+        return '<div class="roadmap-row"><div class="roadmap-meta"><span class="priority-badge">' + escapeHtml(item.priority) + '</span></div><div class="roadmap-copy"><h3>' + escapeHtml(item.title) + '</h3><p>' + escapeHtml(item.detail) + '</p><div class="roadmap-meta"><span></span><span>' + escapeHtml(item.status) + '</span></div></div></div>';
+      }).join('');
+    }
+
+    function viewDefinition(view) {
+      if (view === 'stack') return { title: '技术栈与职责边界', subtitle: '按运行层拆分组件、数据归属和处理职责。', body: stackHtml(updateWiki.stack) };
+      if (view === 'template') return { title: 'Shopee 模板系统', subtitle: '从店铺模板上传到 token 导出的完整链路及本次审计结论。', body: templateHtml(updateWiki) };
+      if (view === 'roadmap') return { title: '后续更新', subtitle: '按优先级维护尚未上线的工程改进，不把计划项描述为已完成功能。', body: roadmapHtml(updateWiki.roadmap) };
+      return { title: '线上更新记录', subtitle: '按版本记录已经部署并可验证的系统变更。', body: releaseHtml(updateWiki.releases) };
+    }
+
+    function renderView() {
+      var definition = viewDefinition(activeView);
+      document.querySelectorAll('.view-tab').forEach(function (button) { button.classList.toggle('active', button.dataset.view === activeView); });
+      document.getElementById('contentTitle').textContent = definition.title;
+      document.getElementById('contentSubtitle').textContent = definition.subtitle;
+      document.getElementById('contentBody').innerHTML = definition.body;
+    }
+
+    function renderWiki(wiki) {
+      updateWiki = wiki;
+      document.querySelector('.update-header h1').textContent = wiki.title || '更新日志与技术栈';
+      document.querySelector('.update-header p').textContent = wiki.subtitle || '';
+      document.getElementById('updatedAt').textContent = '版本 ' + (wiki.version || '-') + ' · ' + formatDate(wiki.updated_at, true);
+      document.getElementById('updateMount').innerHTML = metricsHtml(wiki.audit || {})
+        + '<div class="update-workspace"><aside class="update-index"><div class="index-title">页面索引</div>'
+        + '<button class="view-tab active" type="button" data-view="releases">更新日志</button>'
+        + '<button class="view-tab" type="button" data-view="stack">技术栈</button>'
+        + '<button class="view-tab" type="button" data-view="template">模板系统</button>'
+        + '<button class="view-tab" type="button" data-view="roadmap">后续更新</button>'
+        + '<div class="index-foot">正文由 Worker 在管理员鉴权后返回，响应禁止缓存。</div></aside>'
+        + '<section class="update-content"><header class="content-head"><div><h2 id="contentTitle"></h2><p id="contentSubtitle"></p></div><a href="/admin-deployment-wiki.html">部署 Wiki</a></header><div class="content-body" id="contentBody"></div></section></div>';
+      document.querySelectorAll('.view-tab').forEach(function (button) {
+        button.addEventListener('click', function () { activeView = button.dataset.view; renderView(); });
+      });
+      renderView();
+    }
+
+    async function loadUpdateLog() {
+      if (!await requireAuth()) return;
+      if (localStorage.getItem('ews_role') !== 'admin') { location.replace('/'); return; }
+      refreshNavCredits();
+      try {
+        var result = await requestWithTimeout(API.getUpdateLog());
+        if (!result.success || !result.wiki) throw new Error(result.error || '更新日志加载失败');
+        renderWiki(result.wiki);
+      } catch (error) {
+        document.getElementById('updateMount').innerHTML = '<div class="update-error">' + escapeHtml(error.message || '更新日志加载失败，请重新登录后再试。') + '</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUpdateLog);
+  </script>
+</body>
+</html>
