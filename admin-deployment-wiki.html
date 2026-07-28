@@ -96,7 +96,7 @@
     <header class="deploy-header">
       <div>
         <h1>n8n 一键部署</h1>
-        <p>填写节点和密钥，生成一份可直接双击执行的 CMD 脚本。宿主机只需要 Docker Desktop，Cloudflare Tunnel 在部署完成后单独连接。</p>
+        <p>填写节点和密钥，生成一份可直接双击执行的 CMD 脚本。空白 Windows 主机会自动安装 Docker Desktop 并补齐运行镜像，Cloudflare Tunnel 在部署完成后单独连接。</p>
       </div>
       <span class="admin-badge">仅管理员</span>
     </header>
@@ -378,7 +378,7 @@
             '<section class="deploy-surface">' +
               '<div class="deploy-section"><div class="deploy-section-head"><div><h2>部署顺序</h2><p>保持四步执行，失败时停在当前步骤排查。</p></div><span class="section-index">流程</span></div><ol class="step-list">' + renderSteps(wiki.sections) + '</ol></div>' +
               '<div class="status-grid">' +
-                '<div class="status-item"><span>必要依赖</span><strong>Docker Desktop</strong></div>' +
+                '<div class="status-item"><span>宿主机要求</span><strong>Windows 10/11</strong></div>' +
                 '<div class="status-item"><span>n8n 镜像</span><strong>' + escapeHtml(defaults.n8n_version || 'stable') + '</strong></div>' +
                 '<div class="status-item"><span>工作流</span><strong>' + escapeHtml((wiki.webhooks || []).length) + ' 个</strong></div>' +
                 '<div class="status-item"><span>默认并发</span><strong>' + escapeHtml(defaults.concurrency || 20) + '</strong></div>' +
