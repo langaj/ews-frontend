@@ -184,7 +184,9 @@
         if (imageUrl.protocol !== 'http:' && imageUrl.protocol !== 'https:') throw new Error('invalid protocol');
       } catch (_) { return '请输入可由 n8n 容器访问的 HTTP 或 HTTPS 图片服务地址。'; }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.ownerEmail)) return '请输入有效的 n8n 管理员邮箱。';
-      if (values.ownerPassword.length < 8) return 'n8n 管理员密码至少需要 8 个字符。';
+      if (values.ownerPassword.length < 8 || values.ownerPassword.length > 64) return 'n8n 管理员密码必须为 8-64 位。';
+      if (!/[A-Z]/.test(values.ownerPassword)) return 'n8n 管理员密码必须包含至少一个大写字母。';
+      if (!/\d/.test(values.ownerPassword)) return 'n8n 管理员密码必须包含至少一个数字。';
       if (!values.grsaiKey || !values.deepseekKey || !values.backupKey) return '三组模型 API Key 均为必填。';
       return '';
     }
@@ -339,14 +341,14 @@
                 '<div class="field-group"><label for="nodeName">节点名称</label><input class="form-input" id="nodeName" maxlength="32" value="' + escapeHtml(defaults.node_name || 'node2') + '" autocomplete="off"><div class="field-hint">用于 Docker 容器、网络和数据卷命名</div></div>' +
                 '<div class="field-group"><label for="publicDomain">公开域名</label><input class="form-input" id="publicDomain" value="' + escapeHtml(defaults.domain || '') + '" placeholder="n8n-node2.example.com" autocomplete="url"><div class="field-hint">填写 Cloudflare Tunnel 最终绑定的域名</div></div>' +
                 '<div class="field-group"><label for="localPort">本地端口</label><input class="form-input" id="localPort" inputmode="numeric" value="' + escapeHtml(defaults.port || 5679) + '"><div class="field-hint">仅绑定 127.0.0.1，不暴露公网</div></div>' +
-                '<div class="field-group"><label for="imageServiceUrl">图片处理服务地址</label><input class="form-input" id="imageServiceUrl" value="' + escapeHtml(defaults.image_service_url || 'http://ews-image-sidecar:3000') + '" autocomplete="url"><div class="field-hint">同主机自动接入容器网络；异地主机填写外部 HTTPS 端点</div></div>' +
+                '<div class="field-group"><label for="imageServiceUrl">图片处理服务地址</label><input class="form-input" id="imageServiceUrl" value="' + escapeHtml(defaults.image_service_url || 'http://ews-image-sidecar:3000') + '" autocomplete="url"><div class="field-hint">脚本不会安装图片处理服务；异地主机必须填写外部 HTTPS 端点</div></div>' +
               '</div>' +
             '</section>' +
             '<section class="deploy-section">' +
               '<div class="deploy-section-head secret-head"><div><h2>管理员与模型密钥</h2><p>敏感信息只在当前浏览器内注入下载脚本，不会通过 API 上传或保存在页面缓存。</p></div><label class="secret-switch"><input id="showSecrets" type="checkbox">显示敏感信息</label></div>' +
               '<div class="field-grid">' +
                 '<div class="field-group"><label for="ownerEmail">n8n 管理员邮箱</label><input class="form-input" id="ownerEmail" type="email" autocomplete="off" placeholder="admin@example.com"></div>' +
-                '<div class="field-group"><label for="ownerPassword">n8n 管理员密码 <small>至少 8 位</small></label><input class="form-input secret-field" id="ownerPassword" type="password" autocomplete="new-password"></div>' +
+                '<div class="field-group"><label for="ownerPassword">n8n 管理员密码 <small>8-64 位，含大写字母和数字</small></label><input class="form-input secret-field" id="ownerPassword" type="password" maxlength="64" autocomplete="new-password"></div>' +
                 '<div class="field-group"><label for="grsaiKey">GRSAI API Key</label><input class="form-input secret-field" id="grsaiKey" type="password" autocomplete="off"></div>' +
                 '<div class="field-group"><label for="deepseekKey">DeepSeek API Key</label><input class="form-input secret-field" id="deepseekKey" type="password" autocomplete="off"></div>' +
                 '<div class="field-group field-span"><label for="backupKey">备用图片 API Key</label><input class="form-input secret-field" id="backupKey" type="password" autocomplete="off"></div>' +
