@@ -142,15 +142,6 @@
       return String(value || '').trim().toLowerCase();
     }
 
-    function utf8ToBase64(value) {
-      var bytes = new TextEncoder().encode(String(value));
-      var binary = '';
-      for (var offset = 0; offset < bytes.length; offset += 0x8000) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + 0x8000));
-      }
-      return btoa(binary);
-    }
-
     function stripBearer(value) {
       return String(value || '').trim().replace(/^Bearer\s+/i, '');
     }
@@ -254,23 +245,27 @@
       } catch (_) { showWikiToast('复制失败，请手动选择文本'); }
     }
 
+    function powershellEscape(value) {
+      return String(value).replace(/'/g, "''");
+    }
+
     function injectInstaller(template, values) {
       var replacements = {
-        '__EWS_NODE_NAME_B64__': utf8ToBase64(values.nodeName),
-        '__EWS_DOMAIN_B64__': utf8ToBase64(values.domain),
-        '__EWS_OWNER_EMAIL_B64__': utf8ToBase64(values.ownerEmail),
-        '__EWS_OWNER_PASSWORD_B64__': utf8ToBase64(values.ownerPassword),
-        '__EWS_GRSAI_KEY_B64__': utf8ToBase64(values.grsaiKey),
-        '__EWS_DEEPSEEK_KEY_B64__': utf8ToBase64(values.deepseekKey),
-        '__EWS_BACKUP_KEY_B64__': utf8ToBase64(values.backupKey),
-        '__EWS_IMAGE_SERVICE_URL_B64__': utf8ToBase64(values.imageServiceUrl),
-        '__EWS_CALLBACK_SECRET_B64__': utf8ToBase64(values.callbackSecret),
-        '__EWS_TICKET_ORIGIN_B64__': utf8ToBase64(values.ticketOrigin),
+        '__EWS_NODE_NAME__': powershellEscape(values.nodeName),
+        '__EWS_DOMAIN__': powershellEscape(values.domain),
+        '__EWS_OWNER_EMAIL__': powershellEscape(values.ownerEmail),
+        '__EWS_OWNER_PASSWORD__': powershellEscape(values.ownerPassword),
+        '__EWS_GRSAI_KEY__': powershellEscape(values.grsaiKey),
+        '__EWS_DEEPSEEK_KEY__': powershellEscape(values.deepseekKey),
+        '__EWS_BACKUP_KEY__': powershellEscape(values.backupKey),
+        '__EWS_IMAGE_SERVICE_URL__': powershellEscape(values.imageServiceUrl),
+        '__EWS_CALLBACK_SECRET__': powershellEscape(values.callbackSecret),
+        '__EWS_TICKET_ORIGIN__': powershellEscape(values.ticketOrigin),
         '__EWS_PORT__': String(Number(values.port))
       };
       var result = String(template);
       Object.keys(replacements).forEach(function (token) { result = result.split(token).join(replacements[token]); });
-      if (/__EWS_(?:NODE_NAME|DOMAIN|OWNER_EMAIL|OWNER_PASSWORD|GRSAI_KEY|DEEPSEEK_KEY|BACKUP_KEY|IMAGE_SERVICE_URL|CALLBACK_SECRET|TICKET_ORIGIN|PORT)(?:_B64)?__/.test(result)) {
+      if (/__EWS_(?:NODE_NAME|DOMAIN|OWNER_EMAIL|OWNER_PASSWORD|GRSAI_KEY|DEEPSEEK_KEY|BACKUP_KEY|IMAGE_SERVICE_URL|CALLBACK_SECRET|TICKET_ORIGIN|PORT)__/.test(result)) {
         throw new Error('安装脚本仍有未填写参数，请刷新页面后重试');
       }
       return result;
@@ -360,7 +355,7 @@
                 '<div class="field-group field-span"><label for="callbackSecret">EWS 回调密钥 <small>自动读取系统配置</small></label><input class="form-input secret-field" id="callbackSecret" type="password" value="' + escapeHtml((systemConfig && systemConfig.callback_secret) || '') + '" autocomplete="off"><div class="field-hint">用于本机图片 API、上传票据和结果回调鉴权</div></div>' +
               '</div>' +
               '<div class="deploy-actions"><button class="btn btn-primary" id="generateInstaller" type="button">生成一键部署脚本</button><span class="form-message" id="formMessage" aria-live="polite"></span></div>' +
-              '<div class="security-note">下载的脚本包含 Base64 编码的密码、模型密钥和回调密钥。部署完成后立即删除该文件，不要提交到仓库或通过聊天工具传输。</div>' +
+              '<div class="security-note">下载的脚本包含明文密码、模型密钥和回调密钥。部署完成后立即删除该文件，不要提交到仓库或通过聊天工具传输。</div>' +
             '</section>' +
             '<section class="deploy-section">' +
               '<div class="deploy-section-head"><div><h2>执行脚本</h2><p>直接双击下载的 CMD 文件，或在下载目录的 cmd.exe 中执行这一条命令。</p></div><span class="section-index">02</span></div>' +
