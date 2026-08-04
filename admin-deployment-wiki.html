@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>n8n 一键部署 - EWS</title>
+  <title>n8n 节点环境一键部署 - EWS</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
     body { background: var(--gray-50); color: var(--gray-900); }
@@ -95,7 +95,7 @@
   <main class="app-container deploy-page">
     <header class="deploy-header">
       <div>
-        <h1>n8n 一键部署</h1>
+        <h1>n8n 节点环境一键部署</h1>
         <p>填写节点和密钥，生成一份可直接双击执行的 CMD 脚本。空白 Windows 主机会自动安装 Docker Desktop 并补齐运行镜像，Cloudflare Tunnel 在部署完成后单独连接。</p>
       </div>
       <span class="admin-badge">仅管理员</span>
@@ -142,10 +142,6 @@
       return String(value || '').trim().toLowerCase();
     }
 
-    function stripBearer(value) {
-      return String(value || '').trim().replace(/^Bearer\s+/i, '');
-    }
-
     function formValue(id) {
       var field = document.getElementById(id);
       return field ? field.value.trim() : '';
@@ -160,10 +156,7 @@
         callbackSecret: formValue('callbackSecret'),
         ticketOrigin: new URL(API_BASE).origin,
         ownerEmail: formValue('ownerEmail'),
-        ownerPassword: document.getElementById('ownerPassword').value,
-        grsaiKey: stripBearer(document.getElementById('grsaiKey').value),
-        deepseekKey: stripBearer(document.getElementById('deepseekKey').value),
-        backupKey: stripBearer(document.getElementById('backupKey').value)
+        ownerPassword: document.getElementById('ownerPassword').value
       };
     }
 
@@ -181,7 +174,6 @@
       if (values.ownerPassword.length < 8 || values.ownerPassword.length > 64) return 'n8n 管理员密码必须为 8-64 位。';
       if (!/[A-Z]/.test(values.ownerPassword)) return 'n8n 管理员密码必须包含至少一个大写字母。';
       if (!/\d/.test(values.ownerPassword)) return 'n8n 管理员密码必须包含至少一个数字。';
-      if (!values.grsaiKey || !values.deepseekKey || !values.backupKey) return '三组模型 API Key 均为必填。';
       return '';
     }
 
@@ -255,9 +247,6 @@
         '__EWS_DOMAIN__': powershellEscape(values.domain),
         '__EWS_OWNER_EMAIL__': powershellEscape(values.ownerEmail),
         '__EWS_OWNER_PASSWORD__': powershellEscape(values.ownerPassword),
-        '__EWS_GRSAI_KEY__': powershellEscape(values.grsaiKey),
-        '__EWS_DEEPSEEK_KEY__': powershellEscape(values.deepseekKey),
-        '__EWS_BACKUP_KEY__': powershellEscape(values.backupKey),
         '__EWS_IMAGE_SERVICE_URL__': powershellEscape(values.imageServiceUrl),
         '__EWS_CALLBACK_SECRET__': powershellEscape(values.callbackSecret),
         '__EWS_TICKET_ORIGIN__': powershellEscape(values.ticketOrigin),
@@ -265,7 +254,7 @@
       };
       var result = String(template);
       Object.keys(replacements).forEach(function (token) { result = result.split(token).join(replacements[token]); });
-      if (/__EWS_(?:NODE_NAME|DOMAIN|OWNER_EMAIL|OWNER_PASSWORD|GRSAI_KEY|DEEPSEEK_KEY|BACKUP_KEY|IMAGE_SERVICE_URL|CALLBACK_SECRET|TICKET_ORIGIN|PORT)__/.test(result)) {
+      if (/__EWS_(?:NODE_NAME|DOMAIN|OWNER_EMAIL|OWNER_PASSWORD|IMAGE_SERVICE_URL|CALLBACK_SECRET|TICKET_ORIGIN|PORT)__/.test(result)) {
         throw new Error('安装脚本仍有未填写参数，请刷新页面后重试');
       }
       return result;
@@ -329,14 +318,14 @@
 
     function renderWiki(wiki, systemConfig) {
       wikiData = wiki;
-      document.querySelector('.deploy-header h1').textContent = wiki.title || 'n8n 一键部署';
+      document.querySelector('.deploy-header h1').textContent = wiki.title || 'n8n 节点环境一键部署';
       document.querySelector('.deploy-header p').textContent = wiki.subtitle || '';
       var defaults = wiki.defaults || {};
       document.getElementById('wikiMount').innerHTML =
         '<div class="deploy-layout">' +
           '<div class="deploy-surface">' +
             '<section class="deploy-section">' +
-              '<div class="deploy-section-head"><div><h2>节点配置</h2><p>脚本会自动部署图片队列与 n8n，并创建独立 Docker network、volume、owner、凭证和 9 个已发布工作流。</p></div><span class="section-index">01</span></div>' +
+              '<div class="deploy-section-head"><div><h2>节点配置</h2><p>脚本会部署图片队列与 n8n，并创建独立 Docker network、volume 和 owner；不会导入、修改或发布工作流。</p></div><span class="section-index">01</span></div>' +
               '<div class="field-grid">' +
                 '<div class="field-group"><label for="nodeName">节点名称</label><input class="form-input" id="nodeName" maxlength="32" value="' + escapeHtml(defaults.node_name || 'node2') + '" autocomplete="off"><div class="field-hint">用于 Docker 容器、网络和数据卷命名</div></div>' +
                 '<div class="field-group"><label for="publicDomain">公开域名</label><input class="form-input" id="publicDomain" value="' + escapeHtml(defaults.domain || '') + '" placeholder="n8n-node2.example.com" autocomplete="url"><div class="field-hint">填写 Cloudflare Tunnel 最终绑定的域名</div></div>' +
@@ -345,24 +334,25 @@
               '</div>' +
             '</section>' +
             '<section class="deploy-section">' +
-              '<div class="deploy-section-head secret-head"><div><h2>管理员与模型密钥</h2><p>敏感信息只在当前浏览器内注入下载脚本，不会通过 API 上传或保存在页面缓存。</p></div><label class="secret-switch"><input id="showSecrets" type="checkbox">显示敏感信息</label></div>' +
+              '<div class="deploy-section-head secret-head"><div><h2>管理员与环境密钥</h2><p>这里只配置运行环境。模型凭证不写入安装脚本，部署后由管理员直接在 n8n 中创建。</p></div><label class="secret-switch"><input id="showSecrets" type="checkbox">显示敏感信息</label></div>' +
               '<div class="field-grid">' +
                 '<div class="field-group"><label for="ownerEmail">n8n 管理员邮箱</label><input class="form-input" id="ownerEmail" type="email" autocomplete="off" placeholder="admin@example.com"></div>' +
                 '<div class="field-group"><label for="ownerPassword">n8n 管理员密码 <small>8-64 位，含大写字母和数字</small></label><input class="form-input secret-field" id="ownerPassword" type="password" maxlength="64" autocomplete="new-password"></div>' +
-                '<div class="field-group"><label for="grsaiKey">GRSAI API Key</label><input class="form-input secret-field" id="grsaiKey" type="password" autocomplete="off"></div>' +
-                '<div class="field-group"><label for="deepseekKey">DeepSeek API Key</label><input class="form-input secret-field" id="deepseekKey" type="password" autocomplete="off"></div>' +
-                '<div class="field-group field-span"><label for="backupKey">备用图片 API Key</label><input class="form-input secret-field" id="backupKey" type="password" autocomplete="off"></div>' +
                 '<div class="field-group field-span"><label for="callbackSecret">EWS 回调密钥 <small>自动读取系统配置</small></label><input class="form-input secret-field" id="callbackSecret" type="password" value="' + escapeHtml((systemConfig && systemConfig.callback_secret) || '') + '" autocomplete="off"><div class="field-hint">用于本机图片 API、上传票据和结果回调鉴权</div></div>' +
               '</div>' +
               '<div class="deploy-actions"><button class="btn btn-primary" id="generateInstaller" type="button">生成一键部署脚本</button><span class="form-message" id="formMessage" aria-live="polite"></span></div>' +
-              '<div class="security-note">下载的脚本包含明文密码、模型密钥和回调密钥。部署完成后立即删除该文件，不要提交到仓库或通过聊天工具传输。</div>' +
+              '<div class="security-note">下载的脚本包含明文 owner 密码和回调密钥，不包含 workflow JSON 或模型 API Key。部署完成后立即删除该文件。</div>' +
             '</section>' +
             '<section class="deploy-section">' +
               '<div class="deploy-section-head"><div><h2>执行脚本</h2><p>直接双击下载的 CMD 文件，或在下载目录的 cmd.exe 中执行这一条命令。</p></div><span class="section-index">02</span></div>' +
               '<div class="command-block"><div class="command-head"><span>Windows CMD</span><button class="command-copy" id="copyRunCommand" type="button">复制</button></div><code class="command-code" id="runCommand"></code></div>' +
             '</section>' +
             '<section class="deploy-section">' +
-              '<div class="deploy-section-head"><div><h2>连接 Cloudflare Tunnel</h2><p>先在 Cloudflare 控制台创建 remotely-managed tunnel 并复制 connector token，再执行生成的 Docker 命令。</p></div><span class="section-index">03</span></div>' +
+              '<div class="deploy-section-head"><div><h2>人工迁移工作流</h2><p>环境就绪后登录 n8n，人工导入 9 个 workflow JSON，创建并绑定 GrsaiApp、deepseek 和 EWS Backup Image API 凭证，检查无误后逐个发布。</p></div><span class="section-index">03</span></div>' +
+              '<div class="security-note">安装器不会导入、修改或发布任何工作流，也不会创建或覆盖 n8n credentials。使用外部图片服务时，请同时检查工作流中的图片服务地址。</div>' +
+            '</section>' +
+            '<section class="deploy-section">' +
+              '<div class="deploy-section-head"><div><h2>连接 Cloudflare Tunnel</h2><p>先在 Cloudflare 控制台创建 remotely-managed tunnel 并复制 connector token，再执行生成的 Docker 命令。</p></div><span class="section-index">04</span></div>' +
               '<div class="field-group"><label for="tunnelToken">Tunnel Token <small>不写入安装脚本</small></label><input class="form-input secret-field" id="tunnelToken" type="password" autocomplete="off" placeholder="粘贴 Cloudflare connector token"><div class="field-hint">填写后才能复制连接命令，仅在当前页面内使用</div></div>' +
               '<div class="service-value"><code id="cloudflareService">http://n8n:5678</code><button class="btn btn-sm btn-outline" id="copyService" type="button">复制 Service</button></div>' +
               '<div class="command-block"><div class="command-head"><span>Windows CMD</span><button class="command-copy" id="copyTunnelCommand" type="button">复制</button></div><code class="command-code" id="cloudflareCommand"></code></div>' +
@@ -381,7 +371,7 @@
               '</div>' +
             '</section>' +
             '<section class="deploy-surface">' +
-              '<div class="deploy-section"><div class="deploy-section-head"><div><h2>用户分流地址</h2><p>部署验收后，在系统配置的用户工作流地址中按需替换。</p></div><span class="section-index">04</span></div><div class="webhook-list">' + renderWebhookRows(wiki.webhooks) + '</div></div>' +
+                '<div class="deploy-section"><div class="deploy-section-head"><div><h2>用户分流地址</h2><p>工作流人工迁移并验收后，在系统配置的用户工作流地址中按需替换。</p></div><span class="section-index">05</span></div><div class="webhook-list">' + renderWebhookRows(wiki.webhooks) + '</div></div>' +
             '</section>' +
           '</aside>' +
         '</div>';
