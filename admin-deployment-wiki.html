@@ -169,7 +169,7 @@
         var imageUrl = new URL(values.imageServiceUrl);
         if (imageUrl.protocol !== 'http:' && imageUrl.protocol !== 'https:') throw new Error('invalid protocol');
       } catch (_) { return '请输入可由 n8n 容器访问的 HTTP 或 HTTPS 图片服务地址。'; }
-      if (!values.callbackSecret) return '系统尚未配置 callback_secret，无法部署本机图片服务。';
+      if (!values.callbackSecret) return '所选分组尚未配置回调密钥，无法部署本机图片服务。';
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.ownerEmail)) return '请输入有效的 n8n 管理员邮箱。';
       if (values.ownerPassword.length < 8 || values.ownerPassword.length > 64) return 'n8n 管理员密码必须为 8-64 位。';
       if (!/[A-Z]/.test(values.ownerPassword)) return 'n8n 管理员密码必须包含至少一个大写字母。';
@@ -316,7 +316,7 @@
       }).join('');
     }
 
-    function renderWiki(wiki, systemConfig) {
+    function renderWiki(wiki, groups) {
       wikiData = wiki;
       document.querySelector('.deploy-header h1').textContent = wiki.title || 'n8n 节点环境一键部署';
       document.querySelector('.deploy-header p').textContent = wiki.subtitle || '';
@@ -336,9 +336,10 @@
             '<section class="deploy-section">' +
               '<div class="deploy-section-head secret-head"><div><h2>管理员与环境密钥</h2><p>这里只配置运行环境。模型凭证不写入安装脚本，部署后由管理员直接在 n8n 中创建。</p></div><label class="secret-switch"><input id="showSecrets" type="checkbox">显示敏感信息</label></div>' +
               '<div class="field-grid">' +
+                '<div class="field-group"><label for="deploymentGroup">目标分组</label><select class="form-input" id="deploymentGroup">' + groups.map(function (group) { return '<option value="' + escapeHtml(group.id) + '">' + escapeHtml(group.name) + '</option>'; }).join('') + '</select><div class="field-hint">脚本使用该分组的回调与 R2 回传密钥</div></div>' +
                 '<div class="field-group"><label for="ownerEmail">n8n 管理员邮箱</label><input class="form-input" id="ownerEmail" type="email" autocomplete="off" placeholder="admin@example.com"></div>' +
                 '<div class="field-group"><label for="ownerPassword">n8n 管理员密码 <small>8-64 位，含大写字母和数字</small></label><input class="form-input secret-field" id="ownerPassword" type="password" maxlength="64" autocomplete="new-password"></div>' +
-                '<div class="field-group field-span"><label for="callbackSecret">EWS 回调密钥 <small>自动读取系统配置</small></label><input class="form-input secret-field" id="callbackSecret" type="password" value="' + escapeHtml((systemConfig && systemConfig.callback_secret) || '') + '" autocomplete="off"><div class="field-hint">用于本机图片 API、上传票据和结果回调鉴权</div></div>' +
+                '<div class="field-group field-span"><label for="callbackSecret">EWS 回调密钥 <small>自动读取所选分组</small></label><input class="form-input secret-field" id="callbackSecret" type="password" value="' + escapeHtml(groups[0]?.callback_secret || '') + '" autocomplete="off"><div class="field-hint">用于本机图片 API、上传票据和结果回调鉴权</div></div>' +
               '</div>' +
               '<div class="deploy-actions"><button class="btn btn-primary" id="generateInstaller" type="button">生成一键部署脚本</button><span class="form-message" id="formMessage" aria-live="polite"></span></div>' +
               '<div class="security-note">下载的脚本包含明文 owner 密码和回调密钥，不包含 workflow JSON 或模型 API Key。部署完成后立即删除该文件。</div>' +
@@ -381,6 +382,10 @@
       });
       document.getElementById('showSecrets').addEventListener('change', function (event) { toggleSecrets(event.target.checked); });
       document.getElementById('generateInstaller').addEventListener('click', generateInstaller);
+      document.getElementById('deploymentGroup').addEventListener('change', function () {
+        var group = groups.find(function (item) { return item.id === formValue('deploymentGroup'); });
+        document.getElementById('callbackSecret').value = (group && group.callback_secret) || '';
+      });
       document.getElementById('copyRunCommand').addEventListener('click', function () { copyText(document.getElementById('runCommand').textContent, '执行命令已复制'); });
       document.getElementById('copyService').addEventListener('click', function () { copyText('http://n8n:5678', 'Service 地址已复制'); });
       document.getElementById('copyTunnelCommand').addEventListener('click', function () {
@@ -401,12 +406,12 @@
       if (localStorage.getItem('ews_role') !== 'admin') { location.replace('/'); return; }
       refreshNavCredits();
       try {
-        var results = await requestWithTimeout(Promise.all([API.getDistributedN8nWiki(), API.getConfig()]));
+        var results = await requestWithTimeout(Promise.all([API.getDistributedN8nWiki(), API.getGroups()]));
         var result = results[0];
-        var configResult = results[1];
+        var groupResult = results[1];
         if (!result.success || !result.wiki) throw new Error(result.error || '部署资料加载失败');
-        if (!configResult.success || !configResult.config) throw new Error(configResult.error || '系统配置加载失败');
-        renderWiki(result.wiki, configResult.config);
+        if (!groupResult.success || !Array.isArray(groupResult.groups) || !groupResult.groups.length) throw new Error(groupResult.error || '分组配置加载失败');
+        renderWiki(result.wiki, groupResult.groups);
       } catch (error) {
         document.getElementById('wikiMount').innerHTML = '<div class="deploy-error">' + escapeHtml(error.message || '部署资料加载失败，请重新登录后再试。') + '</div>';
       }

@@ -83,16 +83,16 @@ const EP = [
   {m:'POST',p:'/api/callback',d:'n8n回调写入Cloudflare Queue(secret验证)',a:false},
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)',upload_id:'string(可选，8~64位幂等ID)',client_processed:'1(浏览器已处理SKU图时使用)'}},
-  {m:'GET',p:'/api/users',d:'用户列表(admin)',a:true},
-  {m:'POST',p:'/api/users',d:'创建用户(admin)',a:true,b:{username:'string',password:'string',role:'admin|user',platform_access:'allow|jst|shopee',group_id:'string(默认default)',image_concurrency_limit:'integer(1~20，默认20)'}},
-  {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用用户(admin)',a:true},
-  {m:'PUT',p:'/api/users/:id/reset-password',d:'重置用户密码为 user123(admin)',a:true},
-  {m:'DELETE',p:'/api/users/:id',d:'删除用户(admin)',a:true},
-  {m:'PUT',p:'/api/users/:id/platform',d:'设置用户平台能力(admin)',a:true,b:{platform_access:'allow|jst|shopee'}},
-  {m:'PUT',p:'/api/users/:id/concurrency',d:'设置用户图片并发上限(admin)',a:true,b:{image_concurrency_limit:'integer(1~20)'}},
-  {m:'PUT',p:'/api/users/:id/group',d:'设置用户所属分组(admin，包含管理员账号)',a:true,b:{group_id:'string'}},
-  {m:'GET',p:'/api/users/:id/webhook',d:'读取用户webhook(admin)',a:true},
-  {m:'PUT',p:'/api/users/:id/webhook',d:'设置用户webhook(admin)',a:true},
+  {m:'GET',p:'/api/users',d:'用户列表(admin 全部；group_admin 仅本组)',a:true},
+  {m:'POST',p:'/api/users',d:'创建用户(admin 或 group_admin)',a:true,b:{username:'string',password:'string',role:'group_admin|user',platform_access:'allow|jst|shopee',group_id:'string(仅admin可选)',image_concurrency_limit:'integer(1~20，默认20)'}},
+  {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用可管理用户',a:true},
+  {m:'PUT',p:'/api/users/:id/reset-password',d:'重置可管理用户密码为 user123',a:true},
+  {m:'DELETE',p:'/api/users/:id',d:'删除可管理用户',a:true},
+  {m:'PUT',p:'/api/users/:id/platform',d:'设置用户平台能力，不得超过管理员自身能力',a:true,b:{platform_access:'allow|jst|shopee'}},
+  {m:'PUT',p:'/api/users/:id/concurrency',d:'设置可管理用户图片并发上限',a:true,b:{image_concurrency_limit:'integer(1~20)'}},
+  {m:'PUT',p:'/api/users/:id/group',d:'设置用户所属分组，仅默认admin可用',a:true,b:{group_id:'string'}},
+  {m:'GET',p:'/api/users/:id/webhook',d:'读取可管理用户webhook',a:true},
+  {m:'PUT',p:'/api/users/:id/webhook',d:'设置可管理用户webhook',a:true},
   {m:'GET',p:'/api/users/me/credits',d:'获取我的算力',a:true},
   {m:'PUT',p:'/api/users/:id/credits',d:'设置算力(admin)',a:true,b:{action:'set|add|subtract',amount:'number'}},
 ];
@@ -418,7 +418,8 @@ ${eps(['POST /api/upload'])}
 
 <h2 id="用户管理">用户管理</h2>
 ${eps(['GET /api/groups','POST /api/groups','PUT /api/groups/:id','PUT /api/groups/:id/templates','GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/group','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','PUT /api/users/:id/concurrency','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
-<div class="note"><strong>分组权限：</strong>每个用户属于一个分组，模板可关联多个分组。普通用户只能读取所属分组的已启用 Shopee 模板；管理员读取全部模板。模板上传成功或确认与当前版本重复时，系统自动关联上传者当前分组。分组状态为 <code>disabled</code> 时，组内普通用户的登录和现有 Token 均失效，管理员不受此限制。</div>
+<div class="note"><strong>分组权限：</strong>默认 <code>admin</code> 保留全部权限。<code>group_admin</code> 只能查看和管理本组内非默认管理员用户，不能创建或切换分组、不能接触默认 <code>admin</code>、不能授予超出自身的 JST/Shopee 平台能力，也不能访问系统配置、全局模板管理、部署 Wiki 和更新日志。普通用户只能读取所属分组的已启用 Shopee 模板；分组状态为 <code>disabled</code> 时，组内普通用户和受限管理员的登录与现有 Token 均失效。</div>
+<div class="note"><strong>分组密钥：</strong><code>callback_secret</code> 存储于 <code>ews_groups</code>，由默认 <code>admin</code> 在系统配置的分组管理中维护。任务固化所属 <code>group_id</code>，n8n 回调与图片服务申请 R2 预签名上传票据使用同一分组密钥校验；R2 的 S3 凭据仍是 Worker 环境变量，不下沉到分组。</div>
 <div class="note"><strong>用户工作流配置：</strong>JSON 格式 <code>{"jst":{"n8n_title_enabled":false,...}, "shopee":{...}}</code>。用户级非空 Webhook 覆盖全局地址，空字符串按继承处理；<code>n8n_title_enabled</code> 与 <code>n8n_sku_image_enabled</code> 可传布尔值，省略字段表示继承平台全局开关。系统按任务所有者应用配置。</div>
 
 <h2 id="标题类">商品元数据 Webhook 推送体</h2>
@@ -461,9 +462,9 @@ DELETE /api/shopee/template-profiles/:id   管理员软删除；历史任务仍�
 <h2 id="表结构">表结构</h2>
 <h4>共享层 (ews_)</h4>
 <pre>ews_config      (key, value, platform)  - 分平台配置
-ews_groups      (id, name, status)  - 用户与模板权限分组
+ews_groups      (id, name, status, callback_secret)  - 用户与模板权限分组
 ews_users       (id, username, password_hash, role, group_id, credits, webhook_config)
-ews_tasks       (id, platform, name, status, user_id)  - 统一任务索引
+ews_tasks       (id, platform, name, status, user_id, group_id)  - 统一任务索引
 ews_callback_queue - 旧版D1回调队列（仅排空历史记录）
 ews_image_queue    - 旧版D1图片队列（仅排空历史记录）
 ews_shopee_template_profiles   - 全局模板档案，按 market + store_context_id 唯一

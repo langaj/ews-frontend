@@ -1,6 +1,11 @@
 // EWS - API 客户端
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8787'
+const IS_LOCAL_FRONTEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const LOCAL_API_OVERRIDE = new URLSearchParams(window.location.search).get('api');
+if (IS_LOCAL_FRONTEND && /^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/.test(LOCAL_API_OVERRIDE || '')) {
+  sessionStorage.setItem('ews_local_api', LOCAL_API_OVERRIDE);
+}
+const API_BASE = IS_LOCAL_FRONTEND
+  ? (sessionStorage.getItem('ews_local_api') || 'http://localhost:8787')
   : 'https://ewsz.langaj.cc';
 const SKU_UPLOAD_MAX_BYTES = 2_000_000;
 const SKU_UPLOAD_TARGET_BYTES = 1_800_000;
@@ -221,6 +226,8 @@ async function requireAuth() {
   localStorage.setItem('ews_role', res.role || 'user');
   localStorage.setItem('ews_username', res.username || '');
   localStorage.setItem('ews_platform_access', res.platform_access || 'allow');
+  localStorage.setItem('ews_group_id', res.group_id || '');
+  localStorage.setItem('ews_group_name', res.group_name || '');
   if (window.renderEwsNav) window.renderEwsNav();
   return true;
 }
@@ -271,7 +278,7 @@ async function handleLogin(e) {
   const res = await API.login(password, username);
   if (res.success) {
     API._setToken(res.token);
-    if (res.user) { localStorage.setItem('ews_username', res.user.username || ''); localStorage.setItem('ews_role', res.user.role || 'user'); localStorage.setItem('ews_platform_access', res.user.platform_access || 'allow'); }
+    if (res.user) { localStorage.setItem('ews_username', res.user.username || ''); localStorage.setItem('ews_role', res.user.role || 'user'); localStorage.setItem('ews_platform_access', res.user.platform_access || 'allow'); localStorage.setItem('ews_group_id', res.user.group_id || ''); localStorage.setItem('ews_group_name', res.user.group_name || ''); }
     hideLoginModal();
     location.reload();
   } else {
@@ -287,6 +294,8 @@ function handleLogout() {
   localStorage.removeItem('ews_role');
   localStorage.removeItem('ews_username');
   localStorage.removeItem('ews_platform_access');
+  localStorage.removeItem('ews_group_id');
+  localStorage.removeItem('ews_group_name');
   location.reload();
 }
 

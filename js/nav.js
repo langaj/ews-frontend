@@ -5,6 +5,7 @@
     var platformAccess = localStorage.getItem('ews_platform_access') || 'allow';
     var isLoggedIn = !!token;
     var isAdmin = role === 'admin';
+    var isUserManager = isAdmin || role === 'group_admin';
     var cur = window.location.pathname;
 
     function canUse(platform) {
@@ -17,6 +18,7 @@
     if (canUse('shopee')) allPages.push({ p: '/create-shopee.html', l: 'Shopee 任务' });
     allPages.push({ p: '/guide.html', l: '使用说明' });
     if (isAdmin) allPages.push({ p: '/shopee-templates.html', l: '模板管理' });
+    if (isUserManager) allPages.push({ p: '/user-management.html', l: '用户管理' });
     if (isAdmin) allPages.push({ p: '/config.html', l: '系统配置' });
     if (isAdmin) allPages.push({ p: '/admin-deployment-wiki.html', l: '部署 Wiki' });
     if (isAdmin) allPages.push({ p: '/update_log.html', l: '更新日志' });
