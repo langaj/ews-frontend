@@ -61,7 +61,7 @@ const EP = [
   {m:'GET',p:'/api/ping',d:'健康检查',a:false},
   {m:'POST',p:'/api/auth/login',d:'登录',a:false,b:{password:'string',username:'string(可选)'}},
   {m:'GET',p:'/api/auth/verify',d:'验证Token',a:false},
-  {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6字符)'}},
+  {m:'PUT',p:'/api/auth/password',d:'修改密码',a:true,b:{old_password:'string',new_password:'string(≥6位，仅A-Z/a-z/0-9/._@-)'}},
   {m:'GET',p:'/api/config',d:'获取配置(?platform=jst|shopee，仅 admin)',a:true},
   {m:'PUT',p:'/api/config',d:'更新配置(_platform=jst|shopee，仅 admin)',a:true,b:{_platform:'jst|shopee|空字符串',r2_public_url:'string(通用)',callback_secret:'string(通用)',n8n_title_webhook:'string(平台商品元数据)',n8n_title_enabled:'boolean',n8n_main_webhook:'string',n8n_sub_image_webhook:'string',n8n_detail_webhook:'string',n8n_sku_image_webhook:'string',n8n_sku_image_enabled:'boolean',push_primary_images_only:'boolean(通用总开关)',push_plan_timeout_minutes:'integer(20~1440，默认20分钟)'}},
   {m:'GET',p:'/api/groups',d:'分组列表与用户/模板计数(admin)',a:true},
@@ -84,13 +84,13 @@ const EP = [
   {m:'POST',p:'/api/internal/r2-upload-ticket',d:'图片服务获取单对象R2 PUT票据(callback_secret验证)',a:false},
   {m:'POST',p:'/api/upload',d:'上传文件到R2；仅任务所有者或管理员可操作；支持跨域预检',a:true,b:{file:'File',task_id:'string',folder:'string(可选，SKU成品图使用sku-upload)',upload_id:'string(可选，8~64位幂等ID)',client_processed:'1(浏览器已处理SKU图时使用)'}},
   {m:'GET',p:'/api/users',d:'用户列表(admin 全部；group_admin 仅本组)',a:true},
-  {m:'POST',p:'/api/users',d:'创建用户(admin 或 group_admin)',a:true,b:{username:'string',password:'string',role:'group_admin|user',platform_access:'allow|jst|shopee',group_id:'string(仅admin可选)',image_concurrency_limit:'integer(1~20，默认20)'}},
+  {m:'POST',p:'/api/users',d:'创建用户(admin 或 group_admin)',a:true,b:{username:'string(1~16位，仅A-Z/a-z/0-9)',password:'string(≥6位，仅A-Z/a-z/0-9/._@-)',role:'group_admin|user',platform_access:'allow|jst|shopee',group_id:'string(仅admin可选)',image_concurrency_limit:'integer(1~20，默认20)'}},
   {m:'PUT',p:'/api/users/:id/toggle',d:'启用/禁用可管理用户',a:true},
   {m:'PUT',p:'/api/users/:id/reset-password',d:'重置可管理用户密码为 user123',a:true},
   {m:'DELETE',p:'/api/users/:id',d:'删除可管理用户',a:true},
   {m:'PUT',p:'/api/users/:id/platform',d:'设置用户平台能力，不得超过管理员自身能力',a:true,b:{platform_access:'allow|jst|shopee'}},
   {m:'PUT',p:'/api/users/:id/concurrency',d:'设置可管理用户图片并发上限',a:true,b:{image_concurrency_limit:'integer(1~20)'}},
-  {m:'PUT',p:'/api/users/:id/group',d:'设置用户所属分组，仅默认admin可用',a:true,b:{group_id:'string'}},
+  {m:'PUT',p:'/api/users/:id/group',d:'设置用户所属分组，仅默认admin可用；历史任务保留创建时分组',a:true,b:{group_id:'string'}},
   {m:'GET',p:'/api/users/:id/webhook',d:'读取可管理用户webhook',a:true},
   {m:'PUT',p:'/api/users/:id/webhook',d:'设置可管理用户webhook',a:true},
   {m:'GET',p:'/api/users/me/credits',d:'获取我的算力',a:true},
@@ -419,7 +419,7 @@ ${eps(['POST /api/upload'])}
 <h2 id="用户管理">用户管理</h2>
 ${eps(['GET /api/groups','POST /api/groups','PUT /api/groups/:id','PUT /api/groups/:id/templates','GET /api/users','POST /api/users','PUT /api/users/:id/toggle','PUT /api/users/:id/group','PUT /api/users/:id/reset-password','DELETE /api/users/:id','PUT /api/users/:id/platform','PUT /api/users/:id/concurrency','GET /api/users/:id/webhook','PUT /api/users/:id/webhook','GET /api/users/me/credits','PUT /api/users/:id/credits'])}
 <div class="note"><strong>分组权限：</strong>默认 <code>admin</code> 保留全部权限。分组管理员（内部角色值 <code>group_admin</code>）可查看本组全部任务，并管理本组内非默认管理员用户；不能控制其他用户任务、创建或切换分组、接触默认 <code>admin</code>、授予超出自身的 JST/Shopee 平台能力，也不能访问系统配置、全局模板管理、部署 Wiki 和更新日志。普通用户只能读取所属分组的已启用 Shopee 模板；分组状态为 <code>disabled</code> 时，组内普通用户和分组管理员的登录与现有 Token 均失效。</div>
-<div class="note"><strong>分组密钥：</strong><code>callback_secret</code> 存储于 <code>ews_groups</code>，由默认 <code>admin</code> 在系统配置的分组管理中维护。任务固化所属 <code>group_id</code>，n8n 回调与图片服务申请 R2 预签名上传票据使用同一分组密钥校验；R2 的 S3 凭据仍是 Worker 环境变量，不下沉到分组。</div>
+<div class="note"><strong>分组密钥：</strong><code>callback_secret</code> 存储于 <code>ews_groups</code>，由默认 <code>admin</code> 在系统配置的分组管理中维护。任务归属于创建用户，并保留创建时的 <code>group_id</code>；切换用户分组不会删除或迁移历史任务，以保证在途 n8n 回调和 R2 预签名上传仍使用原分组密钥。R2 的 S3 凭据仍是 Worker 环境变量，不下沉到分组。</div>
 <div class="note"><strong>工作流继承：</strong>优先级为“用户 &gt; 分组 &gt; 全局”。用户和分组配置均使用 <code>{"jst":{"n8n_title_enabled":false,...}, "shopee":{...}}</code> JSON 结构；非空 Webhook 覆盖上一级，空字符串按继承处理；<code>n8n_title_enabled</code> 与 <code>n8n_sku_image_enabled</code> 可传布尔值，省略字段表示继承上一级开关。系统按任务所有者及任务固化的 <code>group_id</code> 计算有效配置。</div>
 
 <h2 id="标题类">商品元数据 Webhook 推送体</h2>
