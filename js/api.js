@@ -97,11 +97,14 @@ const API = {
   async createGroup(name) { return this._post('/api/groups', { name }); },
   async updateGroup(id, data) { return this._put(`/api/groups/${id}`, data); },
   async updateGroupTemplates(id, templateProfileIds) { return this._put(`/api/groups/${id}/templates`, { template_profile_ids: templateProfileIds || [] }); },
-  async getTasks(platform, page, limit) {
+  async getTasks(platform, page, limit, filters) {
     const params = new URLSearchParams();
     if (platform) params.set('platform', platform);
     if (page) params.set('page', page);
     if (limit) params.set('limit', limit);
+    if (filters?.userId) params.set('user_id', filters.userId);
+    if (filters?.taskOrSubTaskId) params.set('task_or_subtask_id', filters.taskOrSubTaskId);
+    if (filters?.name) params.set('name', filters.name);
     const query = params.toString();
     return this._get('/api/tasks' + (query ? '?' + query : ''));
   },
