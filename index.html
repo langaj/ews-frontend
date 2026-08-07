@@ -4,14 +4,14 @@
 <link rel="stylesheet" href="/css/style.css">
 <style>
 .task-workspace{border:1px solid var(--gray-200);border-radius:8px;background:#fff;overflow:hidden}.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--gray-200)}.task-filter{display:flex;gap:3px;padding:3px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.task-filter button{min-height:30px;padding:5px 10px;border:0;border-radius:5px;background:transparent;color:var(--gray-500);cursor:pointer;font-size:12px;font-weight:650}.task-filter button.active{background:#fff;color:var(--gray-900);box-shadow:0 1px 2px rgba(16,24,40,.08)}.task-toolbar-meta{display:flex;align-items:center;gap:14px}.page-size-control{display:flex;align-items:center;gap:6px;color:var(--gray-500);font-size:11px;white-space:nowrap}.page-size-control select{height:30px;padding:0 26px 0 9px;border:1px solid var(--gray-200);border-radius:6px;background:#fff;color:var(--gray-700);font:inherit;cursor:pointer}.page-size-control select:disabled{cursor:wait;opacity:.6}.task-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--gray-200)}.task-metric{padding:15px 18px;border-right:1px solid var(--gray-200)}.task-metric:last-child{border-right:0}.task-metric span{display:block;color:var(--gray-500);font-size:11px}.task-metric strong{display:block;margin-top:3px;color:var(--gray-900);font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}.task-content table{min-width:920px}.task-content table.admin-task-table{min-width:1040px}.task-name{color:var(--gray-900);font-weight:650}.platform-tag{margin-right:0}.tag-jst{background:#edf5ff;color:#205fa8}.tag-shopee{background:#fff5e8;color:#9a5805}.task-actions{display:flex;gap:5px;flex-wrap:wrap}.muted{color:var(--gray-500);font-size:11px}.btn-warning{background:#b66a08;color:#fff}.btn-warning-outline{background:#fff;border-color:#e4bf8a;color:#9a5805}
-.task-query-toolbar{padding:12px 16px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}.task-query-form{display:grid;grid-template-columns:minmax(150px,.8fr) minmax(210px,1.2fr) minmax(210px,1.2fr) auto;gap:10px;align-items:end}.task-query-form.without-user-filter{grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) auto}.task-query-field{display:flex;min-width:0;flex-direction:column;gap:5px}.task-query-field[hidden]{display:none}.task-query-field span{color:var(--gray-600);font-size:11px;font-weight:650}.task-query-field .form-input{width:100%;height:36px;min-width:0}.task-query-actions{display:flex;gap:7px}.task-query-actions .btn{height:36px;white-space:nowrap}
+.task-query-toolbar{padding:12px 16px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)}.task-query-form{display:grid;grid-template-columns:minmax(135px,.7fr) minmax(175px,.9fr) minmax(190px,1fr) minmax(190px,1fr) auto;gap:10px;align-items:end}.task-query-form.without-group-filter{grid-template-columns:minmax(175px,.9fr) minmax(210px,1fr) minmax(210px,1fr) auto}.task-query-form.without-group-filter.without-user-filter{grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) auto}.task-query-field{display:flex;min-width:0;flex-direction:column;gap:5px}.task-query-field[hidden]{display:none}.task-query-field>span{color:var(--gray-600);font-size:11px;font-weight:650}.task-query-field .form-input{width:100%;height:36px;min-width:0}.task-user-picker{position:relative}.task-user-picker summary{display:flex;height:36px;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;border:1px solid var(--gray-300);border-radius:6px;background:#fff;color:var(--gray-800);font-size:13px;cursor:pointer;list-style:none}.task-user-picker summary::-webkit-details-marker{display:none}.task-user-picker summary::after{width:6px;height:6px;flex:0 0 auto;border-right:1.5px solid var(--gray-500);border-bottom:1.5px solid var(--gray-500);content:"";transform:translateY(-2px) rotate(45deg)}.task-user-picker[open] summary::after{transform:translateY(2px) rotate(225deg)}.task-user-picker summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-user-menu{position:absolute;z-index:20;top:41px;right:0;left:0;padding:7px;border:1px solid var(--gray-200);border-radius:7px;background:#fff;box-shadow:0 8px 20px rgba(16,24,40,.14)}.task-user-options{max-height:220px;overflow:auto}.task-user-option{display:flex;min-height:32px;align-items:center;gap:8px;padding:5px 7px;border-radius:5px;color:var(--gray-700);font-size:12px;cursor:pointer}.task-user-option:hover{background:var(--gray-50)}.task-user-option input{width:15px;height:15px;margin:0;accent-color:var(--primary)}.task-user-empty{display:block;padding:8px;color:var(--gray-500);font-size:12px}.task-user-clear{width:100%;margin-top:5px;padding:7px;border:0;border-top:1px solid var(--gray-100);background:#fff;color:var(--gray-600);font-size:11px;cursor:pointer;text-align:left}.task-user-clear:hover{color:var(--gray-900)}.task-query-actions{display:flex;gap:7px}.task-query-actions .btn{height:36px;white-space:nowrap}
 .btn.action-loading{cursor:wait;pointer-events:none;opacity:.72}.btn.action-loading::after{content:"";width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:actionSpin .7s linear infinite}.confirm-message{color:var(--gray-700);font-size:14px;line-height:1.7}.confirm-subtle{color:var(--gray-500);font-size:12px;margin-top:10px}.confirm-modal .modal-footer .btn{min-width:76px;justify-content:center}@keyframes actionSpin{to{transform:rotate(360deg)}}
 .task-detail-modal{width:min(100%,980px);max-width:980px}.detail-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--gray-200);margin-bottom:18px}.detail-hero h3{margin-top:7px;color:var(--gray-900);font-size:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;border:1px solid var(--gray-200);border-radius:8px;background:var(--gray-200);overflow:hidden;margin-bottom:20px}.detail-grid .detail-section{min-height:76px;margin:0;padding:13px;background:#fff}.template-switcher{padding:13px 14px;margin:-4px 0 20px;border:1px solid var(--gray-200);border-radius:7px;background:var(--gray-50)}.template-switcher .form-label{margin-bottom:7px}.template-switch-controls{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:stretch}.template-switch-controls .form-select,.template-switch-controls .btn{height:42px;min-height:42px}.template-switch-controls .btn{width:120px;padding-right:12px;padding-left:12px;overflow:hidden}.template-switcher .form-hint{margin-top:6px}.plan-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.plan-actions{display:flex;gap:5px;white-space:nowrap}.plan-table td:nth-child(5){min-width:220px;white-space:normal;word-break:break-word}
 .detail-loading-body{display:grid;min-height:320px;place-items:center}.detail-loading-state{display:flex;align-items:center;flex-direction:column;gap:10px;color:var(--gray-500);font-size:13px;text-align:center}.detail-loading-state .spinner{margin:0 0 4px}.detail-loading-state strong{color:var(--gray-800);font-size:15px}
 .image-preview-overlay{z-index:650;padding:24px;background:rgba(16,24,40,.76)}.image-preview-modal{display:grid;width:min(760px,calc(100vw - 48px));height:min(82dvh,760px);max-height:none;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.image-preview-stage{position:relative;display:grid;min-height:280px;padding:24px;place-items:center;overflow:hidden;background:var(--gray-100);cursor:zoom-out}.image-preview-stage img{position:absolute;inset:24px;display:block;width:auto;height:auto;max-width:min(calc(100% - 48px),640px);max-height:calc(100% - 48px);margin:auto;object-fit:contain;opacity:0;transition:opacity var(--transition);cursor:default}.image-preview-stage img.is-loaded{opacity:1}.image-preview-state{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-600);font-size:13px}.image-preview-error{display:none;max-width:420px;color:var(--danger);text-align:center}.image-preview-stage.has-error .image-preview-loading{display:none}.image-preview-stage.has-error .image-preview-error{display:block}
-@media(max-width:900px){.task-query-form,.task-query-form.without-user-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.task-query-actions{align-self:end}}
+@media(max-width:1120px){.task-query-form,.task-query-form.without-group-filter,.task-query-form.without-group-filter.without-user-filter{grid-template-columns:repeat(2,minmax(0,1fr))}.task-query-actions{align-self:end}}
 @media(max-width:760px){.task-toolbar{align-items:flex-start;flex-direction:column}.task-toolbar-meta{width:100%;justify-content:space-between}.task-overview{grid-template-columns:repeat(2,1fr)}.task-metric:nth-child(2){border-right:0}.task-metric:nth-child(-n+2){border-bottom:1px solid var(--gray-200)}.detail-grid{grid-template-columns:repeat(2,1fr)}.template-switch-controls{grid-template-columns:1fr}.template-switch-controls .btn{width:100%}}
-@media(max-width:640px){.task-query-form,.task-query-form.without-user-filter{grid-template-columns:1fr}.task-query-actions .btn{flex:1}.image-preview-overlay{align-items:center;padding:10px}.image-preview-modal{width:100%;height:82dvh;border-radius:8px}.image-preview-stage{padding:12px}.image-preview-stage img{inset:12px;max-width:calc(100% - 24px);max-height:calc(100% - 24px)}}
+@media(max-width:640px){.task-query-form,.task-query-form.without-group-filter,.task-query-form.without-group-filter.without-user-filter{grid-template-columns:1fr}.task-user-menu{position:static;margin-top:4px}.task-query-actions .btn{flex:1}.image-preview-overlay{align-items:center;padding:10px}.image-preview-modal{width:100%;height:82dvh;border-radius:8px}.image-preview-stage{padding:12px}.image-preview-stage img{inset:12px;max-width:calc(100% - 24px);max-height:calc(100% - 24px)}}
 </style>
 </head><body>
 <script src="/js/nav.js"></script>
@@ -22,7 +22,8 @@
 <section class="task-workspace">
   <div class="task-toolbar"><div class="task-filter" id="taskFilter"><button type="button" class="active" onclick="setTaskFilter('',this)">全部</button><button type="button" onclick="setTaskFilter('jst',this)">聚水潭</button><button type="button" onclick="setTaskFilter('shopee',this)">Shopee</button></div><div class="task-toolbar-meta"><span class="muted" id="taskRange">正在读取任务</span><label class="page-size-control" for="taskPageSize">每页<select id="taskPageSize" onchange="setTaskPageSize(this.value,this)"><option value="10">10 条</option><option value="20">20 条</option></select></label></div></div>
   <div class="task-query-toolbar"><form class="task-query-form" id="taskQueryForm" onsubmit="applyTaskFilters(event)">
-    <label class="task-query-field" id="taskUserFilterField" hidden><span>创建用户</span><select class="form-input" id="taskUserFilter" onchange="applyTaskFilters()"><option value="">全部用户</option></select></label>
+    <label class="task-query-field" id="taskGroupFilterField" hidden><span>任务分组</span><select class="form-input" id="taskGroupFilter" onchange="changeTaskGroupFilter()"><option value="">全部分组</option></select></label>
+    <div class="task-query-field" id="taskUserFilterField" hidden><span>创建用户</span><details class="task-user-picker" id="taskUserFilter"><summary><span id="taskUserFilterLabel">全部用户</span></summary><div class="task-user-menu"><div class="task-user-options" id="taskUserOptions"></div><button class="task-user-clear" type="button" onclick="clearTaskUserSelection()">清除选择</button></div></details></div>
     <label class="task-query-field"><span>任务 / 子任务 ID</span><input class="form-input" id="taskIdSearch" type="search" autocomplete="off" placeholder="输入完整 ID"></label>
     <label class="task-query-field"><span>任务名称</span><input class="form-input" id="taskNameSearch" type="search" autocomplete="off" placeholder="输入名称关键词"></label>
     <div class="task-query-actions"><button class="btn btn-primary" type="submit">查询</button><button class="btn btn-outline" type="button" onclick="resetTaskFilters()">重置</button></div>
@@ -51,7 +52,7 @@
   </div>
 </div>
 
-<script src="/js/api.js?v=20260807-1"></script>
+<script src="/js/api.js?v=20260807-2"></script>
 <script>
 var ACTION_TIMEOUT_MS=120000;
 var activeActionLocks={};
@@ -61,7 +62,8 @@ var taskPage=1;
 var savedTaskPageSize=parseInt(localStorage.getItem('ews_task_page_size'));
 var taskPageSize=savedTaskPageSize===20?20:10;
 var taskPlatformFilter='';
-var taskUserFilter='';
+var taskGroupFilter='';
+var taskUserFilters=[];
 var taskIdSearch='';
 var taskNameSearch='';
 document.addEventListener('DOMContentLoaded',async()=>{syncTaskPageSizeControl();if(!await requireAuth())return;refreshNavCredits();renderCreateActions();configureTaskFilterScope();await refreshTasks()});
@@ -95,29 +97,63 @@ function setTaskFilter(platform,button){
 }
 function configureTaskFilterScope(){
   var role=localStorage.getItem('ews_role')||'';
-  var hidden=role!=='admin'&&role!=='group_admin';
-  document.getElementById('taskUserFilterField').hidden=hidden;
-  document.getElementById('taskQueryForm').classList.toggle('without-user-filter',hidden);
+  var groupHidden=role!=='admin';
+  var userHidden=role!=='admin'&&role!=='group_admin';
+  document.getElementById('taskGroupFilterField').hidden=groupHidden;
+  document.getElementById('taskUserFilterField').hidden=userHidden;
+  document.getElementById('taskQueryForm').classList.toggle('without-group-filter',groupHidden);
+  document.getElementById('taskQueryForm').classList.toggle('without-user-filter',userHidden);
+}
+function syncTaskGroupOptions(taskGroups){
+  var select=document.getElementById('taskGroupFilter');
+  if(!select||document.getElementById('taskGroupFilterField').hidden)return;
+  var groups=(taskGroups||[]).filter(function(group){return group&&group.id});
+  select.innerHTML='<option value="">全部分组</option>'+groups.map(function(group){return '<option value="'+escapeHtml(group.id)+'">'+escapeHtml(group.name||group.id)+'</option>'}).join('');
+  if(taskGroupFilter&&groups.some(function(group){return group.id===taskGroupFilter}))select.value=taskGroupFilter;
+  else{taskGroupFilter='';select.value=''}
 }
 function syncTaskUserOptions(taskUsers){
-  var select=document.getElementById('taskUserFilter');
-  if(!select||document.getElementById('taskUserFilterField').hidden)return;
-  var users=Array.from(new Set((taskUsers||[]).filter(Boolean))).sort(function(a,b){return a.localeCompare(b)});
-  select.innerHTML='<option value="">全部用户</option>'+users.map(function(userId){return '<option value="'+escapeHtml(userId)+'">'+escapeHtml(userId)+'</option>'}).join('');
-  if(taskUserFilter&&users.includes(taskUserFilter))select.value=taskUserFilter;
-  else{taskUserFilter='';select.value=''}
+  var options=document.getElementById('taskUserOptions');
+  if(!options||document.getElementById('taskUserFilterField').hidden)return;
+  var users=Array.from(new Set((taskUsers||[]).filter(Boolean).map(String))).sort(function(a,b){return a.localeCompare(b)});
+  taskUserFilters=taskUserFilters.filter(function(userId){return users.includes(userId)});
+  options.innerHTML=users.length?users.map(function(userId){return '<label class="task-user-option"><input type="checkbox" value="'+escapeHtml(userId)+'" '+(taskUserFilters.includes(userId)?'checked':'')+' onchange="syncTaskUserSelection()"><span>'+escapeHtml(userId)+'</span></label>'}).join(''):'<span class="task-user-empty">当前分组暂无任务用户</span>';
+  updateTaskUserFilterLabel();
+}
+function syncTaskUserSelection(){
+  taskUserFilters=Array.from(document.querySelectorAll('#taskUserOptions input:checked')).map(function(input){return input.value});
+  updateTaskUserFilterLabel();
+}
+function updateTaskUserFilterLabel(){
+  var label=document.getElementById('taskUserFilterLabel');
+  if(!label)return;
+  label.textContent=taskUserFilters.length===0?'全部用户':taskUserFilters.length===1?taskUserFilters[0]:'已选 '+taskUserFilters.length+' 个用户';
+}
+function clearTaskUserSelection(){
+  taskUserFilters=[];
+  document.querySelectorAll('#taskUserOptions input:checked').forEach(function(input){input.checked=false});
+  updateTaskUserFilterLabel();
+}
+async function changeTaskGroupFilter(){
+  taskGroupFilter=document.getElementById('taskGroupFilter').value;
+  clearTaskUserSelection();taskPage=1;
+  document.getElementById('taskUserFilter').open=false;
+  await refreshTasks();
 }
 async function applyTaskFilters(event){
   if(event)event.preventDefault();
-  taskUserFilter=document.getElementById('taskUserFilterField').hidden?'':document.getElementById('taskUserFilter').value;
+  taskGroupFilter=document.getElementById('taskGroupFilterField').hidden?'':document.getElementById('taskGroupFilter').value;
+  if(document.getElementById('taskUserFilterField').hidden)taskUserFilters=[];else syncTaskUserSelection();
   taskIdSearch=document.getElementById('taskIdSearch').value.trim();
   taskNameSearch=document.getElementById('taskNameSearch').value.trim();
   taskPage=1;
+  document.getElementById('taskUserFilter').open=false;
   await refreshTasks();
 }
 async function resetTaskFilters(){
-  taskUserFilter='';taskIdSearch='';taskNameSearch='';taskPage=1;
-  document.getElementById('taskUserFilter').value='';
+  taskGroupFilter='';taskUserFilters=[];taskIdSearch='';taskNameSearch='';taskPage=1;
+  document.getElementById('taskGroupFilter').value='';
+  clearTaskUserSelection();document.getElementById('taskUserFilter').open=false;
   document.getElementById('taskIdSearch').value='';
   document.getElementById('taskNameSearch').value='';
   await refreshTasks();
@@ -135,9 +171,10 @@ async function refreshTasks(btn){
   if(btn) setActionButtonLoading(btn,'刷新中...');
   try{
     const c=document.getElementById('taskContent');c.innerHTML=taskSkeleton();
-    const res=await API.getTasks(taskPlatformFilter,taskPage,taskPageSize,{userId:taskUserFilter,taskOrSubTaskId:taskIdSearch,name:taskNameSearch});
+    const res=await API.getTasks(taskPlatformFilter,taskPage,taskPageSize,{groupId:taskGroupFilter,userIds:taskUserFilters,taskOrSubTaskId:taskIdSearch,name:taskNameSearch});
     if(!res.success){c.innerHTML='<div class="empty-state"><div class="empty-text">加载失败: '+(res.error||'')+'</div></div>';return}
     const tasks=res.tasks||[];
+    syncTaskGroupOptions(res.task_groups||[]);
     syncTaskUserOptions(res.task_users||[]);
     renderTaskOverview(tasks,res.total||0);
     document.getElementById('taskRange').textContent=tasks.length?'本页 '+tasks.length+' 个，共 '+(res.total||tasks.length)+' 个任务':'当前筛选暂无任务';

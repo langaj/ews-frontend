@@ -102,7 +102,8 @@ const API = {
     if (platform) params.set('platform', platform);
     if (page) params.set('page', page);
     if (limit) params.set('limit', limit);
-    if (filters?.userId) params.set('user_id', filters.userId);
+    if (filters?.groupId) params.set('group_id', filters.groupId);
+    for (const userId of (filters?.userIds || [])) if (userId) params.append('user_id', userId);
     if (filters?.taskOrSubTaskId) params.set('task_or_subtask_id', filters.taskOrSubTaskId);
     if (filters?.name) params.set('name', filters.name);
     const query = params.toString();
