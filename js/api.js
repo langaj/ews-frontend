@@ -104,6 +104,7 @@ const API = {
     if (limit) params.set('limit', limit);
     if (filters?.groupId) params.set('group_id', filters.groupId);
     for (const userId of (filters?.userIds || [])) if (userId) params.append('user_id', userId);
+    if (filters?.createdDate) params.set('created_date', filters.createdDate);
     if (filters?.taskOrSubTaskId) params.set('task_or_subtask_id', filters.taskOrSubTaskId);
     if (filters?.name) params.set('name', filters.name);
     const query = params.toString();
